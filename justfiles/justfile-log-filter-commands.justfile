@@ -45,14 +45,14 @@ logs-errors TEST_ID PLATFORM="auto":
         if [[ "$TEST_ID" == android_* ]]; then
             PLATFORM="android"
         elif [[ "$TEST_ID" == desktop_* ]]; then
-            PLATFORM="desktop"
+            PLATFORM="editor"
         elif [[ "$TEST_ID" == ios_* ]]; then
             PLATFORM="ios"
         elif [[ "$TEST_ID" == macos_* ]]; then
             PLATFORM="macos"
         else
             # Default to desktop for backwards compatibility
-            PLATFORM="desktop"
+            PLATFORM="editor"
         fi
     fi
 
@@ -66,7 +66,7 @@ logs-errors TEST_ID PLATFORM="auto":
                 exit 1
             fi
             ;;
-        desktop)
+        editor)
             # Use existing desktop infrastructure
             LOG_FILE=$(just _find-desktop-log-with-test-id "$TEST_ID")
             ;;
@@ -233,14 +233,14 @@ logs-search TEST_ID SEARCH_TERM PLATFORM="auto":
         if [[ "$TEST_ID" == android_* ]]; then
             PLATFORM="android"
         elif [[ "$TEST_ID" == desktop_* ]]; then
-            PLATFORM="desktop"
+            PLATFORM="editor"
         elif [[ "$TEST_ID" == ios_* ]]; then
             PLATFORM="ios"
         elif [[ "$TEST_ID" == macos_* ]]; then
             PLATFORM="macos"
         else
             # Default to desktop for backwards compatibility with logs-text
-            PLATFORM="desktop"
+            PLATFORM="editor"
         fi
     fi
     
@@ -269,7 +269,7 @@ logs-search TEST_ID SEARCH_TERM PLATFORM="auto":
             grep -i "$SEARCH_TERM" "$LOG_FILE" | head -50 || echo "❌ No matches found for: $SEARCH_TERM"
             ;;
         
-        desktop)
+        editor)
             # Use existing desktop infrastructure
             LOG_FILE=$(just _find-desktop-log-with-test-id "$TEST_ID")
             

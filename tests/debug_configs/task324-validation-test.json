@@ -12,7 +12,7 @@
     "game.lineup.populate_enemy"
   ],
   "platforms": [
-    "desktop",
+    "editor",
     "android"
   ]
 }

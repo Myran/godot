@@ -13,7 +13,7 @@
     }
   ],
   "platforms": [
-    "desktop",
+    "editor",
     "android"
   ],
   "metadata": {

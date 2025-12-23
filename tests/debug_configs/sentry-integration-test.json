@@ -4,7 +4,7 @@
     "sentry.test_sdk_functionality"
   ],
   "platforms": [
-    "desktop"
+    "editor"
   ],
   "metadata": {
     "auto_quit": true,

@@ -129,7 +129,7 @@ _get-desktop-log-file:
         echo "   $DESKTOP_LOG_DIR" >&2
         echo "" >&2
         echo "💡 Try running a test first to generate logs:" >&2
-        echo "   just test-desktop development-workflow" >&2
+        echo "   just test-editor development-workflow" >&2
         exit 1
     fi
     
@@ -151,7 +151,7 @@ _find-desktop-log-with-test-id TEST_ID:
     search_logs_for_test_id() {
         local log_dir="$1"
         if [ -d "$log_dir" ]; then
-            # First, check if test ID is in any filename (for Android logs stored on desktop)
+            # First, check if test ID is in any filename (for Android logs stored on editor)
             local filename_match=$(find "$log_dir" -name "*${TEST_ID}*.log" -type f | head -1)
             if [ -n "$filename_match" ]; then
                 echo "$filename_match"

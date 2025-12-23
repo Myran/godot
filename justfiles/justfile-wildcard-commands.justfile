@@ -19,14 +19,14 @@ logs-pattern TEST_ID PATTERN PLATFORM="auto":
         if [[ "$TEST_ID" == android_* ]]; then
             PLATFORM="android"
         elif [[ "$TEST_ID" == desktop_* ]]; then
-            PLATFORM="desktop"
+            PLATFORM="editor"
         elif [[ "$TEST_ID" == ios_* ]]; then
             PLATFORM="ios"
         elif [[ "$TEST_ID" == macos_* ]]; then
             PLATFORM="macos"
         else
             # Default to desktop for backwards compatibility
-            PLATFORM="desktop"
+            PLATFORM="editor"
         fi
     fi
 
@@ -40,7 +40,7 @@ logs-pattern TEST_ID PATTERN PLATFORM="auto":
                 exit 1
             fi
             ;;
-        desktop)
+        editor)
             # Use existing desktop infrastructure
             LOG_FILE=$(just _find-desktop-log-with-test-id "$TEST_ID")
             ;;

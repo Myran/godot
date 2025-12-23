@@ -14,7 +14,7 @@ test-gamestate-cycle:
     
     echo "🎯 Step 1: Save gamestate using debug menu simulation"
     echo "======================================================"
-    just test-desktop-target gamestate-user-workflow-test
+    just test-editor-target gamestate-user-workflow-test
     
     if [ $? -ne 0 ]; then
         echo "❌ Save step failed"
@@ -62,7 +62,7 @@ test-gamestate-cycle:
     echo ""
     echo "🎯 Step 4: Run load and verification test"
     echo "========================================"
-    just test-desktop-target gamestate-load-user-workflow-test
+    just test-editor-target gamestate-load-user-workflow-test
     
     LOAD_RESULT=$?
     
@@ -124,7 +124,7 @@ test-gamestate-quick:
     
     # Save gamestate
     echo "1. Saving gamestate..."
-    just test-desktop-target gamestate-user-workflow-test > /tmp/save_result.log 2>&1
+    just test-editor-target gamestate-user-workflow-test > /tmp/save_result.log 2>&1
     
     if grep -q "✅ All validations passed" /tmp/save_result.log; then
         echo "✅ Save successful"

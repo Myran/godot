@@ -161,7 +161,7 @@ _fzf-select-config CONTEXT="generic" FILTER="all":
     
     # Set context-specific prompt and header
     case "$CONTEXT" in
-        "desktop")
+        "editor")
             prompt="Select desktop test: "
             header="🖥️  Desktop Testing | ⚙️ Debug Configs | 📝 Test Lists | Use fuzzy search to filter"
             ;;
@@ -521,7 +521,7 @@ create-demo-interactive:
                 echo ""
                 echo "🎮 To test your demo:"
                 echo "   just test-android ${CLEAN_DEMO_NAME}        # Test on Android"
-                echo "   just test-desktop-target ${CLEAN_DEMO_NAME} # Test on Desktop"
+                echo "   just test-editor-target ${CLEAN_DEMO_NAME} # Test on Desktop"
             else
                 echo "❌ Failed to create demo config"
                 exit 1
@@ -665,7 +665,7 @@ demo-to-test demo_name:
         echo ""
         echo "🎮 To run the test:"
         echo "   just test-android-target ${DEMO_NAME}-test    # Creates baseline on first run"
-        echo "   just test-desktop-target ${DEMO_NAME}-test    # Test on desktop"
+        echo "   just test-editor-target ${DEMO_NAME}-test    # Test on desktop"
         echo ""
         echo "🔄 Baseline management:"
         echo "   just test-android-update ${DEMO_NAME}-test   # Update baseline (after changes)"
@@ -817,7 +817,7 @@ demo-test-cross-platform demo_name:
     # Test on Desktop
     if [ "$DESKTOP_AVAILABLE" = true ]; then
         echo "1️⃣ Testing on Desktop..."
-        if just test-desktop-target "$DEMO_NAME"; then
+        if just test-editor-target "$DEMO_NAME"; then
             DESKTOP_SUCCESS=true
             echo "✅ Desktop test completed successfully"
         else
@@ -1075,7 +1075,7 @@ _extract-checksums-to-config session_id config_name:
         echo "   Validation mode: semantic_action_checksums"
         echo ""
         echo "🎮 To test with checksum validation:"
-        echo "   just test-desktop-target ${CONFIG_NAME}"
+        echo "   just test-editor-target ${CONFIG_NAME}"
         echo ""
         echo "🔍 Checksums will be validated automatically during replay"
         
@@ -1869,7 +1869,7 @@ replay-generate-desktop session_id config_name="":
             echo "❌ No desktop log files found"
             echo ""
             echo "💡 Make sure you've run a desktop session first:"
-            echo "   just test-desktop development-workflow"
+            echo "   just test-editor development-workflow"
             echo "   just run-desktop"
             exit 1
         fi
@@ -1903,7 +1903,7 @@ replay-generate-desktop session_id config_name="":
     echo "✅ Found ${ACTION_COUNT} semantic actions for session ${SESSION_ID}"
     
     # Generate debug actions from semantic actions (inline to avoid parameter passing issues)
-    just _generate-debug-actions-inline "$OUTPUT_CONFIG" "$SESSION_ID" "$CLEAN_CONFIG_NAME" "$ACTION_COUNT" "$TIMESTAMP" "desktop"
+    just _generate-debug-actions-inline "$OUTPUT_CONFIG" "$SESSION_ID" "$CLEAN_CONFIG_NAME" "$ACTION_COUNT" "$TIMESTAMP" "editor"
     
     echo ""
     echo "2️⃣ Adding automated checksum validation..."
@@ -1915,11 +1915,11 @@ replay-generate-desktop session_id config_name="":
         echo "📄 Config file: ${OUTPUT_CONFIG}"
         echo ""
         echo "🎮 Ready to test:"
-        echo "   just test-desktop-target ${CLEAN_CONFIG_NAME}"
+        echo "   just test-editor-target ${CLEAN_CONFIG_NAME}"
         echo ""
         echo "🔧 Management commands:"
-        echo "   just test-desktop-update ${CLEAN_CONFIG_NAME}    # Update baseline (legitimate changes)"
-        echo "   just test-desktop-reset ${CLEAN_CONFIG_NAME}     # Reset baseline"
+        echo "   just test-editor-update ${CLEAN_CONFIG_NAME}    # Update baseline (legitimate changes)"
+        echo "   just test-editor-reset ${CLEAN_CONFIG_NAME}     # Reset baseline"
     else
         echo "❌ Failed to add checksum validation"
         echo "💡 Base config created successfully, you can add checksums manually"
@@ -1946,7 +1946,7 @@ replay-generate-from-last-session-desktop config_name:
         echo "❌ No desktop log files found"
         echo ""
         echo "💡 Make sure you've run a desktop session first:"
-        echo "   just test-desktop development-workflow"
+        echo "   just test-editor development-workflow"
         echo "   just run-desktop"
         exit 1
     fi
@@ -1957,7 +1957,7 @@ replay-generate-from-last-session-desktop config_name:
         echo "❌ No recent session found in desktop logs"
         echo ""
         echo "💡 Make sure you've run a game session first:"
-        echo "   just test-desktop development-workflow"
+        echo "   just test-editor development-workflow"
         echo "   just run-desktop"
         exit 1
     fi
@@ -1985,7 +1985,7 @@ replay-select:
         echo ""
         echo "🎮 Available actions:"
         echo "   just test-android-target $selected      # Run on Android"
-        echo "   just test-desktop-target $selected      # Run on Desktop"
+        echo "   just test-editor-target $selected      # Run on Desktop"
         echo "   just replay-validate $selected          # Validate config"
     else
         echo "❌ No selection made"
@@ -2021,7 +2021,7 @@ demo-select:
         echo ""
         echo "🎬 Available actions:"
         echo "   just test-android $selected             # Test demo on Android"
-        echo "   just test-desktop-target $selected      # Test demo on Desktop"
+        echo "   just test-editor-target $selected      # Test demo on Desktop"
         echo "   just demo-to-test $selected             # Convert to regression test"
         echo "   just demo-test-cross-platform $selected # Test on both platforms"
     else
@@ -2318,22 +2318,22 @@ replay-test-e2e:
 # ================================
 
 # Desktop testing interface - manual mode with fzf selection
-test-desktop target="":
+test-editor target="":
     #!/usr/bin/env bash
     set -euo pipefail
     
-    # If arguments provided, delegate to test-desktop-target (automated mode)
+    # If arguments provided, delegate to test-editor-target (automated mode)
     if [ -n "{{target}}" ]; then
         echo "🎯 Automated mode execution: {{target}}"
-        just test-desktop-target "{{target}}"
+        just test-editor-target "{{target}}"
         exit $?
     fi
     
     # Use shared fzf selection for all configs (automatic mode)
-    selected=$(just _fzf-select-config "desktop" "all")
+    selected=$(just _fzf-select-config "editor" "all")
     if [ "$?" -eq 0 ] && [ -n "$selected" ]; then
-        echo "Running automatic mode: just test-desktop-target '$selected'"
-        just test-desktop-target "$selected"
+        echo "Running automatic mode: just test-editor-target '$selected'"
+        just test-editor-target "$selected"
     else
         echo "❌ No selection made"
         exit 1
@@ -2341,7 +2341,7 @@ test-desktop target="":
 
 
 # Desktop test execution target - automated mode (quits automatically)
-# test-desktop-target CONFIG_NAME DURATION="30":
+# test-editor-target CONFIG_NAME DURATION="30":
 #     #!/usr/bin/env bash
 #     set -euo pipefail
 #     

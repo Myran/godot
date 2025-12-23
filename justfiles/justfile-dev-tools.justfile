@@ -108,17 +108,53 @@ development:
 
     echo "🎉 Development workflow completed successfully!"
 
-# Full pipeline: rebuild + export-all + test
-# Complete validation workflow for release preparation
-full-pipeline:
+# Shared export-and-test logic used by all pipeline recipes
+# Not called directly - use pipeline-* recipes instead
+_pipeline-export-and-test target="":
     #!/usr/bin/env bash
     set -euo pipefail
 
-    echo "🔄 Running full pipeline: rebuild → export-all → test"
+    TARGET="{{target}}"
+
+    echo "📦 Exporting all platforms (macOS, iOS, Android, Windows)..."
+    if ! just export-all; then
+        echo "❌ Export failed"
+        exit 1
+    fi
+    echo "✅ All exports completed"
+    echo ""
+
+    echo "🧪 Running cross-platform tests..."
+    if [ -n "$TARGET" ]; then
+        if ! just log-run test-all "$TARGET"; then
+            echo "❌ Tests failed"
+            exit 1
+        fi
+    else
+        if ! just log-run test; then
+            echo "❌ Tests failed"
+            exit 1
+        fi
+    fi
+    echo "✅ Tests completed"
+    echo ""
+
+    echo "📁 Exports available:"
+    echo "   macOS:   export/macos/"
+    echo "   iOS:     project/ios/build/"
+    echo "   Android: export/android/"
+    echo "   Windows: export/windows/"
+
+# Pipeline: rebuild → export-all → test
+# Complete validation workflow for release preparation
+pipeline-rebuild target="":
+    #!/usr/bin/env bash
+    set -euo pipefail
+
+    echo "🔄 Running pipeline-rebuild: rebuild → export-all → test"
     echo "⏱️  This may take 30-60 minutes depending on cache state"
     echo ""
 
-    # Step 1: Rebuild all components
     echo "1️⃣ Rebuilding all components..."
     if ! just rebuild; then
         echo "❌ Rebuild failed"
@@ -127,28 +163,22 @@ full-pipeline:
     echo "✅ Rebuild completed"
     echo ""
 
-    # Step 2: Export all platforms
-    echo "2️⃣ Exporting all platforms (macOS, iOS, Android, Windows)..."
-    if ! just export-all; then
-        echo "❌ Export failed"
-        exit 1
-    fi
-    echo "✅ All exports completed"
+    echo "2️⃣ Export and test phase..."
+    just _pipeline-export-and-test "{{target}}"
+
+    echo "🎉 Pipeline-rebuild completed successfully!"
+
+# Pipeline: export-all → test (no rebuild)
+# Use after GDScript changes when templates are already built
+pipeline-export target="":
+    #!/usr/bin/env bash
+    set -euo pipefail
+
+    echo "⚡ Running pipeline-export: export-all → test (no rebuild)"
+    echo "⏱️  This takes 5-15 minutes depending on test config"
     echo ""
 
-    # Step 3: Run tests with logging
-    echo "3️⃣ Running cross-platform tests..."
-    if ! just log-run test; then
-        echo "❌ Tests failed"
-        exit 1
-    fi
-    echo "✅ Tests completed"
-    echo ""
+    just _pipeline-export-and-test "{{target}}"
 
-    echo "🎉 Full pipeline completed successfully!"
-    echo ""
-    echo "📁 Exports available:"
-    echo "   macOS:   export/macos/"
-    echo "   iOS:     project/ios/build/"
-    echo "   Android: export/android/"
-    echo "   Windows: export/windows/"
+    echo "🎉 Pipeline-export completed successfully!"
+

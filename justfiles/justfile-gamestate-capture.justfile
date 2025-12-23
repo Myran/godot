@@ -469,7 +469,7 @@ capture-gamestate-android NAME:
         echo "📏 Size: ${FILE_SIZE} bytes"
         echo ""
         echo "🎮 Next steps:"
-        echo "   1. Start test: just test-android-manual CONFIG (or desktop: just run-desktop)"
+        echo "   1. Start test: just test-android-manual CONFIG (or desktop: just run-editor)"
         echo "   2. Open debug menu"
         echo "   3. Navigate to 'Saved States'"
         echo "   4. Click 'Load: {{NAME}}'"
@@ -582,7 +582,7 @@ help-gamestate:
     @echo "🚀 Test List Integration (NEW):"
     @echo "  just test-save-load-cycle-with-test-capture-50-desktop   # Wrapper for test list integration"
     @echo "  just test-save-load-cycle-with-test-capture-50-android   # Wrapper for test list integration"
-    @echo "  just test-desktop-target gamestate-system-validation     # Run gamestate validation via test list"
+    @echo "  just test-editor-target gamestate-system-validation     # Run gamestate validation via test list"
     @echo "  just test-android-target gamestate-system-validation     # Run gamestate validation via test list"
     @echo ""
     @echo "📁 File Organization:"
@@ -592,7 +592,7 @@ help-gamestate:
     @echo ""
     @echo "🎯 Integration with Main Test Suite:"
     @echo "  just test                              # Now includes gamestate validation via system-infrastructure"
-    @echo "  just test-desktop-target system-infrastructure  # Includes gamestate testing"
+    @echo "  just test-editor-target system-infrastructure  # Includes gamestate testing"
     @echo "  just test-android-target system-infrastructure  # Includes gamestate testing"
 
 # Quick test of gamestate system (for development validation)
@@ -723,7 +723,7 @@ test-save-load-cycle-desktop:
     }
     EOF
     
-    just test-desktop-target gamestate-initial-save-test || {
+    just test-editor-target gamestate-initial-save-test || {
         echo "❌ Initial save test failed"
         exit 1
     }
@@ -750,12 +750,12 @@ test-save-load-cycle-desktop:
     EOF
     
     # CRITICAL: Copy the first save to the pending load location for test isolation
-    just _place-gamestate-for-loading "desktop" "{{SAVED_STATES_DIR}}/cycle_test_first.json"
+    just _place-gamestate-for-loading "editor" "{{SAVED_STATES_DIR}}/cycle_test_first.json"
     
     # Create load and save config for deterministic testing
     just _create-load-save-config false
     
-    just test-desktop-target gamestate-load-and-save-test || {
+    just test-editor-target gamestate-load-and-save-test || {
         echo "❌ Load and save test failed"
         exit 1
     }
@@ -860,12 +860,12 @@ test-save-load-cycle-with-state-desktop STATE_NAME:
     EOF
     
     # CRITICAL: Copy the state file for debug action (same as standard cycle tests)
-    just _place-gamestate-for-loading "desktop" "$STATE_FILE"
+    just _place-gamestate-for-loading "editor" "$STATE_FILE"
     
     # Create load and save config for deterministic testing  
     just _create-load-save-config true
     
-    just test-desktop-target gamestate-load-and-save-test || {
+    just test-editor-target gamestate-load-and-save-test || {
         echo "❌ Load and save test failed"
         exit 1
     }
@@ -1235,8 +1235,8 @@ help-lineup:
     @echo "  7. Debug menu → Load lineups in either slot"
     @echo ""
     @echo "🎯 Commands:"
-    @echo "  just capture-lineup-allied-desktop NAME # Extract allied lineup (desktop)"
-    @echo "  just capture-lineup-enemy-desktop NAME  # Extract enemy lineup (desktop)"
+    @echo "  just capture-lineup-allied-desktop NAME # Extract allied lineup (editor)"
+    @echo "  just capture-lineup-enemy-desktop NAME  # Extract enemy lineup (editor)"
     @echo "  just capture-lineup-allied-android NAME # Extract allied lineup (Android)"
     @echo "  just capture-lineup-enemy-android NAME  # Extract enemy lineup (Android)"
     @echo "  just list-lineup-saves                 # Show all lineup saves"

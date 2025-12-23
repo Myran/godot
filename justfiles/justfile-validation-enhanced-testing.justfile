@@ -304,7 +304,7 @@ show-platform-matrix target="":
                 ANDROID_SUPPORT="✅"
             fi
             
-            if [[ "$(just _is-platform-supported "$CONFIG_FILE" "desktop")" == "true" ]]; then
+            if [[ "$(just _is-platform-supported "$CONFIG_FILE" "editor")" == "true" ]]; then
                 DESKTOP_SUPPORT="✅"
             fi
             
@@ -553,7 +553,7 @@ _handle-checksum-validation config_path platform test_id:
                 fi
             fi
             ;;
-        "desktop")
+        "editor")
             USER_DATA_DIR="$HOME/Library/Application Support/Godot/app_userdata/gametwo"
             LOGS_DIR="$USER_DATA_DIR/logs"
             DESKTOP_LOG_FILE="$LOGS_DIR/desktop_${TEST_ID}.log"
@@ -834,7 +834,7 @@ _extract-logs test_id platform temp_output_file="":
                 echo "📱 Real-time logs found - using captured logs"
             fi
             ;;
-        "desktop")
+        "editor")
             echo "🖥️  Extracting desktop logs for test: $TEST_ID"
             
             # Temp output file is required for desktop logs
@@ -917,7 +917,7 @@ _extract-logs test_id platform temp_output_file="":
         "macos")
             echo "🍎 Extracting macOS exported app logs for test: $TEST_ID"
 
-            # Temp output file is required for macOS logs (same pattern as desktop)
+            # Temp output file is required for macOS logs (same pattern as editor)
             if [[ -n "$TEMP_OUTPUT_FILE" && -f "$TEMP_OUTPUT_FILE" ]]; then
                 echo "🍎 Using provided temp output file: $TEMP_OUTPUT_FILE"
                 cp "$TEMP_OUTPUT_FILE" "$LOG_FILE"
@@ -1090,7 +1090,7 @@ _extract-logs-android test_id:
 
 # Legacy function for backward compatibility - calls unified function  
 _extract-logs-desktop test_id:
-    just _extract-logs "{{test_id}}" "desktop"
+    just _extract-logs "{{test_id}}" "editor"
 
 # Desktop log filtering with error-safe suppression (Android-style clean output)
 _filter-desktop-logs-safely temp_file_path:
@@ -1235,14 +1235,14 @@ _analyze-test-errors test_id platform config_file="":
                 exit 0
             fi
             ;;
-        "desktop")
+        "editor")
             # Desktop platform supported
             ;;
         "ios")
             # iOS platform supported
             ;;
         "macos")
-            # macOS platform supported (same log location as desktop)
+            # macOS platform supported (same log location as editor)
             ;;
         "windows")
             # Windows platform supported (logs retrieved via SCP from VM)
@@ -1443,7 +1443,7 @@ _analyze-test-errors test_id platform config_file="":
             "android")
                 echo "🔧 Debug: just logs-android-errors $TEST_ID"
                 ;;
-            "desktop")
+            "editor")
                 echo "🔧 Debug: just logs-desktop-errors $TEST_ID"
                 ;;
             "macos")
@@ -1553,15 +1553,15 @@ _collect-action-results test_id platform config_name="unknown" session="":
                 fi
             fi
             ;;
-        "desktop")
-            # For desktop, the extraction should have happened in _execute-test-desktop
+        "editor")
+            # For desktop, the extraction should have happened in _execute-test-editor
             # Here we just read the file that should already exist
             if [[ -f "$PLATFORM_LOG_FILE" ]]; then
                 LOGS=$(cat "$PLATFORM_LOG_FILE")
                 echo "📄 Read $(echo "$LOGS" | wc -l) lines from desktop log file"
             else
                 echo "⚠️  Desktop log file not found: $PLATFORM_LOG_FILE"
-                echo "💡 Desktop logs should be extracted by _execute-test-desktop"
+                echo "💡 Desktop logs should be extracted by _execute-test-editor"
                 LOGS=""
             fi
             ;;
@@ -1580,7 +1580,7 @@ _collect-action-results test_id platform config_name="unknown" session="":
             ;;
         "macos")
             # For macOS, the extraction should have happened in _execute-test-macos
-            # Here we just read the file that should already exist (same pattern as desktop)
+            # Here we just read the file that should already exist (same pattern as editor)
             if [[ -f "$PLATFORM_LOG_FILE" ]]; then
                 LOGS=$(cat "$PLATFORM_LOG_FILE")
                 echo "📄 Read $(echo "$LOGS" | wc -l) lines from macOS log file"
@@ -2312,12 +2312,12 @@ _test-list-generic test_list platform:
         
         echo ""
         echo "💡 To run skipped configs:"
-        if [[ "$PLATFORM" == "desktop" ]]; then
+        if [[ "$PLATFORM" == "editor" ]]; then
             echo "   just test-android-target $TEST_LIST"
             echo "   just test-android-target $(printf '%s ' "${SKIPPED_CONFIG_NAMES[@]}")"
         else
-            echo "   just test-desktop-target $TEST_LIST"
-            echo "   just test-desktop-target $(printf '%s ' "${SKIPPED_CONFIG_NAMES[@]}")"
+            echo "   just test-editor-target $TEST_LIST"
+            echo "   just test-editor-target $(printf '%s ' "${SKIPPED_CONFIG_NAMES[@]}")"
         fi
     fi
     
@@ -2818,10 +2818,10 @@ _execute-test-with-analysis config_name platform session="":
         echo "⏭️ SKIPPED: $CONFIG_NAME (requires $SUPPORTED_PLATFORMS - not supported on $PLATFORM)"
         echo ""
         echo "💡 To run this config:"
-        if [[ "$PLATFORM" == "desktop" ]]; then
+        if [[ "$PLATFORM" == "editor" ]]; then
             echo "   just test-android-target $CONFIG_NAME"
         else
-            echo "   just test-desktop-target $CONFIG_NAME"
+            echo "   just test-editor-target $CONFIG_NAME"
         fi
         exit 2  # Special exit code for platform skip
     fi
@@ -2893,11 +2893,11 @@ _execute-test-with-analysis config_name platform session="":
                 just _execute-test-android "$CONFIG_NAME" || TEST_RESULT=$?
             fi
             ;;
-        "desktop")
+        "editor")
             # Deploy and execute Desktop test
             just _deploy-config-desktop "$TEMP_CONFIG_PATH" || TEST_RESULT=$?
             if [[ $TEST_RESULT -eq 0 ]]; then
-                just _execute-test-desktop "$CONFIG_NAME" || TEST_RESULT=$?
+                just _execute-test-editor "$CONFIG_NAME" || TEST_RESULT=$?
             fi
             ;;
         "ios")
@@ -3468,7 +3468,7 @@ _execute-test-android config_name:
     echo "✅ Android test execution completed successfully"
     echo "💡 App quit detected - test finished"
 
-_execute-test-desktop config_name:
+_execute-test-editor config_name:
     #!/usr/bin/env bash
     set -euo pipefail
     
@@ -3540,7 +3540,7 @@ _execute-test-desktop config_name:
         echo "❌ Desktop test timed out after ${MAX_TIMEOUT} seconds"
         # Extract logs before cleanup on timeout
         echo "📄 Extracting desktop logs for analysis..."
-        just _extract-logs "$TEST_ID" "desktop" "$TEMP_OUTPUT" || echo "⚠️  Failed to extract desktop logs"
+        just _extract-logs "$TEST_ID" "editor" "$TEMP_OUTPUT" || echo "⚠️  Failed to extract desktop logs"
         rm -f "$TEMP_OUTPUT"
         exit 1
     elif [[ ${TEST_EXIT_CODE:-0} -ne 0 ]]; then
@@ -3560,7 +3560,7 @@ _execute-test-desktop config_name:
             echo "🔍 Crash indicators found in output:"
             grep -E "$CRASH_PATTERNS" "$TEMP_OUTPUT" | head -5 | sed 's/^/   /'
             echo "📄 Extracting desktop logs for analysis..."
-            just _extract-logs "$TEST_ID" "desktop" "$TEMP_OUTPUT" || echo "⚠️  Failed to extract desktop logs"
+            just _extract-logs "$TEST_ID" "editor" "$TEMP_OUTPUT" || echo "⚠️  Failed to extract desktop logs"
             rm -f "$TEMP_OUTPUT"
             echo ""
             echo "❌ Desktop test FAILED due to crash"
@@ -3571,7 +3571,7 @@ _execute-test-desktop config_name:
             echo "💡 All actions completed successfully with proper completion signals"
             # Extract logs before exiting successfully
             echo "📄 Extracting desktop logs for analysis..."
-            just _extract-logs "$TEST_ID" "desktop" "$TEMP_OUTPUT" || echo "⚠️  Failed to extract desktop logs"
+            just _extract-logs "$TEST_ID" "editor" "$TEMP_OUTPUT" || echo "⚠️  Failed to extract desktop logs"
             rm -f "$TEMP_OUTPUT"
             echo ""
             echo "✅ Desktop test execution completed"
@@ -3581,7 +3581,7 @@ _execute-test-desktop config_name:
             echo "⚠️  Desktop test completed with exit code ${TEST_EXIT_CODE}"
             # Extract logs before cleanup on failure
             echo "📄 Extracting desktop logs for analysis..."
-            just _extract-logs "$TEST_ID" "desktop" "$TEMP_OUTPUT" || echo "⚠️  Failed to extract desktop logs"
+            just _extract-logs "$TEST_ID" "editor" "$TEMP_OUTPUT" || echo "⚠️  Failed to extract desktop logs"
             rm -f "$TEMP_OUTPUT"
             if [[ ${TEST_EXIT_CODE} -ne 0 ]]; then
                 exit ${TEST_EXIT_CODE}
@@ -3591,7 +3591,7 @@ _execute-test-desktop config_name:
     
     # Extract and save desktop logs using unified function before cleanup (for successful exit path)
     echo "📄 Extracting desktop logs for analysis..."
-    just _extract-logs "$TEST_ID" "desktop" "$TEMP_OUTPUT" || echo "⚠️  Failed to extract desktop logs"
+    just _extract-logs "$TEST_ID" "editor" "$TEMP_OUTPUT" || echo "⚠️  Failed to extract desktop logs"
     
     # Cleanup temp file
     rm -f "$TEMP_OUTPUT"
@@ -4008,7 +4008,7 @@ test-android-manual config_name:
     echo "✅ Android test started in manual mode (app will stay open for verification)"
 
 # Desktop manual mode test command
-test-desktop-manual config_name:
+test-editor-manual config_name:
     #!/usr/bin/env bash
     set -euo pipefail
     
@@ -4038,14 +4038,14 @@ test-desktop-manual config_name:
     
     echo "✅ Desktop test started in manual mode (app will stay open for verification)"
 
-# Enhanced version of test-desktop-target that includes automatic error analysis  
-test-desktop-target config_name="":
+# Enhanced version of test-editor-target that includes automatic error analysis  
+test-editor-target config_name="":
     #!/usr/bin/env bash
     set -euo pipefail
     
     # If no config provided, show fzf selection
     if [ -z "{{config_name}}" ]; then
-        selected=$(just _fzf-select-config "desktop" "all")
+        selected=$(just _fzf-select-config "editor" "all")
         if [ "$?" -eq 0 ] && [ -n "$selected" ]; then
             CONFIG_NAME="$selected"
         else
@@ -4065,7 +4065,7 @@ test-desktop-target config_name="":
     fi
 
     # Use the new unified execution pattern
-    just _execute-test-with-analysis "$CONFIG_NAME" "desktop" "$TEST_SESSION"
+    just _execute-test-with-analysis "$CONFIG_NAME" "editor" "$TEST_SESSION"
 
 # macOS manual mode test command
 test-macos-manual config_name:
@@ -4564,7 +4564,7 @@ _test-android-target-original config_name:
 
 
 # Preserved original Desktop test command (renamed to avoid recursion)
-_test-desktop-target-original config_name:
+_test-editor-target-original config_name:
     #!/usr/bin/env bash
     set -euo pipefail
     
@@ -4695,8 +4695,8 @@ _update-checksum-baseline platform config_name:
     # Execute platform-specific test which will create new baseline
     if [[ "$PLATFORM" == "android" ]]; then
         just test-android-target "$CONFIG_NAME" || echo "Test execution completed (ignoring validation failure for update)"
-    elif [[ "$PLATFORM" == "desktop" ]]; then
-        just test-desktop-target "$CONFIG_NAME" || echo "Test execution completed (ignoring validation failure for update)"
+    elif [[ "$PLATFORM" == "editor" ]]; then
+        just test-editor-target "$CONFIG_NAME" || echo "Test execution completed (ignoring validation failure for update)"
     elif [[ "$PLATFORM" == "ios" ]]; then
         just test-ios-target "$CONFIG_NAME" || echo "Test execution completed (ignoring validation failure for update)"
     else
@@ -4799,7 +4799,7 @@ test-android-update config_name="":
     just _update-checksum-baseline "android" "$CONFIG_NAME"
 
 # Update checksum baseline for Desktop test configuration
-test-desktop-update config_name="":
+test-editor-update config_name="":
     #!/usr/bin/env bash
     set -euo pipefail
     
@@ -4858,7 +4858,7 @@ test-desktop-update config_name="":
             echo -e "$CHECKSUM_CONFIGS"
             echo ""
             echo "❌ fzf not available for interactive selection"
-            echo "Please specify a configuration name: just test-desktop-update CONFIG_NAME"
+            echo "Please specify a configuration name: just test-editor-update CONFIG_NAME"
             echo ""
             echo "Available configurations:"
             echo -e "$CHECKSUM_CONFIGS" | sed 's/📸 \([^ ]*\) .*/  • \1/'
@@ -4867,7 +4867,7 @@ test-desktop-update config_name="":
     fi
     
     # Call shared update function
-    just _update-checksum-baseline "desktop" "$CONFIG_NAME"
+    just _update-checksum-baseline "editor" "$CONFIG_NAME"
 
 # Update checksum baseline for macOS - runs test and captures new baseline values
 test-macos-update config_name="":
@@ -5180,7 +5180,7 @@ _get-platform-icon platform:
     # Extensible platform icon registry
     case "$PLATFORM" in
         "android") echo "📱" ;;
-        "desktop") echo "🖥️" ;;
+        "editor") echo "🖥️" ;;
         "ios") echo "📱" ;;
         "web") echo "🌐" ;;
         "switch") echo "🎮" ;;
@@ -5244,7 +5244,7 @@ _get-platform-display-name platform:
     # Extensible platform display name registry
     case "$PLATFORM" in
         "android") echo "Android Device" ;;
-        "desktop") echo "Desktop (Linux/macOS/Windows)" ;;
+        "editor") echo "Desktop (Linux/macOS/Windows)" ;;
         "ios") echo "iOS Device" ;;
         "web") echo "Web Browser" ;;
         "switch") echo "Nintendo Switch" ;;
@@ -5378,7 +5378,7 @@ test-command-integration:
     cat "$TEST_LIST_PATH" | jq '.'
     
     # Generate TEST_ID for context inheritance
-    CURRENT_PLATFORM="desktop"  # Hardcoded for testing
+    CURRENT_PLATFORM="editor"  # Hardcoded for testing
     TEST_ID=$(just _shared-generate-test-id "$TEST_LIST" "command-integration" "$CURRENT_PLATFORM")
     echo ""
     echo "📋 Generated TEST_ID: $TEST_ID"

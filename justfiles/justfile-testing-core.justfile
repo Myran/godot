@@ -160,7 +160,7 @@ _display-test-info TEST_ID CONFIG_NAME TEST_TYPE PLATFORM="":
     # Add platform-specific info
     if [[ "$PLATFORM" == "android" ]]; then
         just _android-get-device-info
-    elif [[ "$PLATFORM" == "desktop" ]]; then
+    elif [[ "$PLATFORM" == "editor" ]]; then
         echo "🖥️  Platform: Desktop"
         echo "🔧 Editor: {{GODOT_EXECUTABLE}}"
     elif [[ -n "$PLATFORM" ]]; then

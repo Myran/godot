@@ -90,7 +90,7 @@ debug-pids TEST_ID:
     if grep -q "I/godot" "$LOG_FILE"; then
         unique_pids=$(grep "I/godot" "$LOG_FILE" | awk '{print $4}' | sort | uniq)
     else
-        unique_pids="desktop"  # Single desktop process
+        unique_pids="editor"  # Single desktop process
     fi
     
     # Handle different log formats (Android vs Desktop)

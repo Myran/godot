@@ -53,7 +53,7 @@ validate-semantic-config CONFIG:
                 ;;
             
             # Platform-specific actions - NOT allowed
-            "system.debug."*"desktop"*)
+            "system.debug."*"editor"*)
                 echo "❌ Platform-specific action found: $action"
                 echo "   💡 Desktop-specific actions cannot be used in cross-platform semantic replays"
                 INVALID_ACTIONS=$((INVALID_ACTIONS + 1))
@@ -169,7 +169,7 @@ check-action-platform-agnostic ACTION:
             ;;
         
         # Platform-specific actions
-        "system.debug."*"desktop"*|"system.debug."*"android"*)
+        "system.debug."*"editor"*|"system.debug."*"android"*)
             echo "❌ Platform-specific action - NOT platform-agnostic"
             echo "💡 Cannot be used in cross-platform semantic replays"
             exit 1

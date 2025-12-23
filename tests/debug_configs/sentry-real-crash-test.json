@@ -16,7 +16,7 @@
     }
   ],
   "platforms": [
-    "desktop",
+    "editor",
     "android",
     "ios"
   ],
