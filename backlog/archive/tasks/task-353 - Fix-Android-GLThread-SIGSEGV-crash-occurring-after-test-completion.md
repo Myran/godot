@@ -1,10 +1,10 @@
 ---
 id: task-353
 title: Fix Android GLThread SIGSEGV crash occurring after test completion
-status: Open
+status: Done
 assignee: []
 created_date: '2025-12-19 11:03'
-updated_date: '2025-12-21 15:27'
+updated_date: '2025-12-22 23:43'
 labels:
   - critical
   - android
@@ -167,4 +167,10 @@ All Android tests affected including:
 
 ### Key Observation
 Desktop and macOS tests for the same configurations pass without crashes, confirming this is Android-specific GLThread issue during shutdown.
+
+## Closed as Duplicate (2025-12-23)
+
+This task is a duplicate of task-352 which was completed on 2025-12-22. The fix (adding `SentrySDK.close()` before app termination in `quit_application_event.gd`) resolved the GLThread SIGSEGV crash.
+
+Commit: `b7d2c02a` - fix(android): Resolve GLThread SIGSEGV crash during shutdown
 <!-- SECTION:NOTES:END -->

@@ -1,9 +1,10 @@
 ---
 id: task-332
 title: Fix gamestate checksum validation failures on macOS
-status: Open
+status: Done
 assignee: []
 created_date: '2025-12-11 11:02'
+updated_date: '2025-12-22 23:44'
 labels:
   - macos
   - testing
@@ -72,3 +73,17 @@ just test-macos-target gamestate-complete-save-load-cycle-test
 - See `justfiles/CLAUDE.md` for checksum baseline management guidance
 - Test configurations: `tests/debug_configs/gamestate-*.json`
 <!-- SECTION:DESCRIPTION:END -->
+
+## Implementation Notes
+
+<!-- SECTION:NOTES:BEGIN -->
+## Resolved (2025-12-23)
+
+macOS gamestate checksum validation is now passing:
+
+**Results from 2025-12-22 full-pipeline:**
+- `gamestate-save-load-test` on macOS: ✅ PASSED
+- `gamestate-complete-save-load-cycle-test` on macOS: ✅ PASSED
+
+The issue was resolved through task-357 (Add macOS platform support to checksum validation system) which implemented proper checksum baseline management for macOS.
+<!-- SECTION:NOTES:END -->
