@@ -102,6 +102,13 @@ just deploy-windows                        # Deploy to Windows physical machine
 just ship-android                          # Ship to Play Store
 just ship-ios                              # Ship to App Store
 
+# Clear Test Config (before deploy to avoid stale tests)
+just clear-test-android                    # Clear Android device config
+just clear-test-ios                        # Clear iOS export bundle config
+just clear-test-macos                      # Clear macOS user data config
+just clear-test-desktop                    # Clear desktop/editor config
+just clear-test-windows-physical           # Clear Windows physical machine config
+
 # Command Logging (Long-Running)
 just log-run-silent COMMAND                # Silent logging (saves context tokens)
 just log-run COMMAND                       # Verbose logging

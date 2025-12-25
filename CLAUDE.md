@@ -228,6 +228,15 @@ just ship-android          # Ship to Play Store
 just ship-ios              # Ship to App Store
 ```
 
+**Clear Test Config (before deploy to avoid stale tests):**
+```bash
+just clear-test-android          # Clear Android device config
+just clear-test-ios              # Clear iOS export bundle config
+just clear-test-macos            # Clear macOS user data config
+just clear-test-desktop          # Clear desktop/editor config
+just clear-test-windows-physical # Clear Windows physical machine config
+```
+
 ## 🎯 Advanced OODA Debugging
 
 **Evidence-First Investigation (OBSERVE):**
