@@ -10,13 +10,13 @@ debug-quick TEST_ID:
     TEST_ID="{{TEST_ID}}"
     
     # Use unified log retrieval function
-    LOG_FILE=$(just _find-desktop-log-with-test-id "$TEST_ID")
+    LOG_FILE=$(just _find-editor-log-with-test-id "$TEST_ID")
     
     if [ -z "$LOG_FILE" ]; then
         echo "❌ No log file found containing test ID: $TEST_ID"
         echo "🔍 Available recent test IDs:"
         # Use unified log retrieval to find recent test IDs
-        LOG_FILE=$(just _get-desktop-log-file)
+        LOG_FILE=$(just _get-editor-log-file)
         if [ -n "$LOG_FILE" ]; then
             grep -o '"config_name": "[^"]*"' "$LOG_FILE" | head -3 | cut -d'"' -f4 | while read test_id; do
                 echo "   📄 $test_id"
@@ -77,7 +77,7 @@ debug-pids TEST_ID:
     TEST_ID="{{TEST_ID}}"
     
     # Use unified log retrieval function
-    LOG_FILE=$(just _find-desktop-log-with-test-id "$TEST_ID")
+    LOG_FILE=$(just _find-editor-log-with-test-id "$TEST_ID")
     
     if [ -z "$LOG_FILE" ]; then
         echo "❌ No log file found containing test ID: $TEST_ID"
@@ -136,7 +136,7 @@ debug-restarts TEST_ID:
     TEST_ID="{{TEST_ID}}"
     
     # Use unified log retrieval function
-    LOG_FILE=$(just _find-desktop-log-with-test-id "$TEST_ID")
+    LOG_FILE=$(just _find-editor-log-with-test-id "$TEST_ID")
     
     if [ -z "$LOG_FILE" ]; then
         echo "❌ No log file found containing test ID: $TEST_ID"
@@ -162,7 +162,7 @@ debug-test-flow TEST_ID:
     TEST_ID="{{TEST_ID}}"
     
     # Use unified log retrieval function
-    LOG_FILE=$(just _find-desktop-log-with-test-id "$TEST_ID")
+    LOG_FILE=$(just _find-editor-log-with-test-id "$TEST_ID")
     
     if [ -z "$LOG_FILE" ]; then
         echo "❌ No log file found containing test ID: $TEST_ID"
@@ -212,7 +212,7 @@ debug-recent:
     echo "====================="
     
     # Use unified log retrieval to find recent test results
-    LOG_FILE=$(just _get-desktop-log-file)
+    LOG_FILE=$(just _get-editor-log-file)
     if [ -n "$LOG_FILE" ]; then
         echo "📄 Recent test from: $(basename "$LOG_FILE")"
         echo "📁 Location: $(dirname "$LOG_FILE")"

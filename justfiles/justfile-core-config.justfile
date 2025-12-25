@@ -74,7 +74,7 @@ INTER_CONFIG_DELAY := env_var_or_default("INTER_CONFIG_DELAY", "5")
 # LOG PATHS
 # ================================
 # Desktop Godot logs (macOS)
-DESKTOP_LOG_DIR := env_var("HOME") + "/Library/Application Support/Godot/app_userdata/" + GAME_NAME + "/logs"
+EDITOR_LOG_DIR := env_var("HOME") + "/Library/Application Support/Godot/app_userdata/" + GAME_NAME + "/logs"
 
 # Additional log path variables (consolidated from semantic-replay-commands)
 PROJECT_LOGS_DIR := "./logs"
@@ -91,12 +91,12 @@ TEMP_DIR := "/tmp"
 
 # Unified desktop log retrieval function
 # Returns path to latest desktop log file, with fallback logic
-_get-desktop-log-file:
+_get-editor-log-file:
     #!/usr/bin/env bash
     set -euo pipefail
     
     # Desktop log directory (macOS standard location)
-    DESKTOP_LOG_DIR="{{DESKTOP_LOG_DIR}}"
+    EDITOR_LOG_DIR="{{EDITOR_LOG_DIR}}"
     
     # Function to find latest desktop log in a directory
     find_latest_log() {
@@ -121,12 +121,12 @@ _get-desktop-log-file:
     }
     
     # Get latest log from primary location only
-    LATEST_LOG=$(find_latest_log "$DESKTOP_LOG_DIR")
+    LATEST_LOG=$(find_latest_log "$EDITOR_LOG_DIR")
     
     # If no log found, provide helpful error
     if [ -z "$LATEST_LOG" ]; then
         echo "❌ No desktop log files found in:" >&2
-        echo "   $DESKTOP_LOG_DIR" >&2
+        echo "   $EDITOR_LOG_DIR" >&2
         echo "" >&2
         echo "💡 Try running a test first to generate logs:" >&2
         echo "   just test-editor development-workflow" >&2
@@ -137,15 +137,15 @@ _get-desktop-log-file:
     echo "$LATEST_LOG"
 
 # Find desktop log file containing specific test ID
-# Usage: _find-desktop-log-with-test-id TEST_ID
-_find-desktop-log-with-test-id TEST_ID:
+# Usage: _find-editor-log-with-test-id TEST_ID
+_find-editor-log-with-test-id TEST_ID:
     #!/usr/bin/env bash
     set -euo pipefail
     
     TEST_ID="{{TEST_ID}}"
     
     # Desktop log directory
-    DESKTOP_LOG_DIR="{{DESKTOP_LOG_DIR}}"
+    EDITOR_LOG_DIR="{{EDITOR_LOG_DIR}}"
     
     # Function to search for test ID in log directory
     search_logs_for_test_id() {
@@ -164,19 +164,19 @@ _find-desktop-log-with-test-id TEST_ID:
     }
     
     # Search primary location only
-    LOG_FILE=$(search_logs_for_test_id "$DESKTOP_LOG_DIR")
+    LOG_FILE=$(search_logs_for_test_id "$EDITOR_LOG_DIR")
     
     # If not found, provide helpful error
     if [ -z "$LOG_FILE" ]; then
         echo "❌ No log file found containing test ID: $TEST_ID" >&2
         echo "" >&2
         echo "🔍 Searched in:" >&2
-        echo "   $DESKTOP_LOG_DIR" >&2
+        echo "   $EDITOR_LOG_DIR" >&2
         echo "" >&2
         echo "💡 Available test IDs:" >&2
         # Try to show available test IDs from recent logs
-        if [ -d "$DESKTOP_LOG_DIR" ]; then
-            find "$DESKTOP_LOG_DIR" -name "*.log" -type f -exec grep -l "Test ID:" {} \; 2>/dev/null | head -3 | while read -r logfile; do
+        if [ -d "$EDITOR_LOG_DIR" ]; then
+            find "$EDITOR_LOG_DIR" -name "*.log" -type f -exec grep -l "Test ID:" {} \; 2>/dev/null | head -3 | while read -r logfile; do
                 echo "   $(basename "$logfile"): $(grep "Test ID:" "$logfile" 2>/dev/null | head -1 | sed 's/.*Test ID: //' || echo "No test ID found")"
             done
         fi
@@ -194,7 +194,7 @@ _find-desktop-log-with-session-id SESSION_ID:
     SESSION_ID="{{SESSION_ID}}"
     
     # Desktop log directory
-    DESKTOP_LOG_DIR="{{DESKTOP_LOG_DIR}}"
+    EDITOR_LOG_DIR="{{EDITOR_LOG_DIR}}"
     
     # Function to search for session ID in log directory
     search_logs_for_session_id() {
@@ -206,18 +206,18 @@ _find-desktop-log-with-session-id SESSION_ID:
     }
     
     # Search primary location only
-    LOG_FILE=$(search_logs_for_session_id "$DESKTOP_LOG_DIR")
+    LOG_FILE=$(search_logs_for_session_id "$EDITOR_LOG_DIR")
     
     # If not found, provide helpful error
     if [ -z "$LOG_FILE" ]; then
         echo "❌ No log file found containing session ID: $SESSION_ID" >&2
         echo "" >&2
         echo "🔍 Searched in:" >&2
-        echo "   $DESKTOP_LOG_DIR" >&2
+        echo "   $EDITOR_LOG_DIR" >&2
         echo "" >&2
         echo "💡 Available session IDs:" >&2
-        if [ -d "$DESKTOP_LOG_DIR" ]; then
-            find "$DESKTOP_LOG_DIR" -name "*.log" -type f -exec grep -h "SESSION_START" {} \; 2>/dev/null | grep -o '"session_id": "[^"]*"' | sort -u | head -5 >&2 || echo "   (no sessions found)" >&2
+        if [ -d "$EDITOR_LOG_DIR" ]; then
+            find "$EDITOR_LOG_DIR" -name "*.log" -type f -exec grep -h "SESSION_START" {} \; 2>/dev/null | grep -o '"session_id": "[^"]*"' | sort -u | head -5 >&2 || echo "   (no sessions found)" >&2
         fi
         exit 1
     fi

@@ -72,8 +72,8 @@ _build-common force="no":
 # Android full build steps
 # REMOVED: _build-android-full - moved to justfile-platform-android.justfile
 
-# REMOVED: _build-ios-full - duplicate of build-ios-all in justfile-platform-ios.justfile
-# Use: just build-ios-all for iOS build pipeline
+# REMOVED: _build-ios-full - duplicate of build-all-ios in justfile-platform-ios.justfile
+# Use: just build-all-ios for iOS build pipeline
 
 # ================================
 # OLD BUILD-ALL BUGFIX
@@ -130,8 +130,8 @@ android-inject-sdks:
     @echo "   🛡️ Sentry: Error tracking, Performance, Session replay, Crash reporting"
     @echo ""
     @echo "📱 Templates now ready for building:"
-    @echo "   just export-apk-debug"
-    @echo "   just export-apk-release"
+    @echo "   just export-android-apk-debug"
+    @echo "   just export-android-apk-release"
 
 # 🔥 Firebase Android SDK integration (legacy - kept for compatibility)
 android-insert-firebase-dependencies:
@@ -195,8 +195,8 @@ android-setup-templates:
     @echo "   🛡️ ✅ Sentry SDK injected (Error tracking, Performance, Session replay)"
     @echo ""
     @echo "📱 Ready to build APKs:"
-    @echo "   just export-apk-debug"
-    @echo "   just export-apk-release"
+    @echo "   just export-android-apk-debug"
+    @echo "   just export-android-apk-release"
 
 # 🔄 Update Android SDK Configuration (when project.godot settings change)
 # Use this when you change SDK settings - faster than full reinstall

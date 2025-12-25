@@ -115,7 +115,7 @@ test-cross-platform-execution CONFIG:
     # Test desktop execution  
     echo "🖥️  Testing desktop execution..."
     DESKTOP_TEST_START=$(date +%s)
-    if just run-desktop >/dev/null 2>&1; then
+    if just run-editor >/dev/null 2>&1; then
         # For desktop, we just check if it can start
         # TODO: Add proper desktop test execution
         DESKTOP_RESULT="✅ PASSED (startup)"
@@ -138,7 +138,7 @@ test-cross-platform-execution CONFIG:
     
     if [[ "$DESKTOP_RESULT" == *"FAILED"* ]]; then
         echo "❌ Desktop execution failed"
-        echo "💡 Check desktop logs or run: just run-desktop"
+        echo "💡 Check desktop logs or run: just run-editor"
         exit 1
     fi
     

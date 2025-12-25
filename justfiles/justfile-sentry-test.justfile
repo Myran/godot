@@ -138,9 +138,9 @@ test-sentry-injection:
     @echo "🔧 Testing Sentry template injection..."
     @echo ""
 
-    # Check if export-apk-android exists (we'll simulate the export process)
-    if ! grep -q "export-apk-android" justfiles/justfile-platform-android.justfile; then
-        @echo "⚠️  export-apk-android recipe not found, creating minimal test environment..."
+    # Check if export-android-apk exists (we'll simulate the export process)
+    if ! grep -q "export-android-apk" justfiles/justfile-platform-android.justfile; then
+        @echo "⚠️  export-android-apk recipe not found, creating minimal test environment..."
         mkdir -p "{{PROJECT_PATH}}/project/android/build/"
         # Copy current Godot source to project directory for testing
         cp "{{PROJECT_PATH}}/godot/platform/android/java/app/build.gradle" "{{PROJECT_PATH}}/project/android/build/" 2>/dev/null || echo "⚠️  Could not copy build.gradle"

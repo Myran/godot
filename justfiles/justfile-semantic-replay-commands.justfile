@@ -442,7 +442,7 @@ create-demo-interactive:
         echo "❌ No recent logs found"
         echo ""
         echo "💡 Play the game first:"
-        echo "   Desktop: just run-desktop"
+        echo "   Desktop: just run-editor"
         echo "   Android: just run-android"
         exit 1
     fi
@@ -1114,7 +1114,7 @@ _generate-debug-actions-inline OUTPUT_CONFIG SESSION_ID CLEAN_CONFIG_NAME ACTION
     else
         # Desktop: get from desktop logs using unified retrieval
         echo "   Using Desktop logs"
-        LOG_FILE=$(just _get-desktop-log-file 2>/dev/null || echo "")
+        LOG_FILE=$(just _get-editor-log-file 2>/dev/null || echo "")
         if [ -n "$LOG_FILE" ]; then
             echo "   Desktop log file: $(basename "$LOG_FILE")"
             SEMANTIC_ACTIONS=$(grep "SEMANTIC_ACTION" "$LOG_FILE" | grep "\"session_id\": \"${SESSION_ID}\"" || echo "")
@@ -1858,19 +1858,19 @@ replay-generate-desktop session_id config_name="":
     echo "1️⃣ Generating base replay configuration from Desktop logs..."
     
     # Use unified desktop log retrieval
-    LOG_FILE=$(just _find-desktop-log-with-test-id "${SESSION_ID}" 2>/dev/null || echo "")
+    LOG_FILE=$(just _find-editor-log-with-test-id "${SESSION_ID}" 2>/dev/null || echo "")
     
     if [ -z "$LOG_FILE" ]; then
         # Fallback to searching for session in latest desktop log
         echo "📋 Session not found by test ID, searching latest desktop logs..."
-        LOG_FILE=$(just _get-desktop-log-file 2>/dev/null || echo "")
+        LOG_FILE=$(just _get-editor-log-file 2>/dev/null || echo "")
         
         if [ -z "$LOG_FILE" ]; then
             echo "❌ No desktop log files found"
             echo ""
             echo "💡 Make sure you've run a desktop session first:"
             echo "   just test-editor development-workflow"
-            echo "   just run-desktop"
+            echo "   just run-editor"
             exit 1
         fi
         
@@ -1940,14 +1940,14 @@ replay-generate-from-last-session-desktop config_name:
     echo "📋 Getting most recent session from Desktop logs..."
     
     # Use unified desktop log retrieval
-    LATEST_LOG=$(just _get-desktop-log-file 2>/dev/null || echo "")
+    LATEST_LOG=$(just _get-editor-log-file 2>/dev/null || echo "")
     
     if [ -z "$LATEST_LOG" ]; then
         echo "❌ No desktop log files found"
         echo ""
         echo "💡 Make sure you've run a desktop session first:"
         echo "   just test-editor development-workflow"
-        echo "   just run-desktop"
+        echo "   just run-editor"
         exit 1
     fi
     
@@ -1958,7 +1958,7 @@ replay-generate-from-last-session-desktop config_name:
         echo ""
         echo "💡 Make sure you've run a game session first:"
         echo "   just test-editor development-workflow"
-        echo "   just run-desktop"
+        echo "   just run-editor"
         exit 1
     fi
     

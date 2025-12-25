@@ -68,6 +68,7 @@ deploy-ios: export-pck-ios
     cd export/ios && fastlane beta
 
 # DEPLOY: Deploy to Play Store (requires AAB files)
-deploy-android: export-aab-android
+# Updated dependency to use new platform naming convention (Task-378)
+deploy-android: export-android-aab
     @echo "Deploying to Play Store..."
     cd export/android && fastlane internal

@@ -222,7 +222,7 @@ _capture-from-logs SEARCH_PATTERN FILE_PREFIX LOG_SOURCE_CMD NAME:
         echo ""
         echo "💡 To capture:"
         if [ "{{LOG_SOURCE_CMD}}" = "_get-desktop-logs" ]; then
-            echo "   1. Start game: just run-desktop"
+            echo "   1. Start game: just run-editor"
             echo "   2. Open debug menu (press D key)"
             if [ "{{SEARCH_PATTERN}}" = "DEBUG_GAMESTATE_CAPTURE" ]; then
                 echo "   3. Click 'Save State' button"
@@ -320,7 +320,7 @@ capture-gamestate-desktop NAME:
         
         echo ""
         echo "🎮 Next steps:"
-        echo "   1. Start game: just run-desktop"
+        echo "   1. Start game: just run-editor"
         echo "   2. Open debug menu (press D key)"
         echo "   3. Navigate to 'Saved States'"
         echo "   4. Click 'Load: {{NAME}}'"
@@ -524,7 +524,7 @@ list-saved-states:
     done
     
     echo "🎮 To load a state:"
-    echo "   1. just run-desktop"
+    echo "   1. just run-editor"
     echo "   2. Debug menu → Saved States → Load: [name]"
 
 # Clean up old saved states
@@ -548,11 +548,11 @@ help-gamestate:
     @echo "=================================================="
     @echo ""
     @echo "📋 Complete Workflow - Desktop:"
-    @echo "  1. just run-desktop                       # Start game"
+    @echo "  1. just run-editor                       # Start game"
     @echo "  2. Debug menu → 'Save State'              # Capture state during gameplay"  
     @echo "  3. Exit game"
     @echo "  4. just capture-gamestate-desktop NAME    # Extract from desktop logs → JSON file"
-    @echo "  5. just run-desktop                       # Start again"
+    @echo "  5. just run-editor                       # Start again"
     @echo "  6. Debug menu → 'Saved States'            # Navigate to saved states"
     @echo "  7. Click 'Load: NAME'                     # Load as recording starting point"
     @echo "  8. Continue with new actions/recording"
@@ -1226,12 +1226,12 @@ help-lineup:
     @echo "================================================"
     @echo ""
     @echo "📋 Workflow:"
-    @echo "  1. just run-desktop                    # Start game"
+    @echo "  1. just run-editor                    # Start game"
     @echo "  2. Debug menu → Save Allied/Enemy Lineup"
     @echo "  3. Exit game"
     @echo "  4. just capture-lineup-allied-desktop NAME     # Extract allied lineup"
     @echo "  5. just capture-lineup-enemy-desktop NAME      # Extract enemy lineup"
-    @echo "  6. just run-desktop                    # Start for testing"
+    @echo "  6. just run-editor                    # Start for testing"
     @echo "  7. Debug menu → Load lineups in either slot"
     @echo ""
     @echo "🎯 Commands:"

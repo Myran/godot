@@ -331,7 +331,7 @@ build-artifacts force="no": validate-env
     just setup-android-templates {{force}}
     just export-all-android {{force}}
     just export-macos-all {{force}}
-    just build-ios-all {{force}}
+    just build-all-ios {{force}}
     @echo "✅ All artifacts complete"
 
 # Tier 3: Complete Pipeline (Zero to Device Deployment)
