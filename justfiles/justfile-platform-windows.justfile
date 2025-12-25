@@ -207,7 +207,7 @@ win-vm-full-pipeline jobs="6": win-vm-sync (win-vm-templates jobs) sentry-window
 # ALIGNED PLATFORM COMMANDS
 # ================================
 # These commands match the naming convention of other platforms
-# (Android: build-all-android, iOS: build-ios-all, macOS: build-macos-*)
+# (Android: build-all-android, iOS: build-all-ios, macOS: build-macos-*)
 
 # Complete Windows build with templates and Sentry (aligned with build-all-android)
 build-all-windows force="no" jobs="6": win-vm-verify
@@ -431,9 +431,13 @@ help-windows:
     @echo "Windows Development Commands"
     @echo "============================"
     @echo ""
-    @echo "📋 MACHINE DISTINCTION:"
+    @echo "📋 TWO-MACHINE ARCHITECTURE (Task-368):"
     @echo "  • win-vm-* → Building templates, headless ({{WIN_VM_HOST}})"
     @echo "  • win-physical-* → Testing exports with GUI ({{WIN_PHYSICAL_HOST}})"
+    @echo ""
+    @echo "📋 RECIPE NAMING:"
+    @echo "  • test-windows-* → Tests on VM (headless capable)"
+    @echo "  • test-windows-physical-* → Tests on physical machine (GUI mode)"
     @echo ""
     @echo "─────────────────────────────────────────────────────────────"
     @echo "🖥️  PHYSICAL MACHINE TESTING ({{WIN_PHYSICAL_HOST}})"
@@ -453,6 +457,8 @@ help-windows:
     @echo "TESTING (Physical, GUI mode):"
     @echo "  just test-windows-physical-target CONFIG  - Run automated test with GUI"
     @echo "  just test-windows-physical-manual CONFIG  - Run test, stays open for inspection"
+    @echo "  just test-windows-physical-update CONFIG  - Update checksum baseline"
+    @echo "  just test-windows-physical-reset CONFIG   - Reset checksum baseline"
     @echo ""
     @echo "LOGS:"
     @echo "  just logs-windows-physical TEST_ID        - Retrieve test logs"
@@ -711,6 +717,36 @@ win-physical-deploy:
     echo ""
     echo "✅ Windows export deployed to physical machine"
 
+# Run Windows app on physical machine (wake, deploy, launch)
+run-windows:
+    #!/usr/bin/env bash
+    set -euo pipefail
+
+    echo "🚀 Starting Windows app on physical machine..."
+    echo ""
+
+    # Ensure physical machine is awake and reachable
+    just win-physical-wake-wait
+
+    # Deploy latest build
+    just win-physical-deploy
+
+    # Launch the app on physical machine
+    echo ""
+    echo "🎮 Launching Windows app..."
+
+    # Stop any existing instances first
+    just _win-physical-stop-app
+
+    # Launch the game via start command (Windows equivalent of macOS open)
+    ssh {{WIN_PHYSICAL_USER}}@{{WIN_PHYSICAL_HOST}} "cd /c/GameTwoTests/builds && start {{GAME_NAME}}_debug.exe --test-mode" || {
+        echo "⚠️ Launch command sent (app runs in background on Windows)"
+    }
+
+    echo ""
+    echo "✅ Windows app launched on physical machine"
+    echo "💡 Use 'just win-physical-ssh' to connect for manual inspection"
+
 # Deploy debug config to physical machine
 _win-physical-deploy-config config_path:
     #!/usr/bin/env bash
@@ -951,3 +987,158 @@ logs-windows-physical-errors test_id:
     else
         echo "❌ Log file not found: $LOG_FILE"
     fi
+
+# ================================
+# WINDOWS PHYSICAL CHECKSUM BASELINE MANAGEMENT
+# Platform parity with Android/macOS/iOS (Task-363)
+# ================================
+
+# Windows-Physical checksum baseline management - update baseline after legitimate changes
+test-windows-physical-update config_name="":
+    #!/usr/bin/env bash
+    set -euo pipefail
+
+    CONFIG_NAME="{{config_name}}"
+
+    # If no config name provided, show interactive selector for checksum-enabled configs
+    if [[ -z "$CONFIG_NAME" ]]; then
+        echo "🔍 Selecting checksum test configuration..."
+
+        # Find all checksum-enabled configs
+        CHECKSUM_CONFIGS=""
+
+        if [[ -d "{{DEBUG_CONFIG_DIR}}" ]]; then
+            while IFS= read -r -d '' config_file; do
+                if [[ -f "$config_file" ]] && jq -e '.checksum_config' "$config_file" >/dev/null 2>&1; then
+                    basename=$(basename "$config_file" .json)
+                    state_type=$(jq -r '.checksum_config.state_type // "unknown"' "$config_file")
+                    expected_checksums_count=$(jq -r '.checksum_config.expected_checksums | length' "$config_file")
+                    description=$(jq -r '.description // "No description"' "$config_file")
+
+                    # Determine status
+                    if [[ "$expected_checksums_count" -eq 0 ]]; then
+                        status="❌ NO BASELINE SET"
+                    else
+                        status="✅ BASELINE SET"
+                    fi
+
+                    # Format for fzf
+                    CHECKSUM_CONFIGS="${CHECKSUM_CONFIGS}📸 ${basename} (${state_type}) ${status} - ${description}\n"
+                fi
+            done < <(find "{{DEBUG_CONFIG_DIR}}" -name "*.json" -type f -print0)
+        fi
+
+        if [[ -z "$CHECKSUM_CONFIGS" ]]; then
+            echo "❌ No checksum-enabled configurations found"
+            echo ""
+            echo "To enable checksum testing, add a checksum_config section to your configuration."
+            exit 1
+        fi
+
+        echo "📸 Available checksum configurations:"
+        echo "===================================="
+
+        # Use fzf for selection if available, otherwise show list
+        if command -v fzf >/dev/null 2>&1; then
+            SELECTED=$(echo -e "$CHECKSUM_CONFIGS" | fzf --prompt="Select checksum config to update: " --height=10 --layout=reverse)
+            if [[ -z "$SELECTED" ]]; then
+                echo "❌ No configuration selected"
+                exit 1
+            fi
+
+            # Extract config name from selection
+            CONFIG_NAME=$(echo "$SELECTED" | sed 's/📸 \([^ ]*\) .*/\1/')
+        else
+            echo -e "$CHECKSUM_CONFIGS"
+            echo ""
+            echo "❌ fzf not available for interactive selection"
+            echo "Please specify a configuration name: just test-windows-physical-update CONFIG_NAME"
+            echo ""
+            echo "Available configurations:"
+            echo -e "$CHECKSUM_CONFIGS" | sed 's/📸 \([^ ]*\) .*/  • \1/'
+            exit 1
+        fi
+    fi
+
+    # Call shared update function
+    just _update-checksum-baseline "windows-physical" "$CONFIG_NAME"
+
+# Windows-Physical checksum baseline management - reset baseline to start fresh
+test-windows-physical-reset config_name="":
+    #!/usr/bin/env bash
+    set -euo pipefail
+
+    CONFIG_NAME="{{config_name}}"
+
+    # If no config name provided, show interactive selector for checksum-enabled configs
+    if [[ -z "$CONFIG_NAME" ]]; then
+        echo "🔍 Selecting checksum test configuration to reset..."
+
+        # Find all checksum-enabled configs
+        CHECKSUM_CONFIGS=""
+
+        if [[ -d "{{DEBUG_CONFIG_DIR}}" ]]; then
+            while IFS= read -r -d '' config_file; do
+                if [[ -f "$config_file" ]] && jq -e '.checksum_config' "$config_file" >/dev/null 2>&1; then
+                    basename=$(basename "$config_file" .json)
+                    state_type=$(jq -r '.checksum_config.state_type // "unknown"' "$config_file")
+                    expected_checksums_count=$(jq -r '.checksum_config.expected_checksums | length' "$config_file")
+                    description=$(jq -r '.description // "No description"' "$config_file")
+
+                    # Determine status
+                    if [[ "$expected_checksums_count" -eq 0 ]]; then
+                        status="❌ NO BASELINE"
+                    else
+                        status="✅ HAS BASELINE ($expected_checksums_count)"
+                    fi
+
+                    # Format for fzf
+                    CHECKSUM_CONFIGS="${CHECKSUM_CONFIGS}📸 ${basename} (${state_type}) ${status} - ${description}\n"
+                fi
+            done < <(find "{{DEBUG_CONFIG_DIR}}" -name "*.json" -type f -print0)
+        fi
+
+        if [[ -z "$CHECKSUM_CONFIGS" ]]; then
+            echo "❌ No checksum-enabled configurations found"
+            exit 1
+        fi
+
+        echo "📸 Available checksum configurations:"
+        echo "===================================="
+
+        # Use fzf for selection if available, otherwise show list
+        if command -v fzf >/dev/null 2>&1; then
+            SELECTED=$(echo -e "$CHECKSUM_CONFIGS" | fzf --prompt="Select checksum config to RESET: " --height=10 --layout=reverse)
+            if [[ -z "$SELECTED" ]]; then
+                echo "❌ No configuration selected"
+                exit 1
+            fi
+
+            # Extract config name from selection
+            CONFIG_NAME=$(echo "$SELECTED" | sed 's/📸 \([^ ]*\) .*/\1/')
+        else
+            echo -e "$CHECKSUM_CONFIGS"
+            echo ""
+            echo "❌ fzf not available for interactive selection"
+            echo "Please specify a configuration name: just test-windows-physical-reset CONFIG_NAME"
+            exit 1
+        fi
+    fi
+
+    CONFIG_PATH="{{DEBUG_CONFIG_DIR}}/${CONFIG_NAME}.json"
+
+    if [[ ! -f "$CONFIG_PATH" ]]; then
+        echo "❌ Config not found: $CONFIG_PATH"
+        exit 1
+    fi
+
+    echo "🔄 Resetting checksum baseline for: $CONFIG_NAME (Windows-Physical)"
+    echo "================================================================="
+
+    # Clear the expected_checksums array
+    TEMP_FILE=$(mktemp)
+    jq '.checksum_config.expected_checksums = []' "$CONFIG_PATH" > "$TEMP_FILE"
+    mv "$TEMP_FILE" "$CONFIG_PATH"
+
+    echo "✅ Checksum baseline reset for $CONFIG_NAME"
+    echo "💡 Next test run will create a new baseline"

@@ -1492,7 +1492,7 @@ _analyze-test-errors test_id platform config_file="":
                 echo "Crash details:"
                 echo "$CRASH_SIGNALS"
                 echo ""
-                echo "🔧 Debug: just android-logs-search SIGBUS"
+                echo "🔧 Debug: just logs-android-device SIGBUS"
                 echo "🔧 Debug: adb logcat -d | rg -i 'fatal signal'"
                 exit 1
             fi
@@ -4112,6 +4112,45 @@ test-macos-manual config_name:
 
     echo "✅ macOS test started in manual mode (app will stay open for verification)"
 
+# macOS testing interface with fzf selection
+test-macos target="":
+    #!/usr/bin/env bash
+    set -euo pipefail
+
+    # If arguments provided, delegate to test-macos-target (automated mode)
+    if [ -n "{{target}}" ]; then
+        echo "🎯 Automated mode execution: {{target}}"
+
+        # Set MULTI_PLATFORM_SESSION for individual tests to enable session filtering
+        if [[ -z "${MULTI_PLATFORM_SESSION:-}" ]]; then
+            export MULTI_PLATFORM_SESSION="$(date +%s)"
+            echo "🔧 Setting individual test session for filtering: $MULTI_PLATFORM_SESSION"
+        else
+            echo "🔧 Using existing MULTI_PLATFORM_SESSION: $MULTI_PLATFORM_SESSION"
+        fi
+
+        just test-macos-target "{{target}}"
+        exit $?
+    fi
+
+    # Use shared fzf selection for all configs (automatic mode)
+    selected=$(just _fzf-select-config "macos" "all")
+    if [ "$?" -eq 0 ] && [ -n "$selected" ]; then
+        # Set MULTI_PLATFORM_SESSION for individual tests to enable session filtering
+        if [[ -z "${MULTI_PLATFORM_SESSION:-}" ]]; then
+            export MULTI_PLATFORM_SESSION="$(date +%s)"
+            echo "🔧 Setting individual test session for filtering: $MULTI_PLATFORM_SESSION"
+        else
+            echo "🔧 Using existing MULTI_PLATFORM_SESSION: $MULTI_PLATFORM_SESSION"
+        fi
+
+        echo "Running automatic mode: just test-macos-target '$selected'"
+        just test-macos-target "$selected"
+    else
+        echo "❌ No selection made"
+        exit 1
+    fi
+
 # Enhanced version of test-macos-target that includes automatic error analysis
 test-macos-target config_name="":
     #!/usr/bin/env bash
@@ -4148,6 +4187,45 @@ test-macos-target config_name="":
 
     # Use the new unified execution pattern
     just _execute-test-with-analysis "$CONFIG_NAME" "macos" "$TEST_SESSION"
+
+# Windows testing interface with fzf selection
+test-windows target="":
+    #!/usr/bin/env bash
+    set -euo pipefail
+
+    # If arguments provided, delegate to test-windows-target (automated mode)
+    if [ -n "{{target}}" ]; then
+        echo "🎯 Automated mode execution: {{target}}"
+
+        # Set MULTI_PLATFORM_SESSION for individual tests to enable session filtering
+        if [[ -z "${MULTI_PLATFORM_SESSION:-}" ]]; then
+            export MULTI_PLATFORM_SESSION="$(date +%s)"
+            echo "🔧 Setting individual test session for filtering: $MULTI_PLATFORM_SESSION"
+        else
+            echo "🔧 Using existing MULTI_PLATFORM_SESSION: $MULTI_PLATFORM_SESSION"
+        fi
+
+        just test-windows-target "{{target}}"
+        exit $?
+    fi
+
+    # Use shared fzf selection for all configs (automatic mode)
+    selected=$(just _fzf-select-config "windows" "all")
+    if [ "$?" -eq 0 ] && [ -n "$selected" ]; then
+        # Set MULTI_PLATFORM_SESSION for individual tests to enable session filtering
+        if [[ -z "${MULTI_PLATFORM_SESSION:-}" ]]; then
+            export MULTI_PLATFORM_SESSION="$(date +%s)"
+            echo "🔧 Setting individual test session for filtering: $MULTI_PLATFORM_SESSION"
+        else
+            echo "🔧 Using existing MULTI_PLATFORM_SESSION: $MULTI_PLATFORM_SESSION"
+        fi
+
+        echo "Running automatic mode: just test-windows-target '$selected'"
+        just test-windows-target "$selected"
+    else
+        echo "❌ No selection made"
+        exit 1
+    fi
 
 # ================================
 # WINDOWS VM TESTING
@@ -4869,6 +4947,128 @@ test-editor-update config_name="":
     # Call shared update function
     just _update-checksum-baseline "editor" "$CONFIG_NAME"
 
+# Reset checksum baseline for editor - clears baseline to start fresh
+test-editor-reset config_name="":
+    #!/usr/bin/env bash
+    set -euo pipefail
+
+    CONFIG_NAME="{{config_name}}"
+
+    # If no config name provided, show interactive selector for checksum-enabled configs
+    if [[ -z "$CONFIG_NAME" ]]; then
+        echo "🔍 Selecting checksum test configuration to reset..."
+
+        # Find all checksum-enabled configs
+        CHECKSUM_CONFIGS=""
+
+        if [[ -d "{{DEBUG_CONFIG_DIR}}" ]]; then
+            while IFS= read -r -d '' config_file; do
+                if [[ -f "$config_file" ]] && jq -e '.checksum_config' "$config_file" >/dev/null 2>&1; then
+                    basename=$(basename "$config_file" .json)
+                    state_type=$(jq -r '.checksum_config.state_type // "unknown"' "$config_file")
+                    expected_checksums_count=$(jq -r '.checksum_config.expected_checksums | length' "$config_file")
+                    description=$(jq -r '.description // "No description"' "$config_file")
+
+                    # Determine status
+                    if [[ "$expected_checksums_count" -eq 0 ]]; then
+                        status="❌ NO BASELINE"
+                    else
+                        status="✅ HAS BASELINE ($expected_checksums_count)"
+                    fi
+
+                    # Format for fzf
+                    CHECKSUM_CONFIGS="${CHECKSUM_CONFIGS}📸 ${basename} (${state_type}) ${status} - ${description}\n"
+                fi
+            done < <(find "{{DEBUG_CONFIG_DIR}}" -name "*.json" -type f -print0)
+        fi
+
+        if [[ -z "$CHECKSUM_CONFIGS" ]]; then
+            echo "❌ No checksum-enabled configurations found"
+            exit 1
+        fi
+
+        echo "📸 Available checksum configurations:"
+        echo "===================================="
+
+        # Use fzf for selection if available, otherwise show list
+        if command -v fzf >/dev/null 2>&1; then
+            SELECTED=$(echo -e "$CHECKSUM_CONFIGS" | fzf --prompt="Select checksum config to RESET: " --height=10 --layout=reverse)
+            if [[ -z "$SELECTED" ]]; then
+                echo "❌ No configuration selected"
+                exit 1
+            fi
+
+            # Extract config name from selection
+            CONFIG_NAME=$(echo "$SELECTED" | sed 's/📸 \([^ ]*\) .*/\1/')
+        else
+            echo -e "$CHECKSUM_CONFIGS"
+            echo ""
+            echo "❌ fzf not available for interactive selection"
+            echo "Please specify a configuration name: just test-editor-reset CONFIG_NAME"
+            exit 1
+        fi
+    fi
+
+    CONFIG_PATH="{{DEBUG_CONFIG_DIR}}/${CONFIG_NAME}.json"
+
+    if [[ ! -f "$CONFIG_PATH" ]]; then
+        echo "❌ Config not found: $CONFIG_PATH"
+        exit 1
+    fi
+
+    echo "🗑️  Resetting checksum baseline for: $CONFIG_NAME (editor)"
+    echo "==========================================================="
+
+    # Check if configuration has checksum support
+    if ! jq -e '.checksum_config' "$CONFIG_PATH" >/dev/null 2>&1; then
+        echo "❌ Configuration does not support checksum validation"
+        exit 1
+    fi
+
+    # Get current checksum configuration
+    STATE_TYPE=$(jq -r '.checksum_config.state_type // "unknown"' "$CONFIG_PATH")
+    CHECKSUM_COUNT=$(jq -r '.checksum_config.expected_checksums | length' "$CONFIG_PATH")
+
+    echo "📸 Current Checksum Configuration:"
+    echo "State Type: $STATE_TYPE"
+    echo "Current Checksums: $CHECKSUM_COUNT"
+
+    if [[ "$CHECKSUM_COUNT" -eq 0 ]]; then
+        echo ""
+        echo "ℹ️  No baseline currently set - nothing to reset"
+        exit 0
+    fi
+
+    # Confirm reset
+    echo ""
+    echo "⚠️  WARNING: This will remove the current baseline checksums ($CHECKSUM_COUNT)"
+    echo "The next test run will create a new baseline automatically"
+    echo ""
+    read -p "Are you sure you want to reset the baseline? (y/N): " -n 1 -r
+    echo ""
+
+    if [[ ! $REPLY =~ ^[Yy]$ ]]; then
+        echo "❌ Reset cancelled"
+        exit 1
+    fi
+
+    # Clear expected checksums
+    echo ""
+    echo "🗑️  Clearing baseline checksums..."
+    TEMP_FILE=$(mktemp)
+    jq '.checksum_config.expected_checksums = []' "$CONFIG_PATH" > "$TEMP_FILE"
+    mv "$TEMP_FILE" "$CONFIG_PATH"
+
+    echo "✅ Baseline reset completed successfully!"
+    echo "========================================"
+    echo "Configuration: $CONFIG_NAME"
+    echo "State Type: $STATE_TYPE"
+    echo "Previous Checksums: $CHECKSUM_COUNT"
+    echo "New Checksums: (none - will be created on next run)"
+    echo ""
+    echo "The next test run will automatically create a new baseline."
+    echo "Use 'just test-editor-target $CONFIG_NAME' to generate the new baseline."
+
 # Update checksum baseline for macOS - runs test and captures new baseline values
 test-macos-update config_name="":
     #!/usr/bin/env bash
@@ -5008,16 +5208,58 @@ test-macos-reset config_name="":
         exit 1
     fi
 
-    echo "🔄 Resetting checksum baseline for: $CONFIG_NAME (macOS)"
-    echo "========================================================"
+    echo "🗑️  Resetting checksum baseline for: $CONFIG_NAME (macOS)"
+    echo "=========================================================="
 
-    # Clear the expected_checksums array
+    # Check if configuration has checksum support
+    if ! jq -e '.checksum_config' "$CONFIG_PATH" >/dev/null 2>&1; then
+        echo "❌ Configuration does not support checksum validation"
+        exit 1
+    fi
+
+    # Get current checksum configuration
+    STATE_TYPE=$(jq -r '.checksum_config.state_type // "unknown"' "$CONFIG_PATH")
+    CHECKSUM_COUNT=$(jq -r '.checksum_config.expected_checksums | length' "$CONFIG_PATH")
+
+    echo "📸 Current Checksum Configuration:"
+    echo "State Type: $STATE_TYPE"
+    echo "Current Checksums: $CHECKSUM_COUNT"
+
+    if [[ "$CHECKSUM_COUNT" -eq 0 ]]; then
+        echo ""
+        echo "ℹ️  No baseline currently set - nothing to reset"
+        exit 0
+    fi
+
+    # Confirm reset
+    echo ""
+    echo "⚠️  WARNING: This will remove the current baseline checksums ($CHECKSUM_COUNT)"
+    echo "The next test run will create a new baseline automatically"
+    echo ""
+    read -p "Are you sure you want to reset the baseline? (y/N): " -n 1 -r
+    echo ""
+
+    if [[ ! $REPLY =~ ^[Yy]$ ]]; then
+        echo "❌ Reset cancelled"
+        exit 1
+    fi
+
+    # Clear expected checksums
+    echo ""
+    echo "🗑️  Clearing baseline checksums..."
     TEMP_FILE=$(mktemp)
     jq '.checksum_config.expected_checksums = []' "$CONFIG_PATH" > "$TEMP_FILE"
     mv "$TEMP_FILE" "$CONFIG_PATH"
 
-    echo "✅ Checksum baseline reset for $CONFIG_NAME"
-    echo "💡 Next test run will create a new baseline"
+    echo "✅ Baseline reset completed successfully!"
+    echo "========================================"
+    echo "Configuration: $CONFIG_NAME"
+    echo "State Type: $STATE_TYPE"
+    echo "Previous Checksums: $CHECKSUM_COUNT"
+    echo "New Checksums: (none - will be created on next run)"
+    echo ""
+    echo "The next test run will automatically create a new baseline."
+    echo "Use 'just test-macos-target $CONFIG_NAME' to generate the new baseline."
 
 # Update checksum baseline for Windows - runs test and captures new baseline values
 test-windows-update config_name="":

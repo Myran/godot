@@ -18,15 +18,24 @@ help-ios:
     echo "  just ios-deploy-config CONFIG   # Deploy test config to app bundle"
     echo "  just ios-test-file-access       # Test iOS file reading mechanism"
     echo "  just export-pck-ios              # Export iOS PCK file"
-    echo "  just build-ios-all               # Full iOS build pipeline (templates + app + PCK)"
+    echo "  just build-all-ios               # Full iOS build pipeline (templates + app + PCK)"
     echo "  just rebuild-all-ios            # Force rebuild all iOS components"
     echo ""
     echo "Testing Commands:"
-    echo "  just test-ios CONFIG            # iOS testing with fzf selection (NEW!)"
-    echo "  just test-ios-target CONFIG     # iOS automated testing (NEW!)"
-    echo "  just test-ios-iphone CONFIG     # iOS testing on iPhone device (NEW!)"
-    echo "  just test-ios-ipad CONFIG       # iOS testing on iPad device (NEW!)"
+    echo "  just test-ios CONFIG            # iOS testing with fzf selection"
+    echo "  just test-ios-target CONFIG     # iOS automated testing with validation"
+    echo "  just test-ios-iphone CONFIG     # iOS testing on iPhone device"
+    echo "  just test-ios-ipad CONFIG       # iOS testing on iPad device"
     echo "    • Default: iPad (configurable via IOS_TEST_DEVICE)"
+    echo ""
+    echo "Manual Testing (Stays Open for Inspection):"
+    echo "  just test-ios-manual CONFIG           # iOS manual testing (auto-detects device)"
+    echo "  just test-ios-ipad-manual CONFIG      # iPad manual testing"
+    echo "  just test-ios-iphone-manual CONFIG    # iPhone manual testing"
+    echo ""
+    echo "Checksum Baseline Management:"
+    echo "  just test-ios-update CONFIG     # Update checksum baseline (after legitimate changes)"
+    echo "  just test-ios-reset CONFIG      # Reset checksum baseline (start fresh)"
     echo ""
     echo "Log Cleanup:"
     echo "  just clean-godot-logs            # Clean all Godot test logs (iOS, Android, Desktop)"
@@ -37,17 +46,22 @@ help-ios:
     echo "  just export-pck-ios              # Export iOS PCK file"
     echo "  just ios-update-pck              # Update iOS PCK file"
     echo ""
-    echo "Device Logging:"
-    echo "  just ios-device-logs-iphone      # Monitor live logs from iPhone"
-    echo "  just ios-device-logs-ipad        # Monitor live logs from iPad"
-    echo "  just ios-recent-logs-iphone      # Recent logs from iPhone (10 min)"
-    echo "  just ios-recent-logs-ipad        # Recent logs from iPad (10 min)"
-    echo "  just ios-search-logs-iphone \"pattern\"  # Search logs on iPhone"
-    echo "  just ios-search-logs-ipad \"pattern\"    # Search logs on iPad"
+    echo "Device Logging (Unified Commands):"
+    echo "  just logs-ios-device SEARCH      # Search device logs (auto-detects iPhone/iPad)"
+    echo "  just logs-ios-health             # iOS device health check"
+    echo "  just logs-ios-status             # iOS device status (connectivity, app state)"
+    echo ""
+    echo "Device Logging (Device-Specific):"
+    echo "  just logs-ios-device-iphone      # Monitor live logs from iPhone"
+    echo "  just logs-ios-device-ipad        # Monitor live logs from iPad"
+    echo "  just logs-ios-recent-iphone      # Recent logs from iPhone (10 min)"
+    echo "  just logs-ios-recent-ipad        # Recent logs from iPad (10 min)"
+    echo "  just logs-ios-search-iphone \"pattern\"  # Search logs on iPhone"
+    echo "  just logs-ios-search-ipad \"pattern\"    # Search logs on iPad"
     echo "  just sentry-ios-logs-iphone      # Sentry-specific logs from iPhone"
     echo "  just sentry-ios-logs-ipad        # Sentry-specific logs from iPad"
-    echo "  just ios-config-logs-iphone      # JSON config logs from iPhone"
-    echo "  just ios-config-logs-ipad        # JSON config logs from iPad"
+    echo "  just logs-ios-config-iphone      # JSON config logs from iPhone"
+    echo "  just logs-ios-config-ipad        # JSON config logs from iPad"
     echo ""
     echo "Quick Commands:"
     echo "  just quick-build-ios             # Quick iOS build"
@@ -272,19 +286,19 @@ ios-update-pck: pre-build
     just export-pck-ios
     @echo "✅ iOS PCK updated"
 
-# REMOVED: build-install-ios - duplicate of build-ios-all (incomplete, no .app build)
-# REMOVED: build-all-ios - duplicate of build-ios-all (same functionality)
-# Use: just build-ios-all for complete iOS build pipeline (templates + app + PCK)
+# REMOVED: build-install-ios - duplicate of build-all-ios (incomplete, no .app build)
+# Use: just build-all-ios for complete iOS build pipeline (templates + app + PCK)
 
 
 # Force rebuild all iOS components (ignores existing builds)
 rebuild-all-ios:
     @echo "🔥 Force rebuilding all iOS components..."
-    just build-ios-all force=yes
+    just build-all-ios force=yes
     @echo "✅ All iOS rebuilds complete"
 
 # Complete iOS pipeline - from source to device deployment
-build-ios-all force="no":
+# Renamed from build-all-ios for platform naming consistency (Task-365)
+build-all-ios force="no":
     @echo "🤖 FULL BUILD - iOS ONLY"
     @echo "======================"
     @if [ "{{force}}" = "yes" ]; then \
@@ -292,7 +306,7 @@ build-ios-all force="no":
         echo "🔥 Force rebuild enabled - will rebuild everything from scratch"; \
     else \
         echo "⏱️  Estimated time: 5-15 minutes (smart rebuild)"; \
-        echo "💡 Use 'just build-ios-all force=yes' to force rebuild everything"; \
+        echo "💡 Use 'just build-all-ios force=yes' to force rebuild everything"; \
     fi
     @echo ""
 
@@ -302,6 +316,65 @@ build-ios-all force="no":
     @echo "✅ iOS full build complete - ready for device deployment"
     @echo "💡 Use 'just run-ios-iphone' to deploy to iPhone"
     @echo "💡 Use 'just run-ios-ipad' to deploy to iPad"
+
+
+# ================================
+# iOS EXPORT COMMANDS (Platform Parity)
+# Following macOS/Windows pattern for consistency (Task-371)
+# ================================
+
+# Export iOS debug build (templates + debug .app + PCK)
+export-ios-debug:
+    @echo "🍎 Exporting iOS Debug Build"
+    @echo "=============================="
+    @echo "⏱️  Estimated time: 5-10 minutes"
+    @echo ""
+
+    just templates-ios
+    just _ios-build-app "Debug"
+    just export-pck-ios
+
+    @echo ""
+    @echo "✅ iOS debug export complete"
+    @echo "📦 App bundle: export/ios/build/products/Debug-iphoneos/{{GAME_NAME}}.app"
+    @echo "📦 PCK file: export/ios/{{GAME_NAME}}.pck"
+    @echo "💡 Use 'just test-ios-target CONFIG' to test on device"
+
+# Export iOS release build (templates + release .app + PCK)
+export-ios-release:
+    @echo "🍎 Exporting iOS Release Build"
+    @echo "================================"
+    @echo "⏱️  Estimated time: 5-10 minutes"
+    @echo ""
+
+    just templates-ios
+    just _ios-build-app "Release"
+    just export-pck-ios
+
+    @echo ""
+    @echo "✅ iOS release export complete"
+    @echo "📦 App bundle: export/ios/build/products/Release-iphoneos/{{GAME_NAME}}.app"
+    @echo "📦 PCK file: export/ios/{{GAME_NAME}}.pck"
+    @echo "💡 Ready for App Store submission or TestFlight distribution"
+
+# Export both iOS debug and release builds
+export-ios-all:
+    @echo "🍎 Exporting iOS (Debug + Release)"
+    @echo "==================================="
+    @echo "⏱️  Estimated time: 10-20 minutes"
+    @echo ""
+
+    just templates-ios
+    just _ios-build-app "Debug"
+    just _ios-build-app "Release"
+    just export-pck-ios
+
+    @echo ""
+    @echo "✅ iOS full export complete (debug + release)"
+    @echo "📦 Debug app: export/ios/build/products/Debug-iphoneos/{{GAME_NAME}}.app"
+    @echo "📦 Release app: export/ios/build/products/Release-iphoneos/{{GAME_NAME}}.app"
+    @echo "📦 PCK file: export/ios/{{GAME_NAME}}.pck"
+    @echo "💡 Debug builds for development, Release builds for distribution"
 
 
 # ================================
@@ -326,11 +399,13 @@ _ios-device-logs-internal device_id device_name:
     idevicesyslog -u "$DEVICE_ID" -p {{GAME_NAME}} --no-colors
 
 # Stream live logs from iPhone device
-ios-device-logs-iphone:
+# Renamed from ios-device-logs-iphone for unified log naming (Task-366)
+logs-ios-device-iphone:
     just _ios-device-logs-internal "{{IOS_IPHONE_DEVICE_ID}}" "iPhone"
 
 # Stream live logs from iPad device
-ios-device-logs-ipad:
+# Renamed from ios-device-logs-ipad for unified log naming (Task-366)
+logs-ios-device-ipad:
     just _ios-device-logs-internal "{{IOS_IPAD_DEVICE_ID}}" "iPad"
 
 # Core recent logs function - takes device ID as argument
@@ -354,11 +429,13 @@ _ios-recent-logs-internal device_id device_name:
     idevicesyslog -u "$DEVICE_ID" -p {{GAME_NAME}} --no-colors
 
 # Search recent logs from iPhone device (last 10 minutes)
-ios-recent-logs-iphone:
+# Renamed from ios-recent-logs-iphone for unified log naming (Task-366)
+logs-ios-recent-iphone:
     just _ios-recent-logs-internal "{{IOS_IPHONE_DEVICE_ID}}" "iPhone"
 
 # Search recent logs from iPad device (last 10 minutes)
-ios-recent-logs-ipad:
+# Renamed from ios-recent-logs-ipad for unified log naming (Task-366)
+logs-ios-recent-ipad:
     just _ios-recent-logs-internal "{{IOS_IPAD_DEVICE_ID}}" "iPad"
 
 # Core pattern search function - takes device ID as argument
@@ -380,11 +457,13 @@ _ios-search-logs-internal pattern device_id device_name:
     idevicesyslog -u "$DEVICE_ID" -p {{GAME_NAME}} -m "$PATTERN" --no-colors
 
 # Search for specific patterns in iPhone device logs
-ios-search-logs-iphone pattern:
+# Renamed from ios-search-logs-iphone for unified log naming (Task-366)
+logs-ios-search-iphone pattern:
     just _ios-search-logs-internal "{{pattern}}" "{{IOS_IPHONE_DEVICE_ID}}" "iPhone"
 
 # Search for specific patterns in iPad device logs
-ios-search-logs-ipad pattern:
+# Renamed from ios-search-logs-ipad for unified log naming (Task-366)
+logs-ios-search-ipad pattern:
     just _ios-search-logs-internal "{{pattern}}" "{{IOS_IPAD_DEVICE_ID}}" "iPad"
 
 # Core Sentry monitoring function - takes device ID as argument
@@ -432,11 +511,13 @@ _ios-config-logs-internal device_id device_name:
     idevicesyslog -u "$DEVICE_ID" -p {{GAME_NAME}} -m "debug_startup_actions" -m "config_reader" -m "DebugConfigReader" -m "DebugStartupCoordinator" --no-colors
 
 # Monitor JSON config reading specifically from iPhone
-ios-config-logs-iphone:
+# Renamed from ios-config-logs-iphone for unified log naming (Task-366)
+logs-ios-config-iphone:
     just _ios-config-logs-internal "{{IOS_IPHONE_DEVICE_ID}}" "iPhone"
 
 # Monitor JSON config reading specifically from iPad
-ios-config-logs-ipad:
+# Renamed from ios-config-logs-ipad for unified log naming (Task-366)
+logs-ios-config-ipad:
     just _ios-config-logs-internal "{{IOS_IPAD_DEVICE_ID}}" "iPad"
 
 # Retrieve stored logs from iOS device Documents/logs/ directory
@@ -464,11 +545,13 @@ _ios-retrieve-logs-internal device_id device_name:
     ls -lh "$DEST_DIR"
 
 # Retrieve stored logs from iPhone device
-ios-retrieve-logs-iphone:
+# Renamed from ios-retrieve-logs-iphone for unified log naming (Task-366)
+logs-ios-retrieve-iphone:
     just _ios-retrieve-logs-internal "{{IOS_IPHONE_DEVICE_ID}}" "iPhone"
 
 # Retrieve stored logs from iPad device
-ios-retrieve-logs-ipad:
+# Renamed from ios-retrieve-logs-ipad for unified log naming (Task-366)
+logs-ios-retrieve-ipad:
     just _ios-retrieve-logs-internal "{{IOS_IPAD_DEVICE_ID}}" "iPad"
 
 # iOS testing interface - manual mode with fzf selection
@@ -617,6 +700,270 @@ test-ios-ipad target="":
     else
         just test-ios
     fi
+
+# iOS manual testing wrapper for iPhone device
+test-ios-iphone-manual config_name="":
+    #!/usr/bin/env bash
+    set -euo pipefail
+
+    echo "📱 Setting test device to iPhone: {{IOS_IPHONE_DEVICE_ID}}"
+    export IOS_TEST_DEVICE="{{IOS_IPHONE_DEVICE_ID}}"
+
+    if [ -n "{{config_name}}" ]; then
+        just test-ios-manual "{{config_name}}"
+    else
+        echo "❌ Please specify a configuration name"
+        echo "Usage: just test-ios-iphone-manual CONFIG_NAME"
+        exit 1
+    fi
+
+# iOS manual testing wrapper for iPad device
+test-ios-ipad-manual config_name="":
+    #!/usr/bin/env bash
+    set -euo pipefail
+
+    echo "📱 Setting test device to iPad: {{IOS_IPAD_DEVICE_ID}}"
+    export IOS_TEST_DEVICE="{{IOS_IPAD_DEVICE_ID}}"
+
+    if [ -n "{{config_name}}" ]; then
+        just test-ios-manual "{{config_name}}"
+    else
+        echo "❌ Please specify a configuration name"
+        echo "Usage: just test-ios-ipad-manual CONFIG_NAME"
+        exit 1
+    fi
+
+# iOS checksum baseline management - update baseline after legitimate changes
+test-ios-update config_name="":
+    #!/usr/bin/env bash
+    set -euo pipefail
+
+    CONFIG_NAME="{{config_name}}"
+
+    # If no config name provided, show interactive selector for checksum-enabled configs
+    if [[ -z "$CONFIG_NAME" ]]; then
+        echo "🔍 Selecting checksum test configuration..."
+
+        # Find all checksum-enabled configs
+        CHECKSUM_CONFIGS=""
+
+        if [[ -d "{{DEBUG_CONFIG_DIR}}" ]]; then
+            while IFS= read -r -d '' config_file; do
+                if [[ -f "$config_file" ]] && jq -e '.checksum_config' "$config_file" >/dev/null 2>&1; then
+                    basename=$(basename "$config_file" .json)
+                    state_type=$(jq -r '.checksum_config.state_type // "unknown"' "$config_file")
+                    expected_checksums_count=$(jq -r '.checksum_config.expected_checksums | length' "$config_file")
+                    description=$(jq -r '.description // "No description"' "$config_file")
+
+                    # Determine status
+                    if [[ "$expected_checksums_count" -eq 0 ]]; then
+                        status="❌ NO BASELINE SET"
+                    else
+                        status="✅ BASELINE SET"
+                    fi
+
+                    # Format for fzf
+                    CHECKSUM_CONFIGS="${CHECKSUM_CONFIGS}📸 ${basename} (${state_type}) ${status} - ${description}\n"
+                fi
+            done < <(find "{{DEBUG_CONFIG_DIR}}" -name "*.json" -type f -print0)
+        fi
+
+        if [[ -z "$CHECKSUM_CONFIGS" ]]; then
+            echo "❌ No checksum-enabled configurations found"
+            echo ""
+            echo "To enable checksum testing, add a checksum_config section to your configuration."
+            exit 1
+        fi
+
+        echo "📸 Available checksum configurations:"
+        echo "===================================="
+
+        # Use fzf for selection if available, otherwise show list
+        if command -v fzf >/dev/null 2>&1; then
+            SELECTED=$(echo -e "$CHECKSUM_CONFIGS" | fzf --prompt="Select checksum config to update: " --height=10 --layout=reverse)
+            if [[ -z "$SELECTED" ]]; then
+                echo "❌ No configuration selected"
+                exit 1
+            fi
+
+            # Extract config name from selection
+            CONFIG_NAME=$(echo "$SELECTED" | sed 's/📸 \([^ ]*\) .*/\1/')
+        else
+            echo -e "$CHECKSUM_CONFIGS"
+            echo ""
+            echo "❌ fzf not available for interactive selection"
+            echo "Please specify a configuration name: just test-ios-update CONFIG_NAME"
+            echo ""
+            echo "Available configurations:"
+            echo -e "$CHECKSUM_CONFIGS" | sed 's/📸 \([^ ]*\) .*/  • \1/'
+            exit 1
+        fi
+    fi
+
+    # Call shared update function
+    just _update-checksum-baseline "ios" "$CONFIG_NAME"
+
+# iOS checksum baseline management - reset baseline to start fresh
+test-ios-reset config_name="":
+    #!/usr/bin/env bash
+    set -euo pipefail
+
+    CONFIG_NAME="{{config_name}}"
+
+    # If no config name provided, show interactive selector for checksum-enabled configs
+    if [[ -z "$CONFIG_NAME" ]]; then
+        echo "🔍 Selecting checksum test configuration to reset..."
+
+        # Find all checksum-enabled configs
+        CHECKSUM_CONFIGS=""
+
+        if [[ -d "{{DEBUG_CONFIG_DIR}}" ]]; then
+            while IFS= read -r -d '' config_file; do
+                if [[ -f "$config_file" ]] && jq -e '.checksum_config' "$config_file" >/dev/null 2>&1; then
+                    basename=$(basename "$config_file" .json)
+                    state_type=$(jq -r '.checksum_config.state_type // "unknown"' "$config_file")
+                    expected_checksums_count=$(jq -r '.checksum_config.expected_checksums | length' "$config_file")
+                    description=$(jq -r '.description // "No description"' "$config_file")
+
+                    # Determine status
+                    if [[ "$expected_checksums_count" -eq 0 ]]; then
+                        status="❌ NO BASELINE"
+                    else
+                        status="✅ HAS BASELINE ($expected_checksums_count)"
+                    fi
+
+                    # Format for fzf
+                    CHECKSUM_CONFIGS="${CHECKSUM_CONFIGS}📸 ${basename} (${state_type}) ${status} - ${description}\n"
+                fi
+            done < <(find "{{DEBUG_CONFIG_DIR}}" -name "*.json" -type f -print0)
+        fi
+
+        if [[ -z "$CHECKSUM_CONFIGS" ]]; then
+            echo "❌ No checksum-enabled configurations found"
+            exit 1
+        fi
+
+        echo "📸 Available checksum configurations:"
+        echo "===================================="
+
+        # Use fzf for selection if available, otherwise show list
+        if command -v fzf >/dev/null 2>&1; then
+            SELECTED=$(echo -e "$CHECKSUM_CONFIGS" | fzf --prompt="Select checksum config to RESET: " --height=10 --layout=reverse)
+            if [[ -z "$SELECTED" ]]; then
+                echo "❌ No configuration selected"
+                exit 1
+            fi
+
+            # Extract config name from selection
+            CONFIG_NAME=$(echo "$SELECTED" | sed 's/📸 \([^ ]*\) .*/\1/')
+        else
+            echo -e "$CHECKSUM_CONFIGS"
+            echo ""
+            echo "❌ fzf not available for interactive selection"
+            echo "Please specify a configuration name: just test-ios-reset CONFIG_NAME"
+            exit 1
+        fi
+    fi
+
+    CONFIG_PATH="{{DEBUG_CONFIG_DIR}}/${CONFIG_NAME}.json"
+
+    if [[ ! -f "$CONFIG_PATH" ]]; then
+        echo "❌ Config not found: $CONFIG_PATH"
+        exit 1
+    fi
+
+    echo "🗑️  Resetting checksum baseline for: $CONFIG_NAME (iOS)"
+    echo "======================================================="
+
+    # Check if configuration has checksum support
+    if ! jq -e '.checksum_config' "$CONFIG_PATH" >/dev/null 2>&1; then
+        echo "❌ Configuration does not support checksum validation"
+        exit 1
+    fi
+
+    # Get current checksum configuration
+    STATE_TYPE=$(jq -r '.checksum_config.state_type // "unknown"' "$CONFIG_PATH")
+    CHECKSUM_COUNT=$(jq -r '.checksum_config.expected_checksums | length' "$CONFIG_PATH")
+
+    echo "📸 Current Checksum Configuration:"
+    echo "State Type: $STATE_TYPE"
+    echo "Current Checksums: $CHECKSUM_COUNT"
+
+    if [[ "$CHECKSUM_COUNT" -eq 0 ]]; then
+        echo ""
+        echo "ℹ️  No baseline currently set - nothing to reset"
+        exit 0
+    fi
+
+    # Confirm reset
+    echo ""
+    echo "⚠️  WARNING: This will remove the current baseline checksums ($CHECKSUM_COUNT)"
+    echo "The next test run will create a new baseline automatically"
+    echo ""
+    read -p "Are you sure you want to reset the baseline? (y/N): " -n 1 -r
+    echo ""
+
+    if [[ ! $REPLY =~ ^[Yy]$ ]]; then
+        echo "❌ Reset cancelled"
+        exit 1
+    fi
+
+    # Clear expected checksums
+    echo ""
+    echo "🗑️  Clearing baseline checksums..."
+    TEMP_FILE=$(mktemp)
+    jq '.checksum_config.expected_checksums = []' "$CONFIG_PATH" > "$TEMP_FILE"
+    mv "$TEMP_FILE" "$CONFIG_PATH"
+
+    echo "✅ Baseline reset completed successfully!"
+    echo "========================================"
+    echo "Configuration: $CONFIG_NAME"
+    echo "State Type: $STATE_TYPE"
+    echo "Previous Checksums: $CHECKSUM_COUNT"
+    echo "New Checksums: (none - will be created on next run)"
+    echo ""
+    echo "The next test run will automatically create a new baseline."
+    echo "Use 'just test-ios-target $CONFIG_NAME' to generate the new baseline."
+
+# iOS manual testing mode - deploy config and launch app for manual inspection
+test-ios-manual config_name:
+    #!/usr/bin/env bash
+    set -euo pipefail
+
+    CONFIG_NAME="{{config_name}}"
+    CONFIG_PATH="{{DEBUG_CONFIG_DIR}}/${CONFIG_NAME}.json"
+
+    echo "🎯 iOS Testing (Manual Mode - stays open): $CONFIG_NAME"
+    echo "======================================================"
+
+    # Validate configuration exists
+    just _validate-config-exists "$CONFIG_NAME"
+
+    # Use IOS_TEST_DEVICE environment variable (set by test-ios-iphone/ipad commands)
+    if [[ -z "${IOS_TEST_DEVICE:-}" ]]; then
+        echo "❌ IOS_TEST_DEVICE not set. Use 'just test-ios-iphone-manual CONFIG' or 'just test-ios-ipad-manual CONFIG'"
+        exit 1
+    fi
+
+    # Create temporary config with auto_quit=false for manual mode
+    echo "🍎 Creating temporary config with auto_quit=false for manual mode..."
+    TEMP_CONFIG_NAME="${CONFIG_NAME}_ios_manual"
+    TEMP_CONFIG_PATH="{{DEBUG_CONFIG_DIR}}/${TEMP_CONFIG_NAME}.json"
+    just _inject-auto-quit-metadata "$CONFIG_PATH" "$TEMP_CONFIG_PATH" "false"
+
+    # Deploy config to iOS device
+    echo "📱 Deploying configuration to iOS device: $IOS_TEST_DEVICE"
+    just _deploy-config-ios "$TEMP_CONFIG_PATH"
+    rm -f "$TEMP_CONFIG_PATH"
+
+    # Launch the app (user needs to manually tap the app icon)
+    echo ""
+    echo "✅ iOS test config deployed in manual mode"
+    echo "📱 Device: $IOS_TEST_DEVICE"
+    echo "💡 Tap the GameTwo app icon to launch with test config"
+    echo "🔍 App will stay running for manual inspection"
+    echo ""
+    echo "To stop: Press Home/Swipe up to close the app"
 
 # iOS deployment function - integrates with existing ios-deploy-config recipe
 _deploy-config-ios config_path:
