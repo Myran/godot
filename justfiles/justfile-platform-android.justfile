@@ -101,7 +101,7 @@ setup-env:
         echo "2. The keystore path has been set to:"
         echo "   ${CURRENT_DIR}/gametwo-release.keystore"
         echo ""
-        echo "3. Then run: just export-apk-release"
+        echo "3. Then run: just export-android-apk-release"
         echo ""
     else
         echo "✅ .env file already exists"
@@ -357,7 +357,8 @@ setup-android:
     echo "✅ Android development environment validated"
 
 # Export Android AAB files (Google Play Store format)
-export-aab-android force="no": _validate-godot-editor (_ensure-directory-exists "export/android") pre-build
+# Renamed from export-aab-android for platform naming consistency (Task-378)
+export-android-aab force="no": _validate-godot-editor (_ensure-directory-exists "export/android") pre-build
     #!/usr/bin/env bash
     set -euo pipefail
     echo "📦 Exporting Android AAB files (debug + release)..."
@@ -370,7 +371,7 @@ export-aab-android force="no": _validate-godot-editor (_ensure-directory-exists 
         echo "✅ Android AAB files already exported:"
         echo "   📁 Debug: $DEBUG_AAB"
         echo "   📁 Release: $RELEASE_AAB"
-        echo "   Use 'just export-aab-android force=yes' to re-export"
+        echo "   Use 'just export-android-aab force=yes' to re-export"
         exit 0
     fi
 
@@ -414,12 +415,13 @@ export-aab-android force="no": _validate-godot-editor (_ensure-directory-exists 
 # Export all Android formats (APK + AAB)
 export-all-android force="no":
     @echo "📦 Exporting all Android formats (APK + AAB)..."
-    just export-apk-android {{force}}
-    just export-aab-android {{force}}
+    just export-android-apk {{force}}
+    just export-android-aab {{force}}
     @echo "✅ All Android exports complete"
 
 # Export Android APK files
-export-apk-android force="no": _validate-godot-editor (_ensure-directory-exists "export/android")
+# Renamed from export-apk-android for platform naming consistency (Task-378)
+export-android-apk force="no": _validate-godot-editor (_ensure-directory-exists "export/android")
     #!/usr/bin/env bash
     set -euo pipefail
     echo "📦 Exporting Android APK files (debug + release)..."
@@ -432,7 +434,7 @@ export-apk-android force="no": _validate-godot-editor (_ensure-directory-exists 
         echo "✅ Android APK files already exported:"
         echo "   📁 Debug: $DEBUG_APK"
         echo "   📁 Release: $RELEASE_APK"
-        echo "   Use 'just export-apk-android force=yes' to re-export"
+        echo "   Use 'just export-android-apk force=yes' to re-export"
         exit 0
     fi
 
@@ -467,7 +469,8 @@ export-apk-android force="no": _validate-godot-editor (_ensure-directory-exists 
     echo "📁 Release: export/android/{{GAME_NAME}}.apk"
 
 # Export Android APK - Debug only
-export-apk-debug: _validate-godot-editor (_ensure-directory-exists "export/android")
+# Renamed from export-apk-debug for platform naming consistency (Task-378)
+export-android-apk-debug: _validate-godot-editor (_ensure-directory-exists "export/android")
     #!/usr/bin/env bash
     set -euo pipefail
     echo "📦 Exporting Android APK (debug only)..."
@@ -499,7 +502,8 @@ export-apk-debug: _validate-godot-editor (_ensure-directory-exists "export/andro
     echo "📁 Debug: export/android/{{GAME_NAME}}_debug.apk"
 
 # Export Android APK - Release only
-export-apk-release: _validate-godot-editor (_ensure-directory-exists "export/android")
+# Renamed from export-apk-release for platform naming consistency (Task-378)
+export-android-apk-release: _validate-godot-editor (_ensure-directory-exists "export/android")
     #!/usr/bin/env bash
     set -euo pipefail
     echo "📦 Exporting Android APK (release only)..."
@@ -555,15 +559,18 @@ launch-android: _validate-android-workflow
     echo "✅ Android app launched"
 
 # Export and install debug APK (complete workflow)
-export-install-debug: export-apk-debug install-apk-debug
+# Updated dependency to use new platform naming convention (Task-378)
+export-install-debug: export-android-apk-debug install-apk-debug
     @echo "🔄 Export and install debug workflow completed"
 
 # Export and install release APK (complete workflow)
-export-install-release: export-apk-release install-apk-release
+# Updated dependency to use new platform naming convention (Task-378)
+export-install-release: export-android-apk-release install-apk-release
     @echo "🔄 Export and install release workflow completed"
 
 # Export, install, and launch debug APK
-export-install-launch-debug: export-apk-debug install-apk-debug restart-android-app
+# Updated dependency to use new platform naming convention (Task-378)
+export-install-launch-debug: export-android-apk-debug install-apk-debug restart-android-app
     @echo "🔄 Export, install, and launch debug workflow completed"
 
 # Restart Android app (kill and relaunch)

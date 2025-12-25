@@ -11,6 +11,12 @@ templates-macos force="no":
     just macos-build-template {{force}}
     just package-macos-template {{force}}
 
+# Complete macOS build with templates and all dependencies (consistency with build-all-android/windows)
+build-all-macos force="no":
+    @echo "Building all macOS components..."
+    @just templates-macos {{force}}
+    @echo "✅ macOS build complete"
+
 # Build macOS export templates - ARM64 only (faster, smaller)
 templates-macos-arm64 force="no":
     just macos-build-template-arm64 {{force}}

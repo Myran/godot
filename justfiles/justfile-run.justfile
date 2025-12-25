@@ -82,7 +82,7 @@ _android-install-apk APK_TYPE="release": _validate-android-workflow
     # Validate APK file exists
     if [ ! -f "$APK_FILE" ]; then
         echo "❌ APK file not found: $APK_FILE"
-        echo "💡 Build APK first: just export-apk-android"
+        echo "💡 Build APK first: just export-android-apk"
         exit 1
     fi
     
@@ -113,7 +113,8 @@ _ios-hotreload DEVICE_TYPE BUILD_TYPE="debug":
 # ================================
 
 # LEVEL 1: Launch in Godot editor (1-2 sec, no build needed)
-run-desktop: _validate-godot-editor
+# Renamed from run-desktop to run-editor for semantic clarity (Task-329)
+run-editor: _validate-godot-editor
     #!/usr/bin/env bash
     set -euo pipefail
     
@@ -164,7 +165,8 @@ run-desktop: _validate-godot-editor
     wait $GODOT_PID
 
 # LEVEL 1: Launch in Godot editor with debug (1-2 sec, no build needed)
-run-desktop-debug VERBOSE="":
+# Renamed from run-desktop-debug to run-editor-debug for semantic clarity (Task-329)
+run-editor-debug VERBOSE="":
     #!/usr/bin/env bash
     set -euo pipefail
     
