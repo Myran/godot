@@ -31,6 +31,7 @@ This document ensures correct recipe selection during development, testing, and 
 ### Deploy (Development - export → install → run)
 - **Android**: `just deploy-android` (export + install + run)
 - **iOS**: `just deploy-ios` (default: iPad), `just deploy-ios-iphone`, `just deploy-ios-ipad`
+- **macOS**: `just deploy-macos` (export + run)
 - **Windows**: `just deploy-windows` (physical machine)
 - **Editor**: `just run-editor-debug [verbose]` (Task-329)
 

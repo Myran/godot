@@ -802,7 +802,26 @@ config-clear-android:
         echo "⚠️  No external config found on device (or removal failed)"
     fi
 
-# Clear Android test cache to eliminate stale test state
+# Clear debug_startup_actions.json from Android device
+# Lightweight version that only removes test config, not all app data
+clear-test-android:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    echo "🧹 Clearing Android test configuration..."
+
+    # Check if device is connected
+    if ! adb devices | grep -q "{{ANDROID_DEVICE_ID}}.*device"; then
+        echo "❌ Android device not connected: {{ANDROID_DEVICE_ID}}"
+        exit 1
+    fi
+
+    # Clear debug_startup_actions.json from device storage
+    adb -s {{ANDROID_DEVICE_ID}} shell "rm -f /sdcard/Android/data/{{ANDROID_PACKAGE_NAME}}/files/debug_startup_actions.json" 2>/dev/null || true
+
+    echo "✅ Android test config cleared"
+    echo "💡 deploy-android will now start without debug actions"
+
+# Clear Android test cache to eliminate stale test state (comprehensive)
 clear-android-test-cache:
     #!/usr/bin/env bash
     set -euo pipefail

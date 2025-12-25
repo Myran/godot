@@ -797,6 +797,34 @@ test-ios-ipad-manual config_name="":
         exit 1
     fi
 
+# Clear debug_startup_actions.json from iOS app bundle (local export)
+# Note: On-device clearing requires app reinstall as sandbox is protected
+clear-test-ios:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    echo "🧹 Clearing iOS test configuration..."
+
+    # Clear local export file
+    LOCAL_CONFIG="export/ios/debug_startup_actions.json"
+    if [ -f "$LOCAL_CONFIG" ]; then
+        rm -f "$LOCAL_CONFIG"
+        echo "✅ Removed: $LOCAL_CONFIG"
+    fi
+
+    # Clear from app bundle if it exists
+    BUNDLE_CONFIG="export/ios/build/products/Debug-iphoneos/gametwo.app/debug_startup_actions.json"
+    if [ -f "$BUNDLE_CONFIG" ]; then
+        rm -f "$BUNDLE_CONFIG"
+        echo "✅ Removed: $BUNDLE_CONFIG"
+    fi
+
+    echo "✅ iOS test config cleared"
+    echo "💡 deploy-ios will now start without debug actions"
+    echo "📝 Note: If app is already installed with config, reinstall to clear"
+
+# Clear iOS test cache (alias for consistency with other platforms)
+clear-ios-test-cache: clear-test-ios
+
 # iOS checksum baseline management - update baseline after legitimate changes
 test-ios-update config_name="":
     #!/usr/bin/env bash

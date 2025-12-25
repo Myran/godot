@@ -522,6 +522,22 @@ run-macos-release:
     "$APP_PATH/Contents/MacOS/{{GAME_NAME}}"
 
 # ================================
+# macOS DEPLOY (Development)
+# ================================
+
+# Deploy to macOS (complete workflow: export → run)
+# This is the primary command for macOS development iteration
+deploy-macos: export-macos-debug
+    #!/usr/bin/env bash
+    set -euo pipefail
+
+    APP_PATH="export/macos/{{GAME_NAME}}_debug.app"
+
+    echo "🍎 Launching macOS debug build..."
+    open "$APP_PATH"
+    echo "💻 Deploy to macOS complete"
+
+# ================================
 # macOS TEST CACHE MANAGEMENT
 # ================================
 
@@ -575,7 +591,10 @@ help-macos:
     echo "  just export-macos-all              # Export both debug and release"
     echo "  just validate-macos-exports        # Validate export setup"
     echo ""
-    echo "Run Commands:"
+    echo "Deploy (Development - export → run):"
+    echo "  just deploy-macos                  # Export + run debug build"
+    echo ""
+    echo "Run Commands (run only, no export):"
     echo "  just run-macos                     # Run debug build (with console output)"
     echo "  just run-macos-background          # Run debug build (no console, background)"
     echo "  just run-macos-release             # Run release build (with console output)"

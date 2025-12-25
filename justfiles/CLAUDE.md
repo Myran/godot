@@ -95,6 +95,7 @@ just deploy-android                        # Deploy to Android device
 just deploy-ios                            # Deploy to iOS (default: iPad)
 just deploy-ios-iphone                     # Deploy to iPhone
 just deploy-ios-ipad                       # Deploy to iPad
+just deploy-macos                          # Deploy to macOS (export + run)
 just deploy-windows                        # Deploy to Windows physical machine
 
 # Ship (Production - App Store)

@@ -270,7 +270,35 @@ install-ios-ipad-debug: (_ios-launch-app "ipad" "debug")
 # Install and launch release build on iPad
 install-ios-ipad-release: (_ios-launch-app "ipad" "release")
 
+# ================================
+# DESKTOP/EDITOR TEST CACHE
+# ================================
 
+# Clear debug_startup_actions.json from desktop/editor
+# This removes stale test configs that would auto-run on startup
+clear-test-desktop:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    echo "🧹 Clearing desktop/editor test configuration..."
+
+    USER_DIR="${HOME}/Library/Application Support/Godot/app_userdata/gametwo"
+    CONFIG_FILE="${USER_DIR}/debug_startup_actions.json"
+
+    if [ -f "$CONFIG_FILE" ]; then
+        rm -f "$CONFIG_FILE"
+        echo "✅ Removed: debug_startup_actions.json"
+    else
+        echo "ℹ️  No test config found - already clean"
+    fi
+
+    echo "✅ Desktop test config cleared"
+    echo "💡 run-editor will now start without debug actions"
+
+# Clear desktop test cache (alias for consistency with other platforms)
+clear-desktop-test-cache: clear-test-desktop
+
+# Alias for editor users
+clear-test-editor: clear-test-desktop
 
 # LEVEL 1: Launch existing app in debug mode (1-2 sec, no install/build)  
 run-android:

@@ -220,6 +220,7 @@ just logs-errors TEST_ID   # Debug efficiently
 just deploy-android        # Deploy to Android device
 just deploy-ios            # Deploy to iOS (default: iPad)
 just deploy-ios-iphone     # Deploy to iPhone
+just deploy-macos          # Deploy to macOS (export + run)
 just deploy-windows        # Deploy to Windows physical
 
 # Ship = Production (App Store)

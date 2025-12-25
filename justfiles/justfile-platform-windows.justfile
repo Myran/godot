@@ -422,6 +422,23 @@ clear-test-windows:
 # Clear Windows test cache (alias for consistency with other platforms)
 clear-windows-test-cache: clear-test-windows
 
+# Clear debug_startup_actions.json from Windows physical machine
+clear-test-windows-physical:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    echo "🧹 Clearing Windows physical machine test configuration..."
+
+    CONFIG_FILE='C:\Users\{{WIN_PHYSICAL_USER}}\AppData\Roaming\Godot\app_userdata\gametwo\debug_startup_actions.json'
+
+    # Check if config exists and remove it
+    ssh {{WIN_PHYSICAL_USER}}@{{WIN_PHYSICAL_HOST}} "if exist \"${CONFIG_FILE}\" (del \"${CONFIG_FILE}\" && echo Removed: debug_startup_actions.json) else (echo No config found - already clean)"
+
+    echo "✅ Windows physical test config cleared"
+    echo "💡 deploy-windows will now start without debug actions"
+
+# Clear Windows physical test cache (alias for consistency)
+clear-windows-physical-test-cache: clear-test-windows-physical
+
 # ================================
 # WINDOWS VM HELPERS
 # ================================
