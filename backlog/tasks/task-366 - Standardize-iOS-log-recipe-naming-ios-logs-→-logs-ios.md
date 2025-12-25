@@ -1,10 +1,10 @@
 ---
 id: task-366
 title: Standardize iOS log recipe naming (ios-*-logs-* → logs-ios-*)
-status: To Do
+status: Done
 assignee: []
 created_date: '2025-12-23 22:59'
-updated_date: '2025-12-23 23:43'
+updated_date: '2025-12-25 17:06'
 labels:
   - naming
   - ios

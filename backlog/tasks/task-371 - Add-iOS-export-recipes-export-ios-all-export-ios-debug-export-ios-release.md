@@ -1,10 +1,10 @@
 ---
 id: task-371
 title: 'Add iOS export recipes (export-ios-all, export-ios-debug, export-ios-release)'
-status: To Do
+status: Done
 assignee: []
 created_date: '2025-12-23 23:00'
-updated_date: '2025-12-23 23:42'
+updated_date: '2025-12-25 17:06'
 labels:
   - export
   - ios

@@ -1,10 +1,10 @@
 ---
 id: task-367
 title: Remove deprecated android-logs-* recipes after migration
-status: To Do
+status: Done
 assignee: []
 created_date: '2025-12-23 22:59'
-updated_date: '2025-12-23 23:43'
+updated_date: '2025-12-25 17:06'
 labels:
   - cleanup
   - android
