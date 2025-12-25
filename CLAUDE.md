@@ -65,14 +65,18 @@ GameTwo mobile game with custom Godot 4.3 engine, Firebase integration, and debu
 ## 🎯 Checksum Baseline Management
 
 **Essential Commands:**
-- `just test-android-update CONFIG_NAME` - Update checksum baseline (after legitimate changes)
-- `just test-desktop-update CONFIG_NAME` - Update desktop checksum baseline
+- `just test-android-update CONFIG_NAME` - Update Android checksum baseline
+- `just test-editor-update CONFIG_NAME` - Update Editor/Desktop checksum baseline
+- `just test-ios-update CONFIG_NAME` - Update iOS checksum baseline
 - `just test-macos-update CONFIG_NAME` - Update macOS checksum baseline
-- `just test-windows-update CONFIG_NAME` - Update Windows checksum baseline
-- `just test-android-reset CONFIG_NAME` - Reset checksum baseline (start fresh)
-- `just test-desktop-reset CONFIG_NAME` - Reset desktop checksum baseline
-- `just test-macos-reset CONFIG_NAME` - Reset macOS checksum baseline
-- `just test-windows-reset CONFIG_NAME` - Reset Windows checksum baseline
+- `just test-windows-update CONFIG_NAME` - Update Windows VM checksum baseline
+- `just test-windows-physical-update CONFIG_NAME` - Update Windows Physical checksum baseline
+- `just test-android-reset CONFIG_NAME` - Reset Android baseline (start fresh)
+- `just test-editor-reset CONFIG_NAME` - Reset Editor/Desktop baseline
+- `just test-ios-reset CONFIG_NAME` - Reset iOS baseline
+- `just test-macos-reset CONFIG_NAME` - Reset macOS baseline
+- `just test-windows-reset CONFIG_NAME` - Reset Windows VM baseline
+- `just test-windows-physical-reset CONFIG_NAME` - Reset Windows Physical baseline
 
 **When to Update Baselines:**
 - ✅ **Legitimate system changes** (new features, balance updates)
@@ -94,10 +98,12 @@ GameTwo mobile game with custom Godot 4.3 engine, Firebase integration, and debu
 
 **Interactive Usage:**
 ```bash
-just test-android-update    # Shows menu of available configs
-just test-desktop-update    # Shows menu of available configs
-just test-macos-update      # Shows menu of available configs
-just test-windows-update    # Shows menu of available configs
+just test-android-update          # Shows menu of available configs
+just test-editor-update           # Shows menu of available configs
+just test-ios-update              # Shows menu of available configs
+just test-macos-update            # Shows menu of available configs
+just test-windows-update          # Shows menu of available configs
+just test-windows-physical-update # Shows menu of available configs
 ```
 
 **🚨 CRITICAL: Use CLI Commands, Not Direct File Editing**
@@ -323,13 +329,19 @@ just log-run-silent test-android CONFIG   # Save complete output
 
 ## 🪟 Windows Development
 
-**Windows uses a two-machine architecture:**
-- **Windows VM (192.168.50.92)** - Template building with native MSVC
-- **Windows Physical (192.168.50.80)** - GUI testing with Wake-on-LAN
+**Windows uses a two-machine architecture:** (Task-368)
+- **Windows VM (192.168.50.92)** - `win-vm-*` recipes - Template building with native MSVC
+- **Windows Physical (192.168.50.80)** - `win-physical-*` / `test-windows-physical-*` - GUI testing
+
+**Recipe Naming Convention:**
+- `test-windows-*` → Tests on VM (headless capable)
+- `test-windows-physical-*` → Tests on physical machine (GUI mode)
+- `win-vm-*` → VM operations (building)
+- `win-physical-*` → Physical machine operations (deploy, wake, status)
 
 **Essential Commands:**
 ```bash
-# Build & Export
+# Build & Export (VM-based)
 just build-all-windows           # Complete build: templates + sentry + package
 just export-windows-debug        # Export debug build
 just export-windows-release      # Export release build

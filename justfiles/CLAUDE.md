@@ -9,12 +9,18 @@ Complete reference for GameTwo justfile commands, patterns, and workflows.
 ## 🎯 Checksum Baseline Management
 
 **Essential Commands for Baseline Updates:**
-- `just test-android-update CONFIG_NAME` - Update checksum baseline (after legitimate changes)
-- `just test-desktop-update CONFIG_NAME` - Update desktop checksum baseline
+- `just test-android-update CONFIG_NAME` - Update Android checksum baseline
+- `just test-editor-update CONFIG_NAME` - Update Editor/Desktop checksum baseline
+- `just test-ios-update CONFIG_NAME` - Update iOS checksum baseline
 - `just test-macos-update CONFIG_NAME` - Update macOS checksum baseline
-- `just test-android-reset CONFIG_NAME` - Reset checksum baseline (start fresh)
-- `just test-desktop-reset CONFIG_NAME` - Reset desktop checksum baseline
-- `just test-macos-reset CONFIG_NAME` - Reset macOS checksum baseline
+- `just test-windows-update CONFIG_NAME` - Update Windows VM checksum baseline
+- `just test-windows-physical-update CONFIG_NAME` - Update Windows Physical checksum baseline
+- `just test-android-reset CONFIG_NAME` - Reset Android baseline (start fresh)
+- `just test-editor-reset CONFIG_NAME` - Reset Editor/Desktop baseline
+- `just test-ios-reset CONFIG_NAME` - Reset iOS baseline
+- `just test-macos-reset CONFIG_NAME` - Reset macOS baseline
+- `just test-windows-reset CONFIG_NAME` - Reset Windows VM baseline
+- `just test-windows-physical-reset CONFIG_NAME` - Reset Windows Physical baseline
 
 **When to Update vs Reset:**
 - ✅ **Update** (`test-*-update`): Legitimate system/card changes, new features, balance updates, engine optimizations
@@ -38,9 +44,12 @@ just test-android-update draft-10              # After draft system modification
 
 **Interactive Usage:**
 ```bash
-just test-android-update    # Shows menu of available configs
-just test-desktop-update    # Shows menu of available configs
-just test-macos-update      # Shows menu of available configs
+just test-android-update          # Shows menu of available configs
+just test-editor-update           # Shows menu of available configs
+just test-ios-update              # Shows menu of available configs
+just test-macos-update            # Shows menu of available configs
+just test-windows-update          # Shows menu of available configs
+just test-windows-physical-update # Shows menu of available configs
 ```
 
 **Workflow Integration:**
@@ -260,7 +269,7 @@ just log-run-silent test-android-target CONFIG  # Automated testing
 
 **Debug Actions:**
 - ✅ Use `just test-*` commands (enables debug coordinator)
-- ❌ Never use `just run-desktop` (skips state capture)
+- ❌ Never use `just run-editor` (skips state capture) (Task-329)
 
 **Android Development:**
 - **MANDATORY**: `just fastbuild-android` after ANY code changes before testing
@@ -286,9 +295,9 @@ just log-run-silent test-android-target CONFIG  # Automated testing
 
 ## 🔧 Advanced Features
 
-**Desktop debugging:**
-- `just run-desktop-debug` - Normal debug
-- `just run-desktop-debug verbose` - ObjectDB leak detection
+**Editor debugging:**
+- `just run-editor-debug` - Normal debug (Task-329)
+- `just run-editor-debug verbose` - ObjectDB leak detection (Task-329)
 
 **Command help:**
 - `just help` - Interactive browser
