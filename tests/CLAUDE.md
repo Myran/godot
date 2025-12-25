@@ -129,7 +129,7 @@ tests/
 
 #### **Step 1: Play & Record**
 ```bash
-just run-desktop
+just run-editor
 # Play the game
 # Session ID shown in logs: SESSION_12345
 ```
@@ -327,7 +327,7 @@ just test-android-target capture-battle-state
 just capture-gamestate-android "battle-bug"
 
 # 2. Iterate rapidly on desktop (instant iteration)
-just run-desktop
+just run-editor
 # Load state: Debug menu → Saved States → battle-bug
 # Test fix
 # Repeat instantly (no build/deploy)
@@ -551,7 +551,7 @@ just test-macos-target CONFIG
 
 # ❌ FORBIDDEN - Don't use run commands for test actions
 just run-android    # Debug actions won't execute
-just run-desktop    # Skips state capture system
+just run-editor    # Skips state capture system
 just run-macos      # Debug actions won't execute
 ```
 

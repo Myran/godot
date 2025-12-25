@@ -31,7 +31,7 @@ This document ensures correct recipe selection during development, testing, and 
 ### Deploy & Run
 - **Android deploy**: `just fastbuild-android` (builds + installs + launches)
 - **iOS deploy**: `just build-install-ios` (2-5 min)
-- **Desktop run**: `just run-desktop-debug [verbose]`
+- **Editor run**: `just run-editor-debug [verbose]` (Task-329)
 
 ---
 
@@ -46,9 +46,9 @@ This document ensures correct recipe selection during development, testing, and 
 - **Critical Variables**:
   - `GAME_NAME`, `PROJECT_PATH`, `GODOT_EXECUTABLE`
   - `ANDROID_DEVICE_ID`, `IOS_TEST_DEVICE`, `IOS_DEPLOY_DEVICE`
-  - `DEBUG_CONFIG_DIR`, `TEST_LIST_DIR`, `DESKTOP_LOG_DIR`
+  - `DEBUG_CONFIG_DIR`, `TEST_LIST_DIR`, `EDITOR_LOG_DIR`
   - `INTER_CONFIG_DELAY` (Firebase resource drainage)
-- **Key Functions**: `_get-desktop-log-file`, device utilities
+- **Key Functions**: `_get-editor-log-file`, device utilities
 
 ---
 
@@ -81,7 +81,7 @@ This document ensures correct recipe selection during development, testing, and 
   - `fastbuild-android` ⚡ **MANDATORY after code changes**
   - `build-all-android` - Full Android pipeline (3-25 min)
   - `quick-build-android` - Skip template check (2-3 min)
-  - `export-apk-android`, `export-aab-android`
+  - `export-android-apk`, `export-android-aab` (Task-378)
   - `install-apk-android`, `launch-android`
   - `cpp-dev` ⭐ **ONE-COMMAND C++ workflow**
 - **Build Pathways**:
@@ -100,6 +100,9 @@ This document ensures correct recipe selection during development, testing, and 
 
 #### `justfile-platform-windows.justfile`
 - **Purpose**: Windows-specific build, VM building, and physical machine testing
+- **Two-Machine Architecture** (Task-368):
+  - **VM (192.168.50.92)**: MSVC builds, template compilation (BUILDING)
+  - **Physical (192.168.50.80)**: GUI testing, no headless mode (TESTING)
 - **Critical Recipes (VM - Building)**:
   - `win-vm-verify` - Verify VM connectivity
   - `win-vm-template-debug` - Build debug template on VM
@@ -114,13 +117,13 @@ This document ensures correct recipe selection during development, testing, and 
   - `logs-windows-physical TEST_ID` - Retrieve logs
   - `logs-windows-physical-errors TEST_ID` - Error analysis
 - **Key Features**:
-  - **VM (192.168.50.92)**: MSVC builds, template compilation
-  - **Physical (192.168.50.80)**: GUI testing, no headless mode
   - Auto Wake-on-LAN before deploy/test operations
   - Python-based WoL (no external dependencies)
-- **Naming Convention**:
+- **Naming Convention** (Task-368):
   - `win-vm-*` → Windows VM for BUILDING
   - `win-physical-*` → Windows physical for TESTING
+  - `test-windows-*` → Tests on VM (headless capable)
+  - `test-windows-physical-*` → Tests on physical machine (GUI mode)
 
 #### `justfile-platform-macos.justfile`
 - **Purpose**: macOS-specific build, deployment, and testing
@@ -345,8 +348,8 @@ This document ensures correct recipe selection during development, testing, and 
 #### `justfile-run.justfile`
 - **Purpose**: Run game on platforms
 - **Critical Recipes**:
-  - `run-desktop` - Desktop editor mode
-  - `run-desktop-debug [verbose]` - Debug mode with leak detection
+  - `run-editor` - Godot editor mode (Task-329)
+  - `run-editor-debug [verbose]` - Debug mode with leak detection (Task-329)
   - `run-android` - Launch Android app
   - `restart-android-app` - Restart Android app
 - **Safety**: 🚨 Use `test-*` commands for debug actions, NOT `run-*`

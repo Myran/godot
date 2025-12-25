@@ -563,15 +563,15 @@ just restart-android-app                                    # Apply changes
 ### Common Use Cases
 ```bash
 # Complex bug reproduction
-just run-desktop → reproduce bug → save state → capture-gamestate "bug_scenario" 
+just run-editor → reproduce bug → save state → capture-gamestate "bug_scenario" 
 # → Load state repeatedly for testing different fixes
 
 # Feature testing from specific conditions
-just run-desktop → set up scenario → save state → capture-gamestate "feature_test"
+just run-editor → set up scenario → save state → capture-gamestate "feature_test"
 # → Load state → test different feature variations
 
 # Battle testing from exact lineup
-just run-desktop → configure lineup → save state → capture-gamestate "battle_setup"
+just run-editor → configure lineup → save state → capture-gamestate "battle_setup"
 # → Load state → test battle scenarios with deterministic RNG
 ```
 

@@ -26,7 +26,7 @@ This directory contains all game logic, UI, Firebase integration, and Godot-spec
 - `just ci-validate` - CI validation (MANDATORY before commits)
 - `just fastbuild-android` - Deploy to Android (REQUIRED after changes)
 - `just test-android-target CONFIG` - Automated Android testing
-- `just run-desktop-debug [verbose]` - Desktop debugging
+- `just run-editor-debug [verbose]` - Desktop debugging
 
 ---
 
@@ -559,7 +559,7 @@ just show-warnings         # GDScript warnings
 ```bash
 just test-desktop-target CONFIG   # Desktop testing
 just test-android-target CONFIG   # Android testing
-just run-desktop-debug [verbose]  # Debug mode with leak detection
+just run-editor-debug [verbose]  # Debug mode with leak detection
 ```
 
 **See Also:**
