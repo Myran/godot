@@ -158,15 +158,15 @@ validate-android-env:
     echo "  🔑 Release alias: ${GODOT_ANDROID_KEYSTORE_RELEASE_USER}"
 
 # Fast Android development iteration - optimized workflow alias
-fastbuild: export-install-launch-debug
+fastbuild: export-install-android-launch-debug
     @echo "⚡ Fast Android build (2x faster than old implementation)..."
     @echo "✅ Complete Sentry integration enabled"
 
 # Alias for backward compatibility
-fastbuild-android: export-install-launch-debug
+fastbuild-android: export-install-android-launch-debug
 
-# Note: Original fastbuild-android removed - alias to export-install-launch-debug
-# Why: export-install-launch-debug is 2x faster (36s vs 75s) and has complete Sentry integration
+# Note: Original fastbuild-android removed - alias to export-install-android-launch-debug
+# Why: export-install-android-launch-debug is 2x faster (36s vs 75s) and has complete Sentry integration
 
 # Android template building
 build-android-templates force="no":
@@ -559,19 +559,16 @@ launch-android: _validate-android-workflow
     echo "✅ Android app launched"
 
 # Export and install debug APK (complete workflow)
-# Updated dependency to use new platform naming convention (Task-378)
-export-install-debug: export-android-apk-debug install-apk-debug
-    @echo "🔄 Export and install debug workflow completed"
+export-install-android-debug: export-android-apk-debug install-apk-debug
+    @echo "🔄 Android: Export and install debug workflow completed"
 
 # Export and install release APK (complete workflow)
-# Updated dependency to use new platform naming convention (Task-378)
-export-install-release: export-android-apk-release install-apk-release
-    @echo "🔄 Export and install release workflow completed"
+export-install-android-release: export-android-apk-release install-apk-release
+    @echo "🔄 Android: Export and install release workflow completed"
 
 # Export, install, and launch debug APK
-# Updated dependency to use new platform naming convention (Task-378)
-export-install-launch-debug: export-android-apk-debug install-apk-debug restart-android-app
-    @echo "🔄 Export, install, and launch debug workflow completed"
+export-install-android-launch-debug: export-android-apk-debug install-apk-debug restart-android-app
+    @echo "🔄 Android: Export, install, and launch debug workflow completed"
 
 # Restart Android app (kill and relaunch)
 restart-android-app: _validate-android-workflow
@@ -581,8 +578,8 @@ restart-android-app: _validate-android-workflow
     adb -s {{ANDROID_DEVICE_ID}} shell am start -n {{ANDROID_PACKAGE_NAME}}/com.godot.game.GodotApp
     echo "✅ Android app restarted"
 
-# Note: _gradle-build-install-android removed - was only used by fastbuild-android
-# Why: fastbuild-android removed - use 'export-install-launch-debug' instead for better performance
+# Note: _gradle-build-install-android removed - was only used by old fastbuild-android
+# Why: fastbuild-android now uses 'export-install-android-launch-debug' for better performance
 
 
 # Internal helper: Push any file to Android app private directory

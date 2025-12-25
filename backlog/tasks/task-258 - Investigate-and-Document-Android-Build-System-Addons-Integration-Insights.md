@@ -186,8 +186,8 @@ just export-apk-debug          # Debug APK only
 just export-apk-release         # Release APK only
 just install-apk-debug          # Install debug APK
 just install-apk-release         # Install release APK
-just export-install-debug        # Export + install debug
-just export-install-launch-debug # Export + install + launch
+just export-install-android-debug        # Export + install debug
+just export-install-android-launch-debug # Export + install + launch
 ```
 
 ### 4. **Performance Comparison Results - SUCCESS** ✅
@@ -196,7 +196,7 @@ just export-install-launch-debug # Export + install + launch
 | Approach | Time | Sentry Status | Recommendation |
 |----------|------|---------------|----------------|
 | fastbuild-android | ~1m 15s | ❌ 3 log errors | **AVOID** |
-| export-install-launch-debug | ~36s | ✅ Perfect | **USE** |
+| export-install-android-launch-debug | ~36s | ✅ Perfect | **USE** |
 
 **Surprising Discovery:** Export approach is **2x faster** and **100% reliable**!
 
@@ -213,7 +213,7 @@ just export-install-launch-debug # Export + install + launch
 
 ## 🎯 **FINAL RECOMMENDATION**
 
-**Use `just export-install-launch-debug` for daily Android development:**
+**Use `just export-install-android-launch-debug` for daily Android development:**
 
 - ⚡ **2x faster** (36s vs 75s)
 - ✅ **100% reliable** Sentry integration

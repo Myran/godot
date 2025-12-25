@@ -209,7 +209,7 @@ just quick-build-android                                 [2-3 min]
 ```
 just fastbuild-android                                   [30-60 sec]
     │
-    │ (Alias to: just export-install-launch-debug)
+    │ (Alias to: just export-install-android-launch-debug)
     │
     ├─→ just export-apk-debug                            [15-20 sec]
     │       └─→ Godot --export-debug to /tmp/
@@ -535,7 +535,7 @@ Variants:
 ```
 just fastbuild-android                                   [30-60 sec]
     │
-    └─→ just export-install-launch-debug
+    └─→ just export-install-android-launch-debug
             │
             ├─→ just export-apk-debug                    [15-20 sec]
             │       └─→ Godot --export-debug to /tmp/

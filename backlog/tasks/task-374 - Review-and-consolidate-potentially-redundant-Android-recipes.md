@@ -32,7 +32,7 @@ Android has the most recipes of any platform, and some may be redundant or overl
 
 ### Export
 - `export-apk-android` vs `export-all-android` - Overlapping?
-- `export-install-debug` / `export-install-launch-debug` - Needed?
+- `export-install-android-debug` / `export-install-android-launch-debug` - Needed?
 
 ## Investigation Needed
 
@@ -123,7 +123,7 @@ Update task-376 parity doc with findings.
 
 ### Export Recipes: KEEP ALL
 
-- Workflow chain: export-apk-android -> export-all-android -> export-install-debug -> export-install-launch-debug
+- Workflow chain: export-apk-android -> export-all-android -> export-install-android-debug -> export-install-android-launch-debug
 
 - Each adds functionality: export -> export+install -> export+install+launch
 
