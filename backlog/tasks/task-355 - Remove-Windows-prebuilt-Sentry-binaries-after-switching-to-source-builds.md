@@ -1,9 +1,10 @@
 ---
 id: task-355
 title: Remove Windows prebuilt Sentry binaries after switching to source builds
-status: To Do
+status: Done
 assignee: []
 created_date: '2025-12-20 10:47'
+updated_date: '2025-12-23 14:41'
 labels:
   - sentry
   - cleanup

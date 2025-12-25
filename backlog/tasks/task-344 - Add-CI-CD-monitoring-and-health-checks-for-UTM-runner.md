@@ -1,7 +1,7 @@
 ---
 id: task-344
 title: Add CI/CD monitoring and health checks for UTM runner
-status: To Do
+status: Consider
 assignee: []
 created_date: '2025-12-15 09:47'
 labels:
