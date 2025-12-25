@@ -1,10 +1,10 @@
 ---
 id: task-369
 title: 'Add iOS device diagnostic commands (logs-ios-health, logs-ios-status)'
-status: To Do
+status: Done
 assignee: []
 created_date: '2025-12-23 23:00'
-updated_date: '2025-12-23 23:42'
+updated_date: '2025-12-24 00:15'
 labels:
   - logs
   - ios
@@ -55,13 +55,13 @@ Part of platform parity analysis - Phase 3 Feature Parity.
 
 ## Acceptance Criteria
 <!-- AC:BEGIN -->
-- [ ] #1 Recipe logs-ios-health implemented (or documented as N/A if iOS doesn't support)
-- [ ] #2 Recipe logs-ios-status implemented
-- [ ] #3 Recipe logs-ios-device SEARCH_TERM implemented (unified iphone/ipad)
-- [ ] #4 Validation: just logs-ios-status shows connected iOS device info
-- [ ] #5 Validation: just logs-ios-device 'firebase' returns matching logs
-- [ ] #6 Validation: Commands work for both iPhone and iPad devices
-- [ ] #7 Documentation updated with iOS log command reference
+- [x] #1 Recipe logs-ios-health implemented (or documented as N/A if iOS doesn't support)
+- [x] #2 Recipe logs-ios-status implemented
+- [x] #3 Recipe logs-ios-device SEARCH_TERM implemented (unified iphone/ipad)
+- [x] #4 Validation: just logs-ios-status shows connected iOS device info
+- [x] #5 Validation: just logs-ios-device 'firebase' returns matching logs
+- [x] #6 Validation: Commands work for both iPhone and iPad devices
+- [x] #7 Documentation updated with iOS log command reference
 <!-- AC:END -->
 
 ## Implementation Plan

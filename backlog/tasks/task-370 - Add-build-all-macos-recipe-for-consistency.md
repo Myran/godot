@@ -1,10 +1,10 @@
 ---
 id: task-370
 title: Add build-all-macos recipe for consistency
-status: To Do
+status: Done
 assignee: []
 created_date: '2025-12-23 23:00'
-updated_date: '2025-12-23 23:41'
+updated_date: '2025-12-24 00:09'
 labels:
   - build
   - macos
@@ -56,10 +56,10 @@ Part of platform parity analysis - Phase 3 Feature Parity.
 
 ## Acceptance Criteria
 <!-- AC:BEGIN -->
-- [ ] #1 Recipe build-all-macos implemented in justfile-platform-macos.justfile
-- [ ] #2 Recipe calls templates-macos and any additional build steps
-- [ ] #3 Validation: just build-all-macos executes full macOS build pipeline
-- [ ] #4 Validation: just --list shows build-all-macos alongside build-all-android/windows
+- [x] #1 Recipe build-all-macos implemented in justfile-platform-macos.justfile
+- [x] #2 Recipe calls templates-macos and any additional build steps
+- [x] #3 Validation: just build-all-macos executes full macOS build pipeline
+- [x] #4 Validation: just --list shows build-all-macos alongside build-all-android/windows
 - [ ] #5 Documentation updated to reference build-all-macos
 <!-- AC:END -->
 

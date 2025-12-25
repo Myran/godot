@@ -1,10 +1,10 @@
 ---
 id: task-362
 title: Add test-ios-manual recipe for manual inspection mode
-status: To Do
+status: Done
 assignee: []
 created_date: '2025-12-23 22:58'
-updated_date: '2025-12-23 23:42'
+updated_date: '2025-12-24 00:13'
 labels:
   - testing
   - parity
@@ -49,12 +49,12 @@ Part of platform parity analysis - Phase 1 Critical Parity.
 
 ## Acceptance Criteria
 <!-- AC:BEGIN -->
-- [ ] #1 Recipe test-ios-manual CONFIG implemented in justfile
-- [ ] #2 Recipe deploys config to iOS device without auto-exit timeout
-- [ ] #3 App stays running for manual inspection
-- [ ] #4 Validation: just test-ios-manual battle-animated deploys and launches
-- [ ] #5 Validation: App does not auto-exit after debug actions complete
-- [ ] #6 Validation: Works with both iPhone and iPad devices
+- [x] #1 Recipe test-ios-manual CONFIG implemented in justfile
+- [x] #2 Recipe deploys config to iOS device without auto-exit timeout
+- [x] #3 App stays running for manual inspection
+- [x] #4 Validation: just test-ios-manual battle-animated deploys and launches
+- [x] #5 Validation: App does not auto-exit after debug actions complete
+- [x] #6 Validation: Works with both iPhone and iPad devices
 <!-- AC:END -->
 
 ## Implementation Plan

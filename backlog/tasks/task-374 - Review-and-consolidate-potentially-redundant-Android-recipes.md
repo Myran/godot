@@ -1,10 +1,10 @@
 ---
 id: task-374
 title: Review and consolidate potentially redundant Android recipes
-status: To Do
+status: Done
 assignee: []
 created_date: '2025-12-23 23:01'
-updated_date: '2025-12-23 23:40'
+updated_date: '2025-12-24 00:04'
 labels:
   - cleanup
   - android
@@ -54,12 +54,12 @@ Part of platform parity analysis - Infrastructure/Cleanup.
 
 ## Acceptance Criteria
 <!-- AC:BEGIN -->
-- [ ] #1 Purpose of run-android vs launch-android documented
-- [ ] #2 Purpose of test-android-enhanced vs test-android-target documented
-- [ ] #3 Purpose of test-android-trace vs test-android-verbose documented
-- [ ] #4 Redundant recipes identified and removal plan created
-- [ ] #5 Validation: Any removed recipes no longer appear in just --list
-- [ ] #6 Validation: Remaining recipes still work correctly
+- [x] #1 Purpose of run-android vs launch-android documented
+- [x] #2 Purpose of test-android-enhanced vs test-android-target documented
+- [x] #3 Purpose of test-android-trace vs test-android-verbose documented
+- [x] #4 Redundant recipes identified and removal plan created
+- [x] #5 Validation: Any removed recipes no longer appear in just --list
+- [x] #6 Validation: Remaining recipes still work correctly
 <!-- AC:END -->
 
 ## Implementation Plan
@@ -97,3 +97,37 @@ Decision: Which are truly needed?
 ### Chunk 4: Document Findings
 Update task-376 parity doc with findings.
 <!-- SECTION:PLAN:END -->
+
+## Implementation Notes
+
+<!-- SECTION:NOTES:BEGIN -->
+## Investigation Results
+
+### run-android vs launch-android: KEEP BOTH
+
+- run-android: LEVEL 1 (1-2 sec) with state cleanup - for dev iteration
+
+- launch-android: Simple app launch via adb only
+
+### test-android-enhanced vs test-android-target: KEEP BOTH
+
+- enhanced: Smart dispatcher (test list vs config detection)
+
+- target: Automated test runner with checksum validation + error analysis
+
+### test-android-trace vs test-android-verbose: KEEP
+
+- trace: Basic test wrapper
+
+- verbose: VERBOSE_TESTING=true for ObjectDB/memory leak debugging
+
+### Export Recipes: KEEP ALL
+
+- Workflow chain: export-apk-android -> export-all-android -> export-install-debug -> export-install-launch-debug
+
+- Each adds functionality: export -> export+install -> export+install+launch
+
+### Conclusion
+
+No redundancies found. All recipes serve distinct purposes in the development workflow.
+<!-- SECTION:NOTES:END -->

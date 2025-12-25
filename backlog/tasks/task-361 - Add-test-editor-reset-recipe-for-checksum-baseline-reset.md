@@ -1,10 +1,10 @@
 ---
 id: task-361
 title: Add test-editor-reset recipe for checksum baseline reset
-status: To Do
+status: Done
 assignee: []
 created_date: '2025-12-23 22:58'
-updated_date: '2025-12-23 23:41'
+updated_date: '2025-12-24 00:07'
 labels:
   - testing
   - parity
@@ -43,11 +43,11 @@ Part of platform parity analysis - Phase 1 Critical Parity.
 
 ## Acceptance Criteria
 <!-- AC:BEGIN -->
-- [ ] #1 Recipe test-editor-reset CONFIG implemented in justfile-validation-enhanced-testing.justfile
-- [ ] #2 Recipe follows same pattern as test-android-reset
-- [ ] #3 Validation: just test-editor-reset battle-animated executes without error
-- [ ] #4 Validation: Checksum baseline files are removed after reset
-- [ ] #5 Validation: Subsequent test-editor-target creates fresh baseline
+- [x] #1 Recipe test-editor-reset CONFIG implemented in justfile-validation-enhanced-testing.justfile
+- [x] #2 Recipe follows same pattern as test-android-reset
+- [x] #3 Validation: just test-editor-reset battle-animated executes without error
+- [x] #4 Validation: Checksum baseline files are removed after reset
+- [x] #5 Validation: Subsequent test-editor-target creates fresh baseline
 <!-- AC:END -->
 
 ## Implementation Plan

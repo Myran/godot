@@ -1,10 +1,10 @@
 ---
 id: task-375
 title: Consolidate Android device log naming (android-logs-* vs logs-android-*)
-status: To Do
+status: Done
 assignee: []
 created_date: '2025-12-23 23:01'
-updated_date: '2025-12-23 23:40'
+updated_date: '2025-12-24 00:06'
 labels:
   - naming
   - android
@@ -63,12 +63,12 @@ Part of platform parity analysis - Infrastructure/Cleanup.
 
 ## Acceptance Criteria
 <!-- AC:BEGIN -->
-- [ ] #1 Documentation distinguishes logs-android-* (saved) vs android-logs-* (live)
-- [ ] #2 Help commands updated to explain when to use each pattern
-- [ ] #3 Decision made: keep both patterns or consolidate naming
+- [x] #1 Documentation distinguishes logs-android-* (saved) vs android-logs-* (live)
+- [x] #2 Help commands updated to explain when to use each pattern
+- [x] #3 Decision made: keep both patterns or consolidate naming
 - [ ] #4 If consolidating: rename android-logs-* to logs-android-live-*
-- [ ] #5 Validation: just help-logs explains the distinction clearly
-- [ ] #6 Validation: All renamed commands work correctly with deprecation warnings
+- [x] #5 Validation: just help-logs explains the distinction clearly
+- [x] #6 Validation: All renamed commands work correctly with deprecation warnings
 <!-- AC:END -->
 
 ## Implementation Plan
@@ -118,3 +118,27 @@ rg "android-logs-" CLAUDE.md justfiles/
 # Update all, validate none remain
 ```
 <!-- SECTION:PLAN:END -->
+
+## Implementation Notes
+
+<!-- SECTION:NOTES:BEGIN -->
+## Implementation: Option A (Documentation)
+
+Chose Option A (document distinction) rather than renaming for:
+
+- Lower risk - no breaking changes
+
+- Both patterns serve distinct purposes (saved vs live)
+
+- Some deprecations already in place
+
+Updated justfile-android-device-logs.justfile header with:
+
+- Clear distinction between logs-android-* (saved test results) and android-logs-* (live monitoring)
+
+- Usage guidance for when to use each pattern
+
+- Complete command listings for both patterns
+
+Validation: just --list confirms all commands still work
+<!-- SECTION:NOTES:END -->

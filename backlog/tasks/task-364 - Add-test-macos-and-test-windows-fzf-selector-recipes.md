@@ -1,10 +1,10 @@
 ---
 id: task-364
 title: Add test-macos and test-windows fzf selector recipes
-status: To Do
+status: Done
 assignee: []
 created_date: '2025-12-23 22:58'
-updated_date: '2025-12-23 23:41'
+updated_date: '2025-12-24 00:09'
 labels:
   - testing
   - parity
@@ -48,12 +48,12 @@ Part of platform parity analysis - Phase 1 Critical Parity.
 
 ## Acceptance Criteria
 <!-- AC:BEGIN -->
-- [ ] #1 Recipe test-macos implemented with fzf selector
-- [ ] #2 Recipe test-windows implemented with fzf selector
-- [ ] #3 Empty CONFIG triggers interactive selection
-- [ ] #4 Validation: just test-macos shows fzf picker with available configs
-- [ ] #5 Validation: just test-windows shows fzf picker with available configs
-- [ ] #6 Validation: Selecting a config runs test-{platform}-target correctly
+- [x] #1 Recipe test-macos implemented with fzf selector
+- [x] #2 Recipe test-windows implemented with fzf selector
+- [x] #3 Empty CONFIG triggers interactive selection
+- [x] #4 Validation: just test-macos shows fzf picker with available configs
+- [x] #5 Validation: just test-windows shows fzf picker with available configs
+- [x] #6 Validation: Selecting a config runs test-{platform}-target correctly
 <!-- AC:END -->
 
 ## Implementation Plan

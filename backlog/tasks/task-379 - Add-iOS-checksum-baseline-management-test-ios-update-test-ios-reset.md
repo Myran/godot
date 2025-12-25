@@ -1,10 +1,10 @@
 ---
 id: task-379
 title: 'Add iOS checksum baseline management (test-ios-update, test-ios-reset)'
-status: To Do
+status: Done
 assignee: []
 created_date: '2025-12-23 23:18'
-updated_date: '2025-12-23 23:42'
+updated_date: '2025-12-24 00:12'
 labels:
   - testing
   - parity
@@ -51,13 +51,13 @@ Part of platform parity analysis - Phase 1 Critical Parity.
 
 ## Acceptance Criteria
 <!-- AC:BEGIN -->
-- [ ] #1 Recipe test-ios-update CONFIG implemented
-- [ ] #2 Recipe test-ios-reset CONFIG implemented
-- [ ] #3 Recipes follow same pattern as test-android-update/reset
-- [ ] #4 Validation: just test-ios-update battle-animated executes without error
-- [ ] #5 Validation: just test-ios-reset battle-animated executes without error
-- [ ] #6 Validation: Checksum baseline files are created/updated correctly
-- [ ] #7 Validation: test-ios-target detects checksum mismatches after changes
+- [x] #1 Recipe test-ios-update CONFIG implemented
+- [x] #2 Recipe test-ios-reset CONFIG implemented
+- [x] #3 Recipes follow same pattern as test-android-update/reset
+- [x] #4 Validation: just test-ios-update battle-animated executes without error
+- [x] #5 Validation: just test-ios-reset battle-animated executes without error
+- [x] #6 Validation: Checksum baseline files are created/updated correctly
+- [x] #7 Validation: test-ios-target detects checksum mismatches after changes
 <!-- AC:END -->
 
 ## Implementation Plan

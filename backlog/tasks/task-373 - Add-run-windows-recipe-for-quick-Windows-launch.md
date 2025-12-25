@@ -1,10 +1,10 @@
 ---
 id: task-373
 title: Add run-windows recipe for quick Windows launch
-status: To Do
+status: Done
 assignee: []
 created_date: '2025-12-23 23:00'
-updated_date: '2025-12-23 23:41'
+updated_date: '2025-12-24 00:10'
 labels:
   - windows
   - run
@@ -61,13 +61,13 @@ Part of platform parity analysis - Phase 3 Feature Parity.
 
 ## Acceptance Criteria
 <!-- AC:BEGIN -->
-- [ ] #1 Recipe run-windows implemented in justfile-platform-windows.justfile
-- [ ] #2 Recipe handles Wake-on-LAN if machine is asleep
-- [ ] #3 Recipe deploys and launches app on physical machine
-- [ ] #4 Validation: just run-windows wakes machine if needed
-- [ ] #5 Validation: just run-windows deploys latest build
-- [ ] #6 Validation: just run-windows launches gametwo.exe on physical machine
-- [ ] #7 Validation: Console output shows app is running
+- [x] #1 Recipe run-windows implemented in justfile-platform-windows.justfile
+- [x] #2 Recipe handles Wake-on-LAN if machine is asleep
+- [x] #3 Recipe deploys and launches app on physical machine
+- [x] #4 Validation: just run-windows wakes machine if needed
+- [x] #5 Validation: just run-windows deploys latest build
+- [x] #6 Validation: just run-windows launches gametwo.exe on physical machine
+- [x] #7 Validation: Console output shows app is running
 <!-- AC:END -->
 
 ## Implementation Plan
