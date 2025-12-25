@@ -247,3 +247,167 @@ ios-logs-gametwo-iphone DURATION="30" LINES="100":
 # iPhone-specific Firebase logs
 ios-logs-firebase-iphone DURATION="30" LINES="50":
     just _ios-log-base-internal "{{IOS_IPHONE_DEVICE_ID}}" "iPhone" "Firebase logs" "{{DURATION}}" "{{LINES}}" "Firebase" "CoreMotion"
+
+# ================================================================
+# CONSOLIDATED iOS LOG COMMANDS (logs-ios-*)
+# Following Android pattern for consistency (Task-369)
+# These use auto-detection to find connected iOS device
+# ================================================================
+
+# iOS device status check (unified - auto-detects iPhone vs iPad)
+logs-ios-status:
+    #!/usr/bin/env bash
+    set -euo pipefail
+
+    echo "📱 iOS Device & App Status"
+    echo "==========================="
+    echo ""
+
+    # Auto-detect connected device
+    DEVICE_ID=""
+    DEVICE_NAME=""
+
+    # Try iPad first
+    if idevice_id -l | grep -q "{{IOS_IPAD_DEVICE_ID}}"; then
+        DEVICE_ID="{{IOS_IPAD_DEVICE_ID}}"
+        DEVICE_NAME="iPad"
+    # Then try iPhone
+    elif idevice_id -l | grep -q "{{IOS_IPHONE_DEVICE_ID}}"; then
+        DEVICE_ID="{{IOS_IPHONE_DEVICE_ID}}"
+        DEVICE_NAME="iPhone"
+    else
+        # Try to find any connected iOS device
+        FIRST_DEVICE=$(idevice_id -l | head -1 || echo "")
+        if [[ -n "$FIRST_DEVICE" ]]; then
+            DEVICE_ID="$FIRST_DEVICE"
+            DEVICE_NAME="iOS Device"
+        fi
+    fi
+
+    if [[ -z "$DEVICE_ID" ]]; then
+        echo "❌ No iOS device connected"
+        echo ""
+        echo "💡 Connected devices:"
+        idevice_id -l || echo "No devices found"
+        echo ""
+        echo "Connect a device and try again"
+        exit 1
+    fi
+
+    # Check device connection
+    echo "🔌 Device Connectivity:"
+    echo "  ✅ $DEVICE_NAME connected ($DEVICE_ID)"
+    echo ""
+
+    # Check if gametwo is running
+    echo "🎮 App Status:"
+    if idevicesyslog -u "$DEVICE_ID" pidlist 2>/dev/null | grep -q "gametwo"; then
+        echo "  ✅ gametwo process running"
+        GAMETWO_PID=$(idevicesyslog -u "$DEVICE_ID" pidlist 2>/dev/null | grep "gametwo" | awk '{print $1}' || echo "unknown")
+        echo "  📊 Process ID: $GAMETWO_PID"
+    else
+        echo "  ❌ gametwo not running"
+        echo "  💡 Launch with: just run-ios-ipad or just run-ios-iphone"
+    fi
+
+    echo ""
+    echo "📊 Device Info:"
+    echo "  Device ID: $DEVICE_ID"
+    echo "  Tool: idevicesyslog"
+
+# iOS device health check (simplified - iOS doesn't have buffer issues like Android)
+logs-ios-health:
+    #!/usr/bin/env bash
+    set -euo pipefail
+
+    echo "📊 iOS Log System Health Check"
+    echo "================================"
+    echo ""
+
+    # Note: iOS doesn't have the same circular buffer limitations as Android logcat
+    echo "ℹ️  iOS Logging Architecture"
+    echo "==============================="
+    echo ""
+    echo "iOS uses os_log unified logging system:"
+    echo "  ✅ No circular buffer limitations (logs persist to disk)"
+    echo "  ✅ No buffer overflow issues"
+    echo "  ✅ Logs accessible via Console.app and idevicesyslog"
+    echo ""
+    echo "For device diagnostics, use:"
+    echo "  • just logs-ios-status      - Check device and app status"
+    echo "  • just logs-ios-device TERM  - Search device logs"
+    echo ""
+
+    # Quick connectivity check
+    echo "🔍 Connectivity Check:"
+    if command -v idevicesyslog >/dev/null 2>&1; then
+        echo "  ✅ idevicesyslog available"
+    else
+        echo "  ❌ idevicesyslog not found"
+        echo "  💡 Install: brew install libimobiledevice"
+        exit 1
+    fi
+
+    if command -v idevice_id >/dev/null 2>&1; then
+        DEVICE_COUNT=$(idevice_id -l | wc -l || echo "0")
+        echo "  ✅ idevice_id available ($DEVICE_COUNT device(s) connected)"
+    else
+        echo "  ❌ idevice_id not found"
+    fi
+
+    echo ""
+    echo "✅ iOS logging system is healthy"
+
+# Unified iOS device log search (auto-detects iPhone vs iPad)
+logs-ios-device SEARCH_TERM LINES="100":
+    #!/usr/bin/env bash
+    set -euo pipefail
+
+    SEARCH_TERM="{{SEARCH_TERM}}"
+    LINES="{{LINES}}"
+
+    echo "🔍 Searching iOS device logs for: $SEARCH_TERM"
+    echo ""
+
+    # Auto-detect connected device
+    DEVICE_ID=""
+    DEVICE_NAME=""
+
+    if idevice_id -l | grep -q "{{IOS_IPAD_DEVICE_ID}}"; then
+        DEVICE_ID="{{IOS_IPAD_DEVICE_ID}}"
+        DEVICE_NAME="iPad"
+    elif idevice_id -l | grep -q "{{IOS_IPHONE_DEVICE_ID}}"; then
+        DEVICE_ID="{{IOS_IPHONE_DEVICE_ID}}"
+        DEVICE_NAME="iPhone"
+    else
+        FIRST_DEVICE=$(idevice_id -l | head -1 || echo "")
+        if [[ -n "$FIRST_DEVICE" ]]; then
+            DEVICE_ID="$FIRST_DEVICE"
+            DEVICE_NAME="iOS Device"
+        fi
+    fi
+
+    if [[ -z "$DEVICE_ID" ]]; then
+        echo "❌ No iOS device connected"
+        echo ""
+        echo "💡 Connected devices:"
+        idevice_id -l || echo "No devices found"
+        exit 1
+    fi
+
+    echo "📱 Device: $DEVICE_NAME ($DEVICE_ID)"
+    echo "📊 Lines: $LINES"
+    echo ""
+
+    # Check if gametwo is running
+    if ! idevicesyslog -u "$DEVICE_ID" pidlist 2>/dev/null | grep -q "gametwo"; then
+        echo "⚠️  gametwo not running - showing recent logs anyway..."
+    fi
+
+    # Search logs using idevicesyslog with pattern matching
+    echo "📋 Matching logs:"
+    echo "=================="
+    timeout 10 idevicesyslog -u "$DEVICE_ID" -p gametwo -m "$SEARCH_TERM" --no-colors 2>/dev/null | head -"$LINES" || echo "No matches found (device may be idle)"
+
+# Note: ios-logs-status (line 79) and ios-logs-health-check (line 134) remain for backward compatibility
+# The new logs-ios-* commands provide auto-detection of iPhone vs iPad devices

@@ -12,7 +12,7 @@ logs-pattern TEST_ID PATTERN PLATFORM="auto":
     TEST_ID="{{TEST_ID}}"
     PATTERN="{{PATTERN}}"
     PLATFORM="{{PLATFORM}}"
-    DESKTOP_LOG_DIR="{{DESKTOP_LOG_DIR}}"
+    EDITOR_LOG_DIR="{{EDITOR_LOG_DIR}}"
 
     # Auto-detect platform from TEST_ID if platform is "auto"
     if [ "$PLATFORM" = "auto" ]; then
@@ -30,19 +30,23 @@ logs-pattern TEST_ID PATTERN PLATFORM="auto":
         fi
     fi
 
+    # Saved test logs are in project's logs/ directory
+    SAVED_LOGS_DIR="logs"
+
     # Find log file based on platform
     case "$PLATFORM" in
         android|ios|macos)
-            # Use filename-based search for Android/iOS/macOS
-            LOG_FILE=$(find "$DESKTOP_LOG_DIR" -name "*${TEST_ID}*.log" -type f | head -1)
+            # Search in saved test logs directory
+            LOG_FILE=$(find "$SAVED_LOGS_DIR" -name "*${TEST_ID}*.log" -type f 2>/dev/null | head -1)
             if [ -z "$LOG_FILE" ]; then
                 echo "❌ No log file found for test ID: $TEST_ID" >&2
+                echo "🔍 Searched in: $SAVED_LOGS_DIR" >&2
                 exit 1
             fi
             ;;
         editor)
             # Use existing desktop infrastructure
-            LOG_FILE=$(just _find-desktop-log-with-test-id "$TEST_ID")
+            LOG_FILE=$(just _find-editor-log-with-test-id "$TEST_ID")
             ;;
         *)
             echo "❌ Invalid platform: $PLATFORM" >&2
@@ -112,7 +116,7 @@ logs-multi TEST_ID *PATTERNS:
     TEST_ID="{{TEST_ID}}"
     PATTERNS="{{PATTERNS}}"
     
-    LOG_FILE=$(just _find-desktop-log-with-test-id "$TEST_ID")
+    LOG_FILE=$(just _find-editor-log-with-test-id "$TEST_ID")
     
     echo "🔍 Filtering logs by multiple patterns: $PATTERNS"
     echo "📄 Log file: $LOG_FILE"
@@ -161,7 +165,7 @@ logs-exclude TEST_ID PATTERN EXCLUDE_PATTERN:
     PATTERN="{{PATTERN}}"
     EXCLUDE_PATTERN="{{EXCLUDE_PATTERN}}"
     
-    LOG_FILE=$(just _find-desktop-log-with-test-id "$TEST_ID")
+    LOG_FILE=$(just _find-editor-log-with-test-id "$TEST_ID")
     
     echo "🔍 Filtering logs: include '$PATTERN', exclude '$EXCLUDE_PATTERN'"
     echo "📄 Log file: $LOG_FILE"
@@ -209,7 +213,7 @@ logs-discover TEST_ID PREFIX:
     TEST_ID="{{TEST_ID}}"
     PREFIX="{{PREFIX}}"
     
-    LOG_FILE=$(just _find-desktop-log-with-test-id "$TEST_ID")
+    LOG_FILE=$(just _find-editor-log-with-test-id "$TEST_ID")
     
     echo "🔍 Discovering tags starting with: $PREFIX"
     echo "📄 Log file: $LOG_FILE"
@@ -251,7 +255,7 @@ logs-suggest TEST_ID PARTIAL:
     TEST_ID="{{TEST_ID}}"
     PARTIAL="{{PARTIAL}}"
     
-    LOG_FILE=$(just _find-desktop-log-with-test-id "$TEST_ID")
+    LOG_FILE=$(just _find-editor-log-with-test-id "$TEST_ID")
     
     echo "💡 Smart suggestions for: $PARTIAL"
     echo "================================="
@@ -274,7 +278,7 @@ logs-tree TEST_ID:
     
     TEST_ID="{{TEST_ID}}"
     
-    LOG_FILE=$(just _find-desktop-log-with-test-id "$TEST_ID")
+    LOG_FILE=$(just _find-editor-log-with-test-id "$TEST_ID")
     
     echo "🌳 Tag hierarchy in $TEST_ID:"
     echo "============================"
@@ -310,7 +314,7 @@ logs-benchmark TEST_ID PATTERN:
     TEST_ID="{{TEST_ID}}"
     PATTERN="{{PATTERN}}"
     
-    LOG_FILE=$(just _find-desktop-log-with-test-id "$TEST_ID")
+    LOG_FILE=$(just _find-editor-log-with-test-id "$TEST_ID")
     
     echo "⚡ Performance benchmark for pattern matching"
     echo "==========================================="

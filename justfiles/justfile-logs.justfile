@@ -6,7 +6,7 @@ _logs-test-id TEST_ID:
     #!/usr/bin/env bash
     set -euo pipefail
     
-    LOG_FILE=$(just _find-desktop-log-with-test-id "{{TEST_ID}}")
+    LOG_FILE=$(just _find-editor-log-with-test-id "{{TEST_ID}}")
     
     if [ -z "$LOG_FILE" ]; then
         echo "❌ No logs found for test ID: {{TEST_ID}}"
@@ -29,7 +29,7 @@ _logs-results-only TEST_ID:
     #!/usr/bin/env bash
     set -euo pipefail
     
-    LOG_FILE=$(just _find-desktop-log-with-test-id "{{TEST_ID}}")
+    LOG_FILE=$(just _find-editor-log-with-test-id "{{TEST_ID}}")
     
     if [ -z "$LOG_FILE" ]; then
         echo "❌ No logs found for test ID: {{TEST_ID}}"
@@ -87,7 +87,7 @@ _logs-list-recent:
     echo "📁 Recent Test Results:"
     echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
     # Use unified log retrieval to find recent test results
-    LOG_FILE=$(just _get-desktop-log-file)
+    LOG_FILE=$(just _get-editor-log-file)
     if [ -n "$LOG_FILE" ]; then
         echo "📄 Recent test from: $(basename "$LOG_FILE")"
         grep -o '"config_name": "[^"]*"' "$LOG_FILE" | head -5 | cut -d'"' -f4 | while read test_id; do
@@ -127,7 +127,7 @@ _logs-errors-only TEST_ID:
     #!/usr/bin/env bash
     set -euo pipefail
     
-    LOG_FILE=$(just _find-desktop-log-with-test-id "{{TEST_ID}}")
+    LOG_FILE=$(just _find-editor-log-with-test-id "{{TEST_ID}}")
     
     if [ -z "$LOG_FILE" ]; then
         echo "❌ No logs found for test ID: {{TEST_ID}}"
@@ -148,7 +148,7 @@ _logs-performance TEST_ID:
     #!/usr/bin/env bash
     set -euo pipefail
     
-    LOG_FILE=$(just _find-desktop-log-with-test-id "{{TEST_ID}}")
+    LOG_FILE=$(just _find-editor-log-with-test-id "{{TEST_ID}}")
     
     if [ -z "$LOG_FILE" ]; then
         echo "❌ No logs found for test ID: {{TEST_ID}}"

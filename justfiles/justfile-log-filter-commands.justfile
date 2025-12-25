@@ -11,7 +11,7 @@ logs-tags TEST_ID *TAGS:
     TAGS="{{TAGS}}"
     
     # Use unified log retrieval function
-    LOG_FILE=$(just _find-desktop-log-with-test-id "$TEST_ID")
+    LOG_FILE=$(just _find-editor-log-with-test-id "$TEST_ID")
     
     echo "🏷️  Filtering logs by tags: $TAGS"
     echo "📄 Log file: $LOG_FILE"
@@ -38,7 +38,7 @@ logs-errors TEST_ID PLATFORM="auto":
 
     TEST_ID="{{TEST_ID}}"
     PLATFORM="{{PLATFORM}}"
-    DESKTOP_LOG_DIR="{{DESKTOP_LOG_DIR}}"
+    EDITOR_LOG_DIR="{{EDITOR_LOG_DIR}}"
 
     # Auto-detect platform from TEST_ID if platform is "auto"
     if [ "$PLATFORM" = "auto" ]; then
@@ -56,19 +56,23 @@ logs-errors TEST_ID PLATFORM="auto":
         fi
     fi
 
+    # Saved test logs are in project's logs/ directory
+    SAVED_LOGS_DIR="logs"
+
     # Find log file based on platform
     case "$PLATFORM" in
         android|ios|macos)
-            # Use filename-based search for Android/iOS/macOS
-            LOG_FILE=$(find "$DESKTOP_LOG_DIR" -name "*${TEST_ID}*.log" -type f | head -1)
+            # Search in saved test logs directory
+            LOG_FILE=$(find "$SAVED_LOGS_DIR" -name "*${TEST_ID}*.log" -type f 2>/dev/null | head -1)
             if [ -z "$LOG_FILE" ]; then
                 echo "❌ No log file found for test ID: $TEST_ID" >&2
+                echo "🔍 Searched in: $SAVED_LOGS_DIR" >&2
                 exit 1
             fi
             ;;
         editor)
             # Use existing desktop infrastructure
-            LOG_FILE=$(just _find-desktop-log-with-test-id "$TEST_ID")
+            LOG_FILE=$(just _find-editor-log-with-test-id "$TEST_ID")
             ;;
         *)
             echo "❌ Invalid platform: $PLATFORM" >&2
@@ -107,7 +111,7 @@ logs-lifecycle TEST_ID:
     TEST_ID="{{TEST_ID}}"
     
     # Use unified log retrieval function
-    LOG_FILE=$(just _find-desktop-log-with-test-id "$TEST_ID")
+    LOG_FILE=$(just _find-editor-log-with-test-id "$TEST_ID")
     
     echo "🔄 Test Lifecycle Events:"
     echo "========================="
@@ -124,7 +128,7 @@ logs-performance TEST_ID:
     TEST_ID="{{TEST_ID}}"
     
     # Use unified log retrieval function
-    LOG_FILE=$(just _find-desktop-log-with-test-id "$TEST_ID")
+    LOG_FILE=$(just _find-editor-log-with-test-id "$TEST_ID")
     
     echo "⚡ Performance and Timing:"
     echo "========================="
@@ -141,7 +145,7 @@ logs-checksum-detail TEST_ID:
     TEST_ID="{{TEST_ID}}"
     
     # Use unified log retrieval function
-    LOG_FILE=$(just _find-desktop-log-with-test-id "$TEST_ID")
+    LOG_FILE=$(just _find-editor-log-with-test-id "$TEST_ID")
     
     echo "=== Detailed Checksum Content for $TEST_ID ==="
     echo ""
@@ -167,7 +171,7 @@ logs-summary TEST_ID:
     TEST_ID="{{TEST_ID}}"
     
     # Use unified log retrieval function
-    LOG_FILE=$(just _find-desktop-log-with-test-id "$TEST_ID")
+    LOG_FILE=$(just _find-editor-log-with-test-id "$TEST_ID")
     
     echo "📋 Quick Summary for $TEST_ID:"
     echo "============================="
@@ -209,7 +213,7 @@ logs-list-tags TEST_ID:
     TEST_ID="{{TEST_ID}}"
     
     # Use unified log retrieval function
-    LOG_FILE=$(just _find-desktop-log-with-test-id "$TEST_ID")
+    LOG_FILE=$(just _find-editor-log-with-test-id "$TEST_ID")
     
     echo "🏷️  Available tags in $TEST_ID:"
     echo "==============================="
@@ -226,7 +230,7 @@ logs-search TEST_ID SEARCH_TERM PLATFORM="auto":
     TEST_ID="{{TEST_ID}}"
     SEARCH_TERM="{{SEARCH_TERM}}"
     PLATFORM="{{PLATFORM}}"
-    DESKTOP_LOG_DIR="{{DESKTOP_LOG_DIR}}"
+    EDITOR_LOG_DIR="{{EDITOR_LOG_DIR}}"
     
     # Auto-detect platform from TEST_ID if platform is "auto"
     if [ "$PLATFORM" = "auto" ]; then
@@ -249,29 +253,34 @@ logs-search TEST_ID SEARCH_TERM PLATFORM="auto":
     echo "🖥️  Platform: $PLATFORM ($([ "{{PLATFORM}}" = "auto" ] && echo "auto-detected" || echo "explicit"))"
     echo ""
     
+    # Saved test logs are in project's logs/ directory
+    SAVED_LOGS_DIR="logs"
+
     case "$PLATFORM" in
         android)
-            # Use Android log file search
-            LOG_FILE=$(find "$DESKTOP_LOG_DIR" -name "*${TEST_ID}*.log" -type f | head -1)
-            
+            # Search in saved test logs directory
+            LOG_FILE=$(find "$SAVED_LOGS_DIR" -name "*${TEST_ID}*.log" -type f 2>/dev/null | head -1)
+
             if [ -z "$LOG_FILE" ]; then
                 echo "❌ No Android log file found for test ID: $TEST_ID" >&2
+                echo "" >&2
+                echo "🔍 Searched in: $SAVED_LOGS_DIR" >&2
                 echo "" >&2
                 echo "💡 Try:" >&2
                 echo "   just logs-latest android" >&2
                 exit 1
             fi
-            
+
             echo "📄 Log file: $LOG_FILE"
             echo ""
-            
+
             # Case-insensitive search with limit for token efficiency
             grep -i "$SEARCH_TERM" "$LOG_FILE" | head -50 || echo "❌ No matches found for: $SEARCH_TERM"
             ;;
         
         editor)
             # Use existing desktop infrastructure
-            LOG_FILE=$(just _find-desktop-log-with-test-id "$TEST_ID")
+            LOG_FILE=$(just _find-editor-log-with-test-id "$TEST_ID")
             
             echo "📄 Log file: $LOG_FILE"
             echo ""
@@ -281,11 +290,13 @@ logs-search TEST_ID SEARCH_TERM PLATFORM="auto":
             ;;
         
         ios)
-            # Use iOS log file search
-            LOG_FILE=$(find "$DESKTOP_LOG_DIR" -name "*${TEST_ID}*.log" -type f | head -1)
+            # Search in saved test logs directory
+            LOG_FILE=$(find "$SAVED_LOGS_DIR" -name "*${TEST_ID}*.log" -type f 2>/dev/null | head -1)
 
             if [ -z "$LOG_FILE" ]; then
                 echo "❌ No iOS log file found for test ID: $TEST_ID" >&2
+                echo "" >&2
+                echo "🔍 Searched in: $SAVED_LOGS_DIR" >&2
                 echo "" >&2
                 echo "💡 Try running an iOS test first:" >&2
                 echo "   just test-ios-target CONFIG" >&2
@@ -300,11 +311,13 @@ logs-search TEST_ID SEARCH_TERM PLATFORM="auto":
             ;;
 
         macos)
-            # Use macOS log file search
-            LOG_FILE=$(find "$DESKTOP_LOG_DIR" -name "*${TEST_ID}*.log" -type f | head -1)
+            # Search in saved test logs directory
+            LOG_FILE=$(find "$SAVED_LOGS_DIR" -name "*${TEST_ID}*.log" -type f 2>/dev/null | head -1)
 
             if [ -z "$LOG_FILE" ]; then
                 echo "❌ No macOS log file found for test ID: $TEST_ID" >&2
+                echo "" >&2
+                echo "🔍 Searched in: $SAVED_LOGS_DIR" >&2
                 echo "" >&2
                 echo "💡 Try running a macOS test first:" >&2
                 echo "   just test-macos-target CONFIG" >&2

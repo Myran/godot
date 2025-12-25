@@ -20,7 +20,7 @@ logs-android TEST_ID *TAGS:
     if echo "$BUFFER_HEALTH_OUTPUT" | grep -q "CRITICAL"; then
         echo "⚠️  🚨 CURRENT BUFFER IS CRITICAL - Live data unreliable!"
         echo "   💡 These saved logs are MORE RELIABLE than current live buffer"
-        echo "   🎯 Trust this analysis over live android-logs-search results"
+        echo "   🎯 Trust this analysis over live logs-android-device results"
         echo ""
     elif echo "$BUFFER_HEALTH_OUTPUT" | grep -q "CAUTION"; then
         echo "⚠️  Current buffer usage is high"
@@ -65,7 +65,7 @@ logs-desktop TEST_ID *TAGS:
     TEST_ID="{{TEST_ID}}"
     TAGS="{{TAGS}}"
     
-    LOG_CONTENT=$(just _find-desktop-log-with-test-id "$TEST_ID")
+    LOG_CONTENT=$(just _find-editor-log-with-test-id "$TEST_ID")
     
     echo "📋 Desktop Logs for Test: $TEST_ID"
     
@@ -108,7 +108,7 @@ logs-android-errors TEST_ID *TAGS:
 
     if echo "$BUFFER_HEALTH_OUTPUT" | grep -q "CRITICAL"; then
         echo "⚠️  🚨 LIVE BUFFER CRITICAL - This saved log analysis is ESSENTIAL!"
-        echo "   💡 Current android-logs-search would miss critical errors"
+        echo "   💡 Current logs-android-device would miss critical errors"
         echo "   🎯 Trust this analysis - it contains the complete error record"
         echo "   📁 These errors are reliably captured from test execution"
         echo ""
@@ -157,7 +157,7 @@ logs-desktop-errors TEST_ID *TAGS:
     TEST_ID="{{TEST_ID}}"
     TAGS="{{TAGS}}"
 
-    LOG_CONTENT=$(just _find-desktop-log-with-test-id "$TEST_ID")
+    LOG_CONTENT=$(just _find-editor-log-with-test-id "$TEST_ID")
 
     echo "🚨 Desktop Errors and Failures:"
     echo "==============================="
@@ -191,10 +191,11 @@ logs-ios TEST_ID *TAGS:
 
     TEST_ID="{{TEST_ID}}"
     TAGS="{{TAGS}}"
-    DESKTOP_LOG_DIR="{{DESKTOP_LOG_DIR}}"
+    EDITOR_LOG_DIR="{{EDITOR_LOG_DIR}}"
 
     # Find iOS log file by TEST_ID
-    LOG_FILE=$(find "$DESKTOP_LOG_DIR" -name "*${TEST_ID}*.log" -type f | head -1)
+    SAVED_LOGS_DIR="logs"
+    LOG_FILE=$(find "$SAVED_LOGS_DIR" -name "*${TEST_ID}*.log" -type f 2>/dev/null | head -1)
     if [ -z "$LOG_FILE" ]; then
         echo "❌ No iOS log file found for test ID: $TEST_ID" >&2
         echo "💡 Try running an iOS test first: just test-ios-target CONFIG" >&2
@@ -235,10 +236,11 @@ logs-ios-errors TEST_ID *TAGS:
 
     TEST_ID="{{TEST_ID}}"
     TAGS="{{TAGS}}"
-    DESKTOP_LOG_DIR="{{DESKTOP_LOG_DIR}}"
+    EDITOR_LOG_DIR="{{EDITOR_LOG_DIR}}"
 
     # Find iOS log file by TEST_ID
-    LOG_FILE=$(find "$DESKTOP_LOG_DIR" -name "*${TEST_ID}*.log" -type f | head -1)
+    SAVED_LOGS_DIR="logs"
+    LOG_FILE=$(find "$SAVED_LOGS_DIR" -name "*${TEST_ID}*.log" -type f 2>/dev/null | head -1)
     if [ -z "$LOG_FILE" ]; then
         echo "❌ No iOS log file found for test ID: $TEST_ID" >&2
         echo "💡 Try running an iOS test first: just test-ios-target CONFIG" >&2
@@ -280,10 +282,11 @@ logs-macos TEST_ID *TAGS:
 
     TEST_ID="{{TEST_ID}}"
     TAGS="{{TAGS}}"
-    DESKTOP_LOG_DIR="{{DESKTOP_LOG_DIR}}"
+    EDITOR_LOG_DIR="{{EDITOR_LOG_DIR}}"
 
     # Find macOS log file by TEST_ID
-    LOG_FILE=$(find "$DESKTOP_LOG_DIR" -name "*${TEST_ID}*.log" -type f | head -1)
+    SAVED_LOGS_DIR="logs"
+    LOG_FILE=$(find "$SAVED_LOGS_DIR" -name "*${TEST_ID}*.log" -type f 2>/dev/null | head -1)
     if [ -z "$LOG_FILE" ]; then
         echo "❌ No macOS log file found for test ID: $TEST_ID" >&2
         echo "💡 Try running a macOS test first: just test-macos-target CONFIG" >&2
@@ -324,10 +327,11 @@ logs-macos-errors TEST_ID *TAGS:
 
     TEST_ID="{{TEST_ID}}"
     TAGS="{{TAGS}}"
-    DESKTOP_LOG_DIR="{{DESKTOP_LOG_DIR}}"
+    EDITOR_LOG_DIR="{{EDITOR_LOG_DIR}}"
 
     # Find macOS log file by TEST_ID
-    LOG_FILE=$(find "$DESKTOP_LOG_DIR" -name "*${TEST_ID}*.log" -type f | head -1)
+    SAVED_LOGS_DIR="logs"
+    LOG_FILE=$(find "$SAVED_LOGS_DIR" -name "*${TEST_ID}*.log" -type f 2>/dev/null | head -1)
     if [ -z "$LOG_FILE" ]; then
         echo "❌ No macOS log file found for test ID: $TEST_ID" >&2
         echo "💡 Try running a macOS test first: just test-macos-target CONFIG" >&2
