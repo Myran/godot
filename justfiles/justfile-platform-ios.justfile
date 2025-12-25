@@ -42,9 +42,18 @@ help-ios:
     echo "  just clean-godot-logs-by-age [days] # Clean Godot logs older than N days (default: 7)"
     echo "  just clean-all-logs [days]       # Clean all logs (Godot + main directory) older than N days (default: 7)"
     echo ""
-    echo "Export & Deploy:"
+    echo "Deploy (Development - export → install → run):"
+    echo "  just deploy-ios                  # Deploy to iOS (uses IOS_TEST_DEVICE, default: iPad)"
+    echo "  just deploy-ios-iphone           # Deploy to iPhone"
+    echo "  just deploy-ios-ipad             # Deploy to iPad"
+    echo ""
+    echo "Ship (Production - App Store):"
+    echo "  just ship-ios                    # Ship to App Store via fastlane"
+    echo ""
+    echo "Export:"
+    echo "  just export-ios-debug            # Export iOS debug build"
+    echo "  just export-ios-release          # Export iOS release build"
     echo "  just export-pck-ios              # Export iOS PCK file"
-    echo "  just ios-update-pck              # Update iOS PCK file"
     echo ""
     echo "Device Logging (Unified Commands):"
     echo "  just logs-ios-device SEARCH      # Search device logs (auto-detects iPhone/iPad)"
@@ -397,6 +406,39 @@ export-install-ios-launch-debug: export-ios-debug install-ios-ipad-debug
 # Export, install, and launch iOS release build
 export-install-ios-launch-release: export-ios-release install-ios-ipad-release
     @echo "🔄 iOS: Export, install, and launch release workflow completed"
+
+
+# ================================
+# DEPLOY: Development device workflow (export → install → run)
+# ================================
+# Note: For app store release, use 'ship-ios' instead
+
+# Internal: Deploy to iOS with device selection
+_deploy-ios-internal DEVICE_TYPE="ipad": export-ios-debug (_ios-launch-app DEVICE_TYPE "debug")
+    @echo "📱 Deploy to iOS ({{DEVICE_TYPE}}) complete"
+
+# Deploy to iOS (complete workflow: export → install → run)
+# Uses IOS_TEST_DEVICE env var or defaults to iPad
+# This is the primary command for development iteration
+deploy-ios:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    # Use IOS_TEST_DEVICE if set, otherwise default to ipad
+    DEVICE="${IOS_TEST_DEVICE:-ipad}"
+    # Normalize device name
+    if [[ "$DEVICE" == *"iPhone"* ]] || [[ "$DEVICE" == *"iphone"* ]]; then
+        just _deploy-ios-internal iphone
+    else
+        just _deploy-ios-internal ipad
+    fi
+
+# Deploy to iPhone (complete workflow: export → install → run)
+deploy-ios-iphone: export-ios-debug install-ios-iphone-debug
+    @echo "📱 Deploy to iPhone complete"
+
+# Deploy to iPad (complete workflow: export → install → run)
+deploy-ios-ipad: export-ios-debug install-ios-ipad-debug
+    @echo "📱 Deploy to iPad complete"
 
 
 # ================================

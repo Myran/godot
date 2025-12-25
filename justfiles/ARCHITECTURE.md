@@ -28,10 +28,15 @@ This document ensures correct recipe selection during development, testing, and 
 - **Pattern matching**: `just logs-pattern TEST_ID "firebase.*"`
 - **Full Android logs**: `just logs-android-device "term"` (sees startup)
 
-### Deploy & Run
-- **Android deploy**: `just fastbuild-android` (builds + installs + launches)
-- **iOS deploy**: `just build-install-ios` (2-5 min)
-- **Editor run**: `just run-editor-debug [verbose]` (Task-329)
+### Deploy (Development - export → install → run)
+- **Android**: `just deploy-android` (export + install + run)
+- **iOS**: `just deploy-ios` (default: iPad), `just deploy-ios-iphone`, `just deploy-ios-ipad`
+- **Windows**: `just deploy-windows` (physical machine)
+- **Editor**: `just run-editor-debug [verbose]` (Task-329)
+
+### Ship (Production - App Store)
+- **Android**: `just ship-android` (Play Store via fastlane)
+- **iOS**: `just ship-ios` (App Store via fastlane)
 
 ---
 

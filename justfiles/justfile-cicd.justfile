@@ -62,13 +62,13 @@ ci-cd: validate-env
     just generate-gitlab-ci
     just full-process
 
-# Deploy to App Store
-deploy-ios: export-pck-ios
-    @echo "Deploying to App Store..."
+# Ship to App Store (production release)
+ship-ios: export-pck-ios
+    @echo "🚀 Shipping to App Store..."
     cd export/ios && fastlane beta
 
-# DEPLOY: Deploy to Play Store (requires AAB files)
-# Updated dependency to use new platform naming convention (Task-378)
-deploy-android: export-android-aab
-    @echo "Deploying to Play Store..."
+# Ship to Play Store (production release)
+# Renamed from deploy-android to clarify: ship = app store, deploy = dev device
+ship-android: export-android-aab
+    @echo "🚀 Shipping to Play Store..."
     cd export/android && fastlane internal

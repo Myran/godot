@@ -90,6 +90,17 @@ adb logcat -d | rg "search_term" -i       # Direct full log access
 # Android Development
 just fastbuild-android                     # REQUIRED after ANY code changes
 
+# Deploy (Development - export → install → run)
+just deploy-android                        # Deploy to Android device
+just deploy-ios                            # Deploy to iOS (default: iPad)
+just deploy-ios-iphone                     # Deploy to iPhone
+just deploy-ios-ipad                       # Deploy to iPad
+just deploy-windows                        # Deploy to Windows physical machine
+
+# Ship (Production - App Store)
+just ship-android                          # Ship to Play Store
+just ship-ios                              # Ship to App Store
+
 # Command Logging (Long-Running)
 just log-run-silent COMMAND                # Silent logging (saves context tokens)
 just log-run COMMAND                       # Verbose logging

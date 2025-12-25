@@ -451,8 +451,9 @@ help-windows:
     @echo "  just win-physical-ssh         - Open interactive SSH session"
     @echo "  just win-physical-cmd CMD     - Run single command via SSH"
     @echo ""
-    @echo "DEPLOYMENT:"
-    @echo "  just win-physical-deploy      - Deploy latest Windows export (auto-wakes)"
+    @echo "DEPLOY (Development - export → install → run):"
+    @echo "  just deploy-windows           - Deploy to physical machine (export → install → run)"
+    @echo "  just win-physical-deploy      - Deploy files only (no run)"
     @echo ""
     @echo "TESTING (Physical, GUI mode):"
     @echo "  just test-windows-physical-target CONFIG  - Run automated test with GUI"
@@ -749,6 +750,17 @@ export-install-windows-release: export-windows-release win-physical-deploy-relea
 # Export, install, and launch Windows debug build
 export-install-windows-launch-debug: export-windows-debug run-windows
     @echo "🔄 Windows: Export, install, and launch debug workflow completed"
+
+
+# ================================
+# DEPLOY: Development device workflow (export → install → run)
+# ================================
+# Note: Windows has no app store, so no 'ship-windows' equivalent
+
+# Deploy to Windows physical machine (complete workflow: export → install → run)
+# This is the primary command for development iteration
+deploy-windows: export-install-windows-launch-debug
+    @echo "🖥️ Deploy to Windows complete"
 
 
 # Run Windows app on physical machine (wake, deploy, launch)

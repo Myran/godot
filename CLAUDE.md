@@ -214,6 +214,19 @@ just test-android CONFIG   # Validate on platform
 just logs-errors TEST_ID   # Debug efficiently
 ```
 
+**Deploy vs Ship:**
+```bash
+# Deploy = Development (export → install → run)
+just deploy-android        # Deploy to Android device
+just deploy-ios            # Deploy to iOS (default: iPad)
+just deploy-ios-iphone     # Deploy to iPhone
+just deploy-windows        # Deploy to Windows physical
+
+# Ship = Production (App Store)
+just ship-android          # Ship to Play Store
+just ship-ios              # Ship to App Store
+```
+
 ## 🎯 Advanced OODA Debugging
 
 **Evidence-First Investigation (OBSERVE):**

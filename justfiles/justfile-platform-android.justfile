@@ -570,6 +570,16 @@ export-install-android-release: export-android-apk-release install-apk-release
 export-install-android-launch-debug: export-android-apk-debug install-apk-debug restart-android-app
     @echo "🔄 Android: Export, install, and launch debug workflow completed"
 
+# ================================
+# DEPLOY: Development device workflow (export → install → run)
+# ================================
+# Note: For app store release, use 'ship-android' instead
+
+# Deploy to Android device (complete workflow: export → install → run)
+# This is the primary command for development iteration
+deploy-android: export-install-android-launch-debug
+    @echo "📱 Deploy to Android complete"
+
 # Restart Android app (kill and relaunch)
 restart-android-app: _validate-android-workflow
     @echo "🔄 Restarting Android app..."
