@@ -378,6 +378,28 @@ export-ios-all:
 
 
 # ================================
+# iOS COMBINED EXPORT+INSTALL WORKFLOWS
+# ================================
+# Platform parity with Android: export-install-android-debug, export-install-android-launch-debug
+
+# Export and install iOS debug build (no launch)
+export-install-ios-debug: export-ios-debug (_ios-install-only-app "ipad" "debug")
+    @echo "🔄 iOS: Export and install debug workflow completed"
+
+# Export and install iOS release build (no launch)
+export-install-ios-release: export-ios-release (_ios-install-only-app "ipad" "release")
+    @echo "🔄 iOS: Export and install release workflow completed"
+
+# Export, install, and launch iOS debug build
+export-install-ios-launch-debug: export-ios-debug install-ios-ipad-debug
+    @echo "🔄 iOS: Export, install, and launch debug workflow completed"
+
+# Export, install, and launch iOS release build
+export-install-ios-launch-release: export-ios-release install-ios-ipad-release
+    @echo "🔄 iOS: Export, install, and launch release workflow completed"
+
+
+# ================================
 # iOS DEVICE LOGGING
 # ================================
 

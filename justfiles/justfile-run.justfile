@@ -62,6 +62,49 @@ _ios-launch-app DEVICE_TYPE BUILD_TYPE="debug" DEBUG_MODE="false": (_validate-io
     echo "Launching $BUILD_NAME app on $DEVICE_NAME$DEBUG_TEXT..."
     xcrun devicectl device process launch --device ${DEVICE_ID} ${LAUNCH_FLAGS} ${BUNDLE_ID}
 
+# Generic iOS app installer (install only, no launch) - for combined workflows
+_ios-install-only-app DEVICE_TYPE BUILD_TYPE="debug": (_validate-ios-workflow DEVICE_TYPE) pre-build
+    #!/usr/bin/env bash
+    set -euo pipefail
+
+    # Device selection
+    if [ "{{DEVICE_TYPE}}" = "iphone" ]; then
+        DEVICE_ID="{{IOS_IPHONE_DEVICE_ID}}"
+        DEVICE_NAME="iPhone"
+    elif [ "{{DEVICE_TYPE}}" = "ipad" ]; then
+        DEVICE_ID="{{IOS_IPAD_DEVICE_ID}}"
+        DEVICE_NAME="iPad"
+    else
+        echo "❌ Invalid device type: {{DEVICE_TYPE}}. Use 'iphone' or 'ipad'"
+        exit 1
+    fi
+
+    # Build type selection
+    if [ "{{BUILD_TYPE}}" = "debug" ]; then
+        BUILD_PATH="Debug-iphoneos"
+        BUILD_NAME="debug"
+    elif [ "{{BUILD_TYPE}}" = "release" ]; then
+        BUILD_PATH="Release-iphoneos"
+        BUILD_NAME="release"
+    else
+        echo "❌ Invalid build type: {{BUILD_TYPE}}. Use 'debug' or 'release'"
+        exit 1
+    fi
+
+    APP_PATH="export/ios/build/products/${BUILD_PATH}/{{GAME_NAME}}.app"
+
+    # Validate app exists
+    if [ ! -d "$APP_PATH" ]; then
+        echo "❌ iOS app not found: $APP_PATH"
+        echo "💡 Build the app first: just build-ios-app"
+        exit 1
+    fi
+
+    # Install the app (no launch)
+    echo "📦 Installing $BUILD_NAME app on $DEVICE_NAME..."
+    xcrun devicectl device install app --device ${DEVICE_ID} ${APP_PATH}
+    echo "✅ iOS app installed on $DEVICE_NAME"
+
 # Generic Android APK installer - handles debug/release variants
 _android-install-apk APK_TYPE="release": _validate-android-workflow
     #!/usr/bin/env bash

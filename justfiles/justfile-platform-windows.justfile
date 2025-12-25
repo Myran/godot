@@ -659,21 +659,30 @@ WIN_PHYSICAL_CONFIGS := WIN_PHYSICAL_DIR + "\\configs"
 # Godot user data on physical machine
 WIN_PHYSICAL_USER_DATA := "C:\\Users\\" + WIN_PHYSICAL_USER + "\\AppData\\Roaming\\Godot\\app_userdata\\gametwo"
 
-# Deploy Windows export to physical machine
-win-physical-deploy:
+# Internal helper: Deploy Windows export with build type selection
+_win-physical-deploy-internal BUILD_TYPE="debug":
     #!/usr/bin/env bash
     set -euo pipefail
 
-    echo "📦 Deploying Windows export to physical machine..."
+    BUILD_TYPE="{{BUILD_TYPE}}"
+    echo "📦 Deploying Windows $BUILD_TYPE export to physical machine..."
     echo ""
 
-    # Check export exists locally
-    WIN_EXE_PATH="export/windows/{{GAME_NAME}}_debug.exe"
-    WIN_PCK_PATH="export/windows/{{GAME_NAME}}_debug.pck"
+    # Check export exists locally based on build type
+    if [ "$BUILD_TYPE" = "debug" ]; then
+        WIN_EXE_PATH="export/windows/{{GAME_NAME}}_debug.exe"
+        WIN_PCK_PATH="export/windows/{{GAME_NAME}}_debug.pck"
+    elif [ "$BUILD_TYPE" = "release" ]; then
+        WIN_EXE_PATH="export/windows/{{GAME_NAME}}.exe"
+        WIN_PCK_PATH="export/windows/{{GAME_NAME}}.pck"
+    else
+        echo "❌ Invalid build type: $BUILD_TYPE. Use 'debug' or 'release'"
+        exit 1
+    fi
 
     if [ ! -f "$WIN_EXE_PATH" ]; then
         echo "❌ Windows executable not found at: $WIN_EXE_PATH"
-        echo "💡 Run 'just export-windows-debug' first"
+        echo "💡 Run 'just export-windows-$BUILD_TYPE' first"
         exit 1
     fi
 
@@ -692,9 +701,9 @@ win-physical-deploy:
     echo "📂 Preparing builds directory..."
     ssh {{WIN_PHYSICAL_USER}}@{{WIN_PHYSICAL_HOST}} "if exist \"{{WIN_PHYSICAL_DIR}}\\builds\" (rmdir /S /Q \"{{WIN_PHYSICAL_DIR}}\\builds\" && mkdir \"{{WIN_PHYSICAL_DIR}}\\builds\") else (mkdir \"{{WIN_PHYSICAL_DIR}}\\builds\")"
 
-    # Copy entire export/windows folder
-    echo "📤 Copying Windows export files..."
-    scp -r export/windows/* "{{WIN_PHYSICAL_USER}}@{{WIN_PHYSICAL_HOST}}:/C:/GameTwoTests/builds/"
+    # Copy the specific export files
+    echo "📤 Copying Windows $BUILD_TYPE export files..."
+    scp "$WIN_EXE_PATH" "$WIN_PCK_PATH" "{{WIN_PHYSICAL_USER}}@{{WIN_PHYSICAL_HOST}}:/C:/GameTwoTests/builds/"
 
     # Copy Firebase config if exists
     if [ -f "firebase/google-services-desktop.json" ]; then
@@ -715,7 +724,32 @@ win-physical-deploy:
     ssh {{WIN_PHYSICAL_USER}}@{{WIN_PHYSICAL_HOST}} "dir {{WIN_PHYSICAL_DIR}}\\builds /B" 2>/dev/null | sed 's/^/   /'
 
     echo ""
-    echo "✅ Windows export deployed to physical machine"
+    echo "✅ Windows $BUILD_TYPE export deployed to physical machine"
+
+# Deploy Windows export to physical machine (debug - default)
+win-physical-deploy: (_win-physical-deploy-internal "debug")
+
+# Deploy Windows release export to physical machine
+win-physical-deploy-release: (_win-physical-deploy-internal "release")
+
+
+# ================================
+# WINDOWS COMBINED EXPORT+INSTALL WORKFLOWS
+# ================================
+# Platform parity with Android: export-install-android-debug, export-install-android-launch-debug
+
+# Export and install Windows debug build (no launch)
+export-install-windows-debug: export-windows-debug win-physical-deploy
+    @echo "🔄 Windows: Export and install debug workflow completed"
+
+# Export and install Windows release build (no launch)
+export-install-windows-release: export-windows-release win-physical-deploy-release
+    @echo "🔄 Windows: Export and install release workflow completed"
+
+# Export, install, and launch Windows debug build
+export-install-windows-launch-debug: export-windows-debug run-windows
+    @echo "🔄 Windows: Export, install, and launch debug workflow completed"
+
 
 # Run Windows app on physical machine (wake, deploy, launch)
 run-windows:
