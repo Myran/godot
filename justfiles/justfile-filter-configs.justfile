@@ -17,7 +17,7 @@ ANDROID_NOISE := "OpenGL|GL_|font|Buffer|VSYNC|Touch|Input|SurfaceFlinger"
 # Handles different log level formats: Android (I/D/E/W/V) and iOS (<Debug>/<Info>/<Error>)
 # EXCLUDES: Sentry logs (duplicates), system logs, noise - only counts actual game actions
 # NOTE: This pattern will be combined with TEST_ID at runtime in the filtering commands
-CROSS_PLATFORM_TEST_BASE := "(SEMANTIC_ACTION|gametwo|com.primaryhive|godot.*:)"
+CROSS_PLATFORM_TEST_BASE := "(SEMANTIC_ACTION|intentional_test_error|gametwo|com.primaryhive|godot.*:)"
 
 # Package and process identifiers
 IOS_PACKAGE := "gametwo"

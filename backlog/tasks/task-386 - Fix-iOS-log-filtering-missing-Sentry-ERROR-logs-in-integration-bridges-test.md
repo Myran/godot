@@ -1,9 +1,10 @@
 ---
 id: task-386
 title: Fix iOS log filtering missing Sentry ERROR logs in integration-bridges test
-status: To Do
+status: Done
 assignee: []
 created_date: '2025-12-26 11:48'
+updated_date: '2025-12-26 12:16'
 labels:
   - ios
   - logging
@@ -69,3 +70,11 @@ Add Sentry ERROR pattern to the iOS log filter:
 grep -E "($TEST_ID|SEMANTIC_ACTION|gametwo|com.primaryhive|godot.*:|sentry.*intentional_test_error|Test error for Sentry)"
 ```
 <!-- SECTION:DESCRIPTION:END -->
+
+## Implementation Notes
+
+<!-- SECTION:NOTES:BEGIN -->
+Implemented: Added `intentional_test_error` to `CROSS_PLATFORM_TEST_BASE` filter pattern in `justfile-filter-configs.justfile:20`
+
+Tested: iOS sentry-integration-bridges test now captures the intentional ERROR log correctly.
+<!-- SECTION:NOTES:END -->
