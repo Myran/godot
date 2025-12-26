@@ -74,20 +74,38 @@ func _execute_action_logic(_params: Dictionary = {}) -> DebugActionResult:
 				"res://addons/sentry/bin/ios/libsentry.ios.release.xcframework"
 			)
 		)
+	elif current_platform == "Windows":
+		var debug_path: String = "res://addons/sentry/bin/windows/x86_64/libsentry.windows.debug.x86_64.dll"
+		var release_path: String = "res://addons/sentry/bin/windows/x86_64/libsentry.windows.release.x86_64.dll"
+
+		Log.info(
+			"Windows GDExtension path validation",
+			{
+				"debug_path": debug_path,
+				"debug_exists": FileAccess.file_exists(debug_path),
+				"release_path": release_path,
+				"release_exists": FileAccess.file_exists(release_path)
+			},
+			["debug", "sentry", "trace"]
+		)
+
+		test_results.sentry_native_binaries_exist = (
+			FileAccess.file_exists(debug_path) or FileAccess.file_exists(release_path)
+		)
 
 	# Test 3: Check if SentrySDK global class is available (will be tested in integration test)
 	# This requires the game to actually run, so we'll check in a separate test
 	test_results.sentry_sdk_class_available = ClassDB.class_exists("SentrySDK")
 
 	# Enhanced validation: If SentrySDK is available, GDExtension must be working
-	# On Android, file access patterns may differ, so prioritize functional validation
-	if current_platform == "Android" and test_results.sentry_sdk_class_available:
+	# On Android/Windows, file access patterns may differ, so prioritize functional validation
+	if current_platform in ["Android", "Windows"] and test_results.sentry_sdk_class_available:
 		# If SentrySDK class exists and is accessible, GDExtension must be loaded
 		# This is a more reliable indicator than file path checks on Android
 		test_results.native_binaries_functional = true
 		Log.info(
-			"Android functional validation: SentrySDK available implies GDExtension loaded",
-			{"sentrysdk_available": test_results.sentry_sdk_class_available},
+			current_platform + " functional validation: SentrySDK available implies GDExtension loaded",
+			{"sentrysdk_available": test_results.sentry_sdk_class_available, "platform": current_platform},
 			["debug", "sentry", "trace"]
 		)
 

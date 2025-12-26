@@ -14,7 +14,10 @@
   ],
   "platforms": [
     "editor",
-    "android"
+    "android",
+    "ios",
+    "macos",
+    "windows-physical"
   ],
   "metadata": {
     "auto_quit": true,

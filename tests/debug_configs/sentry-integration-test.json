@@ -4,7 +4,9 @@
     "sentry.test_sdk_functionality"
   ],
   "platforms": [
-    "editor"
+    "editor",
+    "macos",
+    "windows-physical"
   ],
   "metadata": {
     "auto_quit": true,
