@@ -81,3 +81,8 @@ templates/godot.windows.template_*.exe
 export/macos
 # Sentry GDExtension pre-built binaries (downloaded from GitHub releases)
 extras/sentry-godot-gdextension-*/
+
+# Fastlane secrets (never commit)
+export/android/fastlane/fastlaneaccountkey.json
+export/android/fastlane/report.xml
+upload_cert.pem

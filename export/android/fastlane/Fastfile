@@ -1,0 +1,160 @@
+# Fastfile for GameTwo Android deployment
+# Usage: fastlane [lane] from export/android directory
+
+default_platform(:android)
+
+# Helper: Extract version from export_presets.cfg (single source of truth)
+def get_version_from_export_presets
+  # From export/android/fastlane/ go up 3 levels to repo root, then into project/
+  presets_path = File.expand_path('../../../project/export_presets.cfg', __dir__)
+
+  unless File.exist?(presets_path)
+    UI.user_error!("export_presets.cfg not found at #{presets_path}")
+  end
+
+  content = File.read(presets_path)
+
+  # Extract Android version (first occurrence)
+  version_code = content.match(/^version\/code=(\d+)/)&.[](1)
+  version_name = content.match(/^version\/name="([^"]+)"/)&.[](1)
+
+  {
+    code: version_code,
+    name: version_name
+  }
+end
+
+platform :android do
+  # Path to Google Play service account key (absolute path to fastlane directory)
+  json_key_file = File.expand_path('fastlaneaccountkey.json', __dir__)
+
+  # App configuration
+  package_name = 'com.primaryhive.gametwo'
+
+  #################################################
+  # Internal Testing Track
+  # - For internal testing (up to 100 testers)
+  # - No review required
+  #################################################
+  lane :internal do
+    version = get_version_from_export_presets
+    UI.message("📦 Uploading to internal track: v#{version[:name]} (#{version[:code]})")
+
+    upload_to_play_store(
+      track: 'internal',
+      aab: 'gametwo.aab',
+      json_key: json_key_file,
+      package_name: package_name,
+      skip_upload_apk: true,
+      skip_upload_screenshots: true,
+      skip_upload_images: true,
+      skip_upload_metadata: true
+    )
+  end
+
+  #################################################
+  # Alpha (Closed Testing Track)
+  # - For closed testing with specific testers
+  # - Review required for first release
+  #################################################
+  lane :alpha do
+    version = get_version_from_export_presets
+    UI.message("📦 Uploading to alpha track: v#{version[:name]} (#{version[:code]})")
+
+    upload_to_play_store(
+      track: 'alpha',
+      aab: 'gametwo.aab',
+      json_key: json_key_file,
+      package_name: package_name,
+      skip_upload_apk: true,
+      skip_upload_screenshots: true,
+      skip_upload_images: true,
+      skip_upload_metadata: true
+    )
+  end
+
+  #################################################
+  # Beta (Open Testing Track)
+  # - For open testing (anyone can join)
+  # - Review required
+  #################################################
+  lane :beta do
+    version = get_version_from_export_presets
+    UI.message("📦 Uploading to beta track: v#{version[:name]} (#{version[:code]})")
+
+    upload_to_play_store(
+      track: 'beta',
+      aab: 'gametwo.aab',
+      json_key: json_key_file,
+      package_name: package_name,
+      skip_upload_apk: true,
+      skip_upload_screenshots: true,
+      skip_upload_images: true,
+      skip_upload_metadata: true
+    )
+  end
+
+  #################################################
+  # Production Track
+  # - Full production release
+  # - Review required
+  # - Use with caution!
+  #################################################
+  lane :production do
+    version = get_version_from_export_presets
+    UI.important("🚀 Uploading to PRODUCTION: v#{version[:name]} (#{version[:code]})")
+
+    upload_to_play_store(
+      track: 'production',
+      aab: 'gametwo.aab',
+      json_key: json_key_file,
+      package_name: package_name,
+      skip_upload_apk: true,
+      skip_upload_screenshots: true,
+      skip_upload_images: true,
+      skip_upload_metadata: true
+    )
+  end
+
+  #################################################
+  # Deploy to specified track (parameterized)
+  # Usage: fastlane deploy track:internal
+  #################################################
+  lane :deploy do |options|
+    track = options[:track] || 'internal'
+    version = get_version_from_export_presets
+    UI.message("📦 Uploading to #{track} track: v#{version[:name]} (#{version[:code]})")
+
+    upload_to_play_store(
+      track: track,
+      aab: 'gametwo.aab',
+      json_key: json_key_file,
+      package_name: package_name,
+      skip_upload_apk: true,
+      skip_upload_screenshots: true,
+      skip_upload_images: true,
+      skip_upload_metadata: true
+    )
+  end
+
+  #################################################
+  # Validate service account key
+  #################################################
+  lane :validate do
+    validate_play_store_json_key(
+      json_key: json_key_file
+    )
+  end
+
+  #################################################
+  # Show current version from export_presets.cfg
+  # Useful for verification before upload
+  #################################################
+  lane :version do
+    version = get_version_from_export_presets
+    UI.success("Current version from export_presets.cfg:")
+    UI.message("  Version Code: #{version[:code]}")
+    UI.message("  Version Name: #{version[:name]}")
+    version
+  end
+end
