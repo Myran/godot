@@ -98,14 +98,24 @@ func _execute_action_logic(_params: Dictionary = {}) -> DebugActionResult:
 	test_results.sentry_sdk_class_available = ClassDB.class_exists("SentrySDK")
 
 	# Enhanced validation: If SentrySDK is available, GDExtension must be working
-	# On Android/Windows, file access patterns may differ, so prioritize functional validation
-	if current_platform in ["Android", "Windows"] and test_results.sentry_sdk_class_available:
+	# On Android/Windows/iOS/macOS, file access patterns may differ (exported apps, xcframeworks as dirs)
+	# Prioritize functional validation - if SentrySDK class exists, GDExtension loaded successfully
+	if (
+		current_platform in ["Android", "Windows", "iOS", "macOS"]
+		and test_results.sentry_sdk_class_available
+	):
 		# If SentrySDK class exists and is accessible, GDExtension must be loaded
 		# This is a more reliable indicator than file path checks on Android
 		test_results.native_binaries_functional = true
 		Log.info(
-			current_platform + " functional validation: SentrySDK available implies GDExtension loaded",
-			{"sentrysdk_available": test_results.sentry_sdk_class_available, "platform": current_platform},
+			(
+				current_platform
+				+ " functional validation: SentrySDK available implies GDExtension loaded"
+			),
+			{
+				"sentrysdk_available": test_results.sentry_sdk_class_available,
+				"platform": current_platform
+			},
 			["debug", "sentry", "trace"]
 		)
 
