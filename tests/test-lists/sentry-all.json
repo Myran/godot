@@ -1,29 +1,25 @@
 {
   "name": "Sentry All Tests",
-  "description": "Comprehensive Sentry SDK integration testing across all platforms and scenarios. Tests both editor-mode desktop development and mobile device integration.",
+  "description": "Comprehensive Sentry SDK integration testing across all platforms. Each config runs on all supported platforms for consistent coverage.",
   "configs": [
     "sentry-addon-validation",
     "sentry-android-file-validation",
     "sentry-integration-test",
-    "sentry-android-integration-test",
     "sentry-crash-scenarios",
     "sentry-integration-bridges"
   ],
   "metadata": {
     "test_category": "sentry_comprehensive",
-    "platform_coverage": ["desktop", "android", "ios"],
+    "platform_coverage": ["editor", "android", "ios", "macos", "windows-physical"],
     "tdd_phases": ["addon_validation", "file_validation", "integration_testing", "crash_reporting", "integration_bridges"],
-    "total_configs": 6,
+    "total_configs": 5,
     "estimated_duration": "5-10 minutes",
-    "testing_modes": {
-      "desktop": "editor_mode_development_testing",
-      "android": "device_testing",
-      "ios": "device_testing"
-    },
     "platform_notes": {
-      "desktop": "Editor-mode testing for development validation (macOS)",
-      "android": "Real device testing with AAR integration",
-      "ios": "Real device testing with iOS SDK integration"
+      "editor": "Desktop editor-mode testing",
+      "android": "Real device testing with AAR auto-init",
+      "ios": "Real device testing with native SDK",
+      "macos": "Exported app testing",
+      "windows-physical": "Physical machine GUI testing"
     }
   }
 }

@@ -1,20 +1,22 @@
 {
-  "description": "TDD: Test real Sentry SDK integration and functionality",
+  "description": "Test Sentry SDK integration and functionality on all platforms",
   "actions": [
     "sentry.test_sdk_functionality"
   ],
   "platforms": [
     "editor",
+    "android",
+    "ios",
     "macos",
     "windows-physical"
   ],
   "metadata": {
     "auto_quit": true,
-    "test_category": "sentry_tdd",
+    "test_category": "sentry_integration",
     "tdd_phase": "integration_testing"
   },
   "test_metadata": {
     "test_id": "auto-generated",
-    "notes": "TDD Phase 2: Test actual SentrySDK class methods and integration"
+    "notes": "Tests SentrySDK class availability, singleton access, init(), and capture_message() on all platforms. Android uses AAR auto-init, other platforms use manual init."
   }
 }
