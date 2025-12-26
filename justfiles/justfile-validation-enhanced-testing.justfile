@@ -1274,13 +1274,11 @@ _analyze-test-errors test_id platform config_file="":
     fi
     
     # WHITELIST APPROACH: Only look for test-relevant logs, ignore all system noise
-    # Focus on our application logs with specific test ID or Godot tags
+    # Use word boundaries (\b) to match ERROR/CRITICAL/WARNING as words across all log formats
     if [[ -n "$TEST_ID" ]]; then
-        # Filter to only logs related to this specific test or Godot app
-        RELEVANT_LOGS=$(echo "$LOGS" | grep -E "($TEST_ID|godot.*ERROR|godot.*CRITICAL|godot.*SCRIPT ERROR|godot.*Assertion failed|DEBUG_TEST_FAILURE|CHECKSUM_MISMATCH)" || echo "")
+        RELEVANT_LOGS=$(echo "$LOGS" | grep -E "($TEST_ID|\bERROR\b|\bCRITICAL\b|\bWARNING\b|SCRIPT ERROR|Assertion failed|DEBUG_TEST_FAILURE|CHECKSUM_MISMATCH)" || echo "")
     else
-        # Fallback: only Godot application errors
-        RELEVANT_LOGS=$(echo "$LOGS" | grep -E "(godot.*ERROR|godot.*CRITICAL|godot.*SCRIPT ERROR|godot.*Assertion failed|DEBUG_TEST_FAILURE|CHECKSUM_MISMATCH)" || echo "")
+        RELEVANT_LOGS=$(echo "$LOGS" | grep -E "(\bERROR\b|\bCRITICAL\b|\bWARNING\b|SCRIPT ERROR|Assertion failed|DEBUG_TEST_FAILURE|CHECKSUM_MISMATCH)" || echo "")
     fi
 
     # ================================

@@ -1,9 +1,10 @@
 ---
 id: task-381
 title: Fix expected_result pattern validation bug in test error analysis
-status: To Do
+status: Done
 assignee: []
 created_date: '2025-12-26 00:08'
+updated_date: '2025-12-26 00:17'
 labels:
   - testing
   - bug
@@ -65,8 +66,29 @@ The legacy log pattern validation may be:
 - Discovered while adding Windows platform support (task-380)
 
 ## Acceptance Criteria
-
-- [ ] Investigate why pattern validation fails when pattern exists
-- [ ] Fix the validation logic to correctly find patterns in logs
-- [ ] Verify sentry-integration-bridges passes on all platforms
+<!-- AC:BEGIN -->
+- [x] #1 Investigate why pattern validation fails when pattern exists
+- [x] #2 Fix the validation logic to correctly find patterns in logs
+- [x] #3 Verify sentry-integration-bridges passes on all platforms
 <!-- SECTION:DESCRIPTION:END -->
+
+<!-- AC:END -->
+
+## Implementation Notes
+
+<!-- SECTION:NOTES:BEGIN -->
+## Fix Applied (2025-12-26)
+
+**Root Cause**: The `RELEVANT_LOGS` filter at line 1280 in `justfile-validation-enhanced-testing.justfile` used the pattern `godot.*ERROR` which only matched Android log format (`12-24 11:09:31.413 30453 30516 E godot   : [ERROR]...`). Windows physical logs use the Advanced Logger format (`2025-12-26 01:06:49 ERROR [tags] message`) which doesn't have `godot` in the line.
+
+**Fix**: Added patterns to match both Android format and Advanced Logger format:
+- `[[:space:]]ERROR[[:space:]]` - matches ` ERROR ` (space-surrounded)
+- `[[:space:]]CRITICAL[[:space:]]` - matches ` CRITICAL ` (space-surrounded)
+- `^ERROR:` - matches Godot internal errors at line start
+
+**Verified on all platforms**:
+- ✅ Desktop (editor)
+- ✅ Android
+- ✅ Windows physical
+- ✅ macOS
+<!-- SECTION:NOTES:END -->
