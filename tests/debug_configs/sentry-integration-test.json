@@ -4,7 +4,6 @@
     "sentry.test_sdk_functionality"
   ],
   "platforms": [
-    "editor",
     "android",
     "ios",
     "macos",

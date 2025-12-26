@@ -13,7 +13,6 @@
     }
   ],
   "platforms": [
-    "editor",
     "android",
     "ios",
     "macos",

@@ -4,7 +4,6 @@
     "sentry.validate_gdextension_loading"
   ],
   "platforms": [
-    "editor",
     "android",
     "ios",
     "macos",

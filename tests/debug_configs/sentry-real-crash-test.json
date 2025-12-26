@@ -16,9 +16,10 @@
     }
   ],
   "platforms": [
-    "editor",
     "android",
-    "ios"
+    "ios",
+    "macos",
+    "windows-physical"
   ],
   "metadata": {
     "auto_quit": false,

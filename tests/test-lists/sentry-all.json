@@ -10,12 +10,11 @@
   ],
   "metadata": {
     "test_category": "sentry_comprehensive",
-    "platform_coverage": ["editor", "android", "ios", "macos", "windows-physical"],
+    "platform_coverage": ["android", "ios", "macos", "windows-physical"],
     "tdd_phases": ["addon_validation", "file_validation", "integration_testing", "crash_reporting", "integration_bridges"],
     "total_configs": 5,
     "estimated_duration": "5-10 minutes",
     "platform_notes": {
-      "editor": "Desktop editor-mode testing",
       "android": "Real device testing with AAR auto-init",
       "ios": "Real device testing with native SDK",
       "macos": "Exported app testing",

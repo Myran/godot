@@ -4,7 +4,6 @@
     "sentry.test_crash_scenarios"
   ],
   "platforms": [
-    "editor",
     "android",
     "ios",
     "macos",
