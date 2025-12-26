@@ -1,9 +1,10 @@
 {
   "name": "Main Test Suite",
-  "description": "Essential test suite for daily development - runs core system validation, Firebase services, pure battle testing, and save/load validation",
+  "description": "Essential test suite for daily development - runs core system validation, Firebase services, Sentry crash reporting, pure battle testing, and save/load validation",
   "configs": [
     "@system-infrastructure",
     "@firebase-all",
+    "@sentry-all",
     "@battle-pure",
     "@save-load-validation"
   ]
