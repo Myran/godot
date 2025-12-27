@@ -93,3 +93,5 @@ project/addons/sentry/bin/macos/**/*.dylib
 
 # Claude Code local settings
 .claude/settings.local.json
+project/addons/sentry/bin/macos/libsentry.macos.release.framework/libsentry.macos.release
+project/addons/sentry/bin/macos/libsentry.macos.debug.framework/libsentry.macos.debug
