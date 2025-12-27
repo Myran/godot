@@ -65,6 +65,7 @@ build-sentry-gdscript-all force="no":
 build-sentry-gdscript-desktop force="no":
     just build-sentry-gdscript-editor-desktop
     just build-sentry-gdscript-template-desktop
+    just sentry-sync-macos
     @echo "✅ GDScript Sentry desktop builds completed"
 
 build-sentry-gdscript-editor-desktop:
@@ -82,16 +83,12 @@ build-sentry-gdscript-android force="no":
     just build-sentry-gdscript-android-lib
     just build-sentry-gdscript-editor-android
     just build-sentry-gdscript-template-android
+    just sentry-sync-android
     @echo "✅ GDScript Sentry Android builds completed"
 
 build-sentry-gdscript-android-lib:
     @echo "🏗️  Building GDScript Sentry Android library..."
     @cd {{SENTRY_PATH}} && ./gradlew assemble
-    @echo "📦 Copying Sentry AAR files to addons directory for automatic discovery..."
-    @mkdir -p project/addons/sentry/
-    @cp project/addons/sentry/bin/android/sentry_android_godot_plugin.debug.aar project/addons/sentry/ 2>/dev/null || echo "⚠️  Debug AAR file not found in build output"
-    @cp project/addons/sentry/bin/android/sentry_android_godot_plugin.release.aar project/addons/sentry/ 2>/dev/null || echo "⚠️  Release AAR file not found in build output"
-    @echo "✅ Sentry AAR files copied to addons directory"
     @echo "✅ GDScript Sentry Android library build completed"
 
 build-sentry-gdscript-editor-android:
@@ -196,44 +193,48 @@ build-sentry-gdscript-template-ios force="no":
         echo "⚠️  Debug dylib not found - skipping debug XCFramework"
     fi
     echo "🔧 Fixing embedded dylib paths in XCFrameworks..."
-    if [ -f "{{SENTRY_ADDON_PATH}}/bin/ios/libsentry.ios.release.xcframework/ios-arm64/libsentry.ios.release.arm64.dylib" ]; then
-        install_name_tool -id "@rpath/libsentry.ios.release.arm64.dylib" {{SENTRY_ADDON_PATH}}/bin/ios/libsentry.ios.release.xcframework/ios-arm64/libsentry.ios.release.arm64.dylib
+    # Note: We're currently in {{SENTRY_PATH}} (extras/sentry-godot), so use relative paths
+    if [ -f "project/addons/sentry/bin/ios/libsentry.ios.release.xcframework/ios-arm64/libsentry.ios.release.arm64.dylib" ]; then
+        install_name_tool -id "@rpath/libsentry.ios.release.arm64.dylib" project/addons/sentry/bin/ios/libsentry.ios.release.xcframework/ios-arm64/libsentry.ios.release.arm64.dylib
         echo "✅ Fixed embedded dylib paths in release XCFramework"
     fi
-    if [ -f "{{SENTRY_ADDON_PATH}}/bin/ios/libsentry.ios.debug.xcframework/ios-arm64/libsentry.ios.debug.arm64.dylib" ]; then
-        install_name_tool -id "@rpath/libsentry.ios.debug.arm64.dylib" {{SENTRY_ADDON_PATH}}/bin/ios/libsentry.ios.debug.xcframework/ios-arm64/libsentry.ios.debug.arm64.dylib
+    if [ -f "project/addons/sentry/bin/ios/libsentry.ios.debug.xcframework/ios-arm64/libsentry.ios.debug.arm64.dylib" ]; then
+        install_name_tool -id "@rpath/libsentry.ios.debug.arm64.dylib" project/addons/sentry/bin/ios/libsentry.ios.debug.xcframework/ios-arm64/libsentry.ios.debug.arm64.dylib
         echo "✅ Fixed embedded dylib paths in debug XCFramework"
     fi
-    echo "📦 Copying XCFrameworks to export directory..."
-    cd {{PROJECT_PATH}}
+
+    echo "📦 Syncing XCFrameworks to main project and export directory..."
+    # Go back to justfile root directory for proper path resolution
+    cd ../..
+
+    # Sync from submodule to main project
     if [ -d "{{SENTRY_ADDON_PATH}}/bin/ios/libsentry.ios.release.xcframework" ]; then
-        if [ ! -d "../../{{IOS_EXPORT_PATH}}/libsentry.ios.release.xcframework" ] || [ "{{SENTRY_ADDON_PATH}}/bin/ios/libsentry.ios.release.xcframework" -nt "../../{{IOS_EXPORT_PATH}}/libsentry.ios.release.xcframework" ]; then
-            echo "📦 Copying release XCFramework to export..."
-            # First copy to project directory for consistency
-            cp -R {{SENTRY_ADDON_PATH}}/bin/ios/libsentry.ios.release.xcframework project/addons/sentry/bin/ios/
-            cp -R {{SENTRY_ADDON_PATH}}/bin/ios/libsentry.ios.release.xcframework ../../{{IOS_EXPORT_PATH}}/
-            echo "✅ GDScript Sentry GDExtension XCFramework (release) copied to iOS export project"
-        else
-            echo "✅ Release XCFramework already exists in export and is up to date"
-        fi
-    else
-        echo "⚠️  Release XCFramework not found in addon directory - skipping copy"
+        echo "📦 Syncing release XCFramework to main project..."
+        rm -rf {{PROJECT_SENTRY_PATH}}/bin/ios/libsentry.ios.release.xcframework
+        cp -R {{SENTRY_ADDON_PATH}}/bin/ios/libsentry.ios.release.xcframework {{PROJECT_SENTRY_PATH}}/bin/ios/
+        echo "✅ Synced to {{PROJECT_SENTRY_PATH}}/bin/ios/"
     fi
     if [ -d "{{SENTRY_ADDON_PATH}}/bin/ios/libsentry.ios.debug.xcframework" ]; then
-        if [ ! -d "../../{{IOS_EXPORT_PATH}}/libsentry.ios.debug.xcframework" ] || [ "{{SENTRY_ADDON_PATH}}/bin/ios/libsentry.ios.debug.xcframework" -nt "../../{{IOS_EXPORT_PATH}}/libsentry.ios.debug.xcframework" ]; then
-            echo "📦 Copying debug XCFramework to export..."
-            # First copy to project directory for consistency
-            cp -R {{SENTRY_ADDON_PATH}}/bin/ios/libsentry.ios.debug.xcframework project/addons/sentry/bin/ios/
-            cp -R {{SENTRY_ADDON_PATH}}/bin/ios/libsentry.ios.debug.xcframework ../../{{IOS_EXPORT_PATH}}/
-            echo "✅ GDScript Sentry GDExtension XCFramework (debug) copied to iOS export project"
-        else
-            echo "✅ Debug XCFramework already exists in export and is up to date"
-        fi
-    else
-        echo "⚠️  Debug XCFramework not found in addon directory - skipping copy"
+        echo "📦 Syncing debug XCFramework to main project..."
+        rm -rf {{PROJECT_SENTRY_PATH}}/bin/ios/libsentry.ios.debug.xcframework
+        cp -R {{SENTRY_ADDON_PATH}}/bin/ios/libsentry.ios.debug.xcframework {{PROJECT_SENTRY_PATH}}/bin/ios/
+        echo "✅ Synced to {{PROJECT_SENTRY_PATH}}/bin/ios/"
     fi
-    # Keep xcframeworks in project directory for validation
-    echo "✅ Keeping libsentry XCFrameworks in addon directory for validation"
+
+    # Sync from main project to export directory
+    if [ -d "{{PROJECT_SENTRY_PATH}}/bin/ios/libsentry.ios.release.xcframework" ]; then
+        echo "📦 Syncing release XCFramework to export..."
+        rm -rf {{IOS_EXPORT_PATH}}/libsentry.ios.release.xcframework
+        cp -R {{PROJECT_SENTRY_PATH}}/bin/ios/libsentry.ios.release.xcframework {{IOS_EXPORT_PATH}}/
+        echo "✅ Synced to {{IOS_EXPORT_PATH}}/"
+    fi
+    if [ -d "{{PROJECT_SENTRY_PATH}}/bin/ios/libsentry.ios.debug.xcframework" ]; then
+        echo "📦 Syncing debug XCFramework to export..."
+        rm -rf {{IOS_EXPORT_PATH}}/libsentry.ios.debug.xcframework
+        cp -R {{PROJECT_SENTRY_PATH}}/bin/ios/libsentry.ios.debug.xcframework {{IOS_EXPORT_PATH}}/
+        echo "✅ Synced to {{IOS_EXPORT_PATH}}/"
+    fi
+
     echo "✅ GDScript Sentry iOS GDExtension integration complete"
 
 # Verify GDScript Sentry SDK
@@ -283,6 +284,78 @@ sentry-gdscript-status:
     @if [ -d "{{IOS_EXPORT_PATH}}" ]; then echo "✅ Found"; else echo "❌ Missing"; fi
     @echo "📱 GDScript Sentry GDExtension: {{IOS_EXPORT_PATH}}/libsentry.ios.release.xcframework"
     @if [ -d "{{IOS_EXPORT_PATH}}/libsentry.ios.release.xcframework" ]; then echo "✅ Built"; else echo "❌ Not built"; fi
+
+# Sync iOS xcframeworks from project addon to export directory
+sentry-sync-ios:
+    @echo "📱 Syncing iOS Sentry xcframeworks to export directory..."
+    @if [ -d "{{PROJECT_SENTRY_PATH}}/bin/ios/libsentry.ios.release.xcframework" ]; then \
+        echo "📦 Copying release xcframework..."; \
+        rm -rf {{IOS_EXPORT_PATH}}/libsentry.ios.release.xcframework; \
+        cp -R {{PROJECT_SENTRY_PATH}}/bin/ios/libsentry.ios.release.xcframework {{IOS_EXPORT_PATH}}/; \
+        echo "✅ Copied libsentry.ios.release.xcframework"; \
+    else \
+        echo "⚠️  Release xcframework not found in {{PROJECT_SENTRY_PATH}}/bin/ios/"; \
+    fi
+    @if [ -d "{{PROJECT_SENTRY_PATH}}/bin/ios/libsentry.ios.debug.xcframework" ]; then \
+        echo "📦 Copying debug xcframework..."; \
+        rm -rf {{IOS_EXPORT_PATH}}/libsentry.ios.debug.xcframework; \
+        cp -R {{PROJECT_SENTRY_PATH}}/bin/ios/libsentry.ios.debug.xcframework {{IOS_EXPORT_PATH}}/; \
+        echo "✅ Copied libsentry.ios.debug.xcframework"; \
+    else \
+        echo "⚠️  Debug xcframework not found in {{PROJECT_SENTRY_PATH}}/bin/ios/"; \
+    fi
+    @echo "✅ iOS Sentry sync complete"
+
+# Sync macOS frameworks from submodule to project addon
+sentry-sync-macos:
+    @echo "🍎 Syncing macOS Sentry frameworks to project addon..."
+    @if [ -d "{{SENTRY_ADDON_PATH}}/bin/macos/libsentry.macos.release.framework" ]; then \
+        echo "📦 Copying release framework..."; \
+        rm -rf {{PROJECT_SENTRY_PATH}}/bin/macos/libsentry.macos.release.framework; \
+        cp -R {{SENTRY_ADDON_PATH}}/bin/macos/libsentry.macos.release.framework {{PROJECT_SENTRY_PATH}}/bin/macos/; \
+        echo "✅ Copied libsentry.macos.release.framework"; \
+    else \
+        echo "⚠️  Release framework not found in {{SENTRY_ADDON_PATH}}/bin/macos/"; \
+    fi
+    @if [ -d "{{SENTRY_ADDON_PATH}}/bin/macos/libsentry.macos.debug.framework" ]; then \
+        echo "📦 Copying debug framework..."; \
+        rm -rf {{PROJECT_SENTRY_PATH}}/bin/macos/libsentry.macos.debug.framework; \
+        cp -R {{SENTRY_ADDON_PATH}}/bin/macos/libsentry.macos.debug.framework {{PROJECT_SENTRY_PATH}}/bin/macos/; \
+        echo "✅ Copied libsentry.macos.debug.framework"; \
+    else \
+        echo "⚠️  Debug framework not found in {{SENTRY_ADDON_PATH}}/bin/macos/"; \
+    fi
+    @if [ -d "{{SENTRY_ADDON_PATH}}/bin/macos/Sentry.framework" ]; then \
+        echo "📦 Copying native Sentry.framework..."; \
+        rm -rf {{PROJECT_SENTRY_PATH}}/bin/macos/Sentry.framework; \
+        cp -R {{SENTRY_ADDON_PATH}}/bin/macos/Sentry.framework {{PROJECT_SENTRY_PATH}}/bin/macos/; \
+        echo "✅ Copied Sentry.framework"; \
+    else \
+        echo "⚠️  Sentry.framework not found in {{SENTRY_ADDON_PATH}}/bin/macos/"; \
+    fi
+    @echo "✅ macOS Sentry sync complete"
+
+# Sync Android .so files from submodule to project addon
+sentry-sync-android:
+    @echo "🤖 Syncing Android Sentry binaries to project addon..."
+    @if [ -f "{{SENTRY_ADDON_PATH}}/bin/android/libsentry.android.release.arm64.so" ]; then \
+        echo "📦 Copying Android .so files..."; \
+        cp -f {{SENTRY_ADDON_PATH}}/bin/android/libsentry.android.*.so {{PROJECT_SENTRY_PATH}}/bin/android/; \
+        echo "✅ Copied .so files"; \
+    else \
+        echo "⚠️  Android .so files not found in {{SENTRY_ADDON_PATH}}/bin/android/"; \
+    fi
+    @if [ -f "{{SENTRY_ADDON_PATH}}/bin/android/libsentry.android.release.arm64.so.debug" ]; then \
+        echo "📦 Copying Android debug symbols..."; \
+        cp -f {{SENTRY_ADDON_PATH}}/bin/android/libsentry.android.*.so.debug {{PROJECT_SENTRY_PATH}}/bin/android/; \
+        echo "✅ Copied debug symbols"; \
+    fi
+    @if [ -f "{{SENTRY_ADDON_PATH}}/bin/android/sentry_android_godot_plugin.release.aar" ]; then \
+        echo "📦 Copying Android AAR files..."; \
+        cp -f {{SENTRY_ADDON_PATH}}/bin/android/sentry_android_godot_plugin.*.aar {{PROJECT_SENTRY_PATH}}/bin/android/; \
+        echo "✅ Copied AAR files"; \
+    fi
+    @echo "✅ Android Sentry sync complete"
 
 # Validate GDScript Sentry integration
 sentry-gdscript-validate:
