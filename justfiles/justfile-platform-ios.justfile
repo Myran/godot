@@ -302,7 +302,7 @@ ios-update-pck: pre-build
 # Force rebuild all iOS components (ignores existing builds)
 rebuild-all-ios:
     @echo "🔥 Force rebuilding all iOS components..."
-    just build-all-ios force=yes
+    just build-all-ios yes
     @echo "✅ All iOS rebuilds complete"
 
 # Complete iOS pipeline - from source to device deployment
