@@ -87,3 +87,6 @@ export/android/fastlane/fastlaneaccountkey.json
 export/android/fastlane/report.xml
 upload_cert.pem
 export/android/fastlane/report.xml
+
+# Sentry macOS framework binary files
+project/addons/sentry/bin/macos/**/*.dylib
