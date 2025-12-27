@@ -322,6 +322,9 @@ build-all-ios force="no":
     just templates-ios {{force}}
     just build-ios-app
     just export-pck-ios
+    @echo ""
+    @echo "🔥 Building Native Sentry (crash reporting SDK)..."
+    just sentry-native-ios-complete {{force}}
     @echo "✅ iOS full build complete - ready for device deployment"
     @echo "💡 Use 'just run-ios-iphone' to deploy to iPhone"
     @echo "💡 Use 'just run-ios-ipad' to deploy to iPad"

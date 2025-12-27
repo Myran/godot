@@ -84,7 +84,7 @@ sentry-native-android-verify:
 # Clean native build artifacts
 sentry-native-android-clean:
     @echo "🧹 Cleaning native Sentry build artifacts..."
-    @rm -rf {{SENTRY_PATH}}/bin/
+    @rm -rf {{SENTRY_PATH}}/modules/godot-cpp/bin/libgodot-cpp.android.*.a
     @echo "✅ Native Android Sentry build artifacts cleaned"
 
 # Check native build status

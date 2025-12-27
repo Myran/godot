@@ -20,9 +20,9 @@ help-sentry-windows:
     @echo "============================================="
     @echo ""
     @echo "🔧 VM BUILD COMMANDS (from macOS):"
-    @echo "  just sentry-windows-vm-build-all      # Build release + debug on VM"
-    @echo "  just sentry-windows-vm-package       # Copy built DLLs from VM to macOS"
-    @echo "  just sentry-windows-vm-complete      # Full workflow: build + package"
+    @echo "  just build-sentry-native-windows-vm-build-all      # Build release + debug on VM"
+    @echo "  just build-sentry-native-windows-vm-package       # Copy built DLLs from VM to macOS"
+    @echo "  just build-sentry-native-windows-vm-complete      # Full workflow: build + package"
     @echo ""
     @echo "🔧 DIRECT WINDOWS COMMANDS (run ON Windows VM):"
     @echo "  just windows-native-sentry-release  # Build release GDExtension"
@@ -34,8 +34,8 @@ help-sentry-windows:
     @echo "  just sentry-windows-status          # Check build status"
     @echo "  just sentry-windows-validate        # Validate DLL integration"
     @echo ""
-    @echo "🧹 MAINTENANCE:"
-    @echo "  just sentry-windows-clean           # Clean local build artifacts"
+    @echo "🧹 GDScript Sentry Cleanup:"
+    @echo "  just sentry-gdscript-windows-clean  # Clean GDExtension DLLs"
     @echo ""
     @echo "ℹ️  ARCHITECTURE:"
     @echo "   • Uses SCons + MSVC for proper GDExtension with gdextension_init"
@@ -132,16 +132,6 @@ sentry-windows-validate:
         echo "✅ Windows Sentry GDExtension validation passed"
     else
         echo "❌ Validation failed with $ERRORS error(s)"
-        echo "   Run 'just sentry-windows-vm-complete' to build"
+        echo "   Run 'just build-sentry-native-windows-vm-complete' to build"
         exit 1
     fi
-
-# Clean local build artifacts
-sentry-windows-clean:
-    @echo "🧹 Cleaning Windows Sentry local artifacts..."
-    @rm -rf {{PROJECT_SENTRY_PATH}}/bin/windows/x86_64/*.dll
-    @rm -rf {{PROJECT_SENTRY_PATH}}/bin/windows/x86_64/*.exe
-    @echo "✅ Windows Sentry local artifacts cleaned"
-    @echo ""
-    @echo "ℹ️  To clean VM build artifacts, run on Windows:"
-    @echo "   just windows-native-sentry-clean"

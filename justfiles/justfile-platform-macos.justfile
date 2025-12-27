@@ -15,6 +15,9 @@ templates-macos force="no":
 build-all-macos force="no":
     @echo "Building all macOS components..."
     @just templates-macos {{force}}
+    @echo ""
+    @echo "🔥 Building Native Sentry (crash reporting SDK)..."
+    @just sentry-native-macos-complete {{force}}
     @echo "✅ macOS build complete"
 
 # Build macOS export templates - ARM64 only (faster, smaller)

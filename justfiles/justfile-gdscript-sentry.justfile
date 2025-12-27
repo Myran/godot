@@ -10,13 +10,14 @@ help-sentry-gdscript:
     @echo ""
     @echo "🎮 GDSCRIPT INTEGRATION:"
     @echo "  just build-sentry-gdscript-all         # Build GDScript Sentry for all platforms"
-    @echo "  just build-sentry-gdscript-desktop    # Build GDScript Sentry for desktop"
-    @echo "  just build-sentry-gdscript-android    # Build GDScript Sentry for Android"
-    @echo "  just build-sentry-gdscript-ios        # Build GDScript Sentry for iOS"
+    @echo "  just build-sentry-gdscript-macos       # Build GDScript Sentry for macOS"
+    @echo "  just build-sentry-gdscript-android     # Build GDScript Sentry for Android"
+    @echo "  just build-sentry-gdscript-ios         # Build GDScript Sentry for iOS"
+    @echo "  just build-sentry-gdscript-windows     # Build GDScript Sentry for Windows"
     @echo ""
-    @echo "🖥️  DESKTOP BUILDS:"
-    @echo "  just build-sentry-gdscript-editor-desktop   # Desktop editor build"
-    @echo "  just build-sentry-gdscript-template-desktop # Desktop template build"
+    @echo "🍎 macOS BUILDS:"
+    @echo "  just build-sentry-gdscript-editor-macos   # macOS editor build"
+    @echo "  just build-sentry-gdscript-template-macos # macOS template build"
     @echo ""
     @echo "📱 ANDROID BUILDS:"
     @echo "  just build-sentry-gdscript-android-lib   # Android library build"
@@ -26,6 +27,9 @@ help-sentry-gdscript:
     @echo "🍎 iOS BUILDS:"
     @echo "  just build-sentry-gdscript-editor-ios       # iOS editor build"
     @echo "  just build-sentry-gdscript-template-ios     # iOS template build"
+    @echo ""
+    @echo "🪟 WINDOWS BUILDS:"
+    @echo "  just build-sentry-gdscript-windows         # Windows GDExtension builds (via VM)"
     @echo ""
     @echo "🔧 MAINTENANCE:"
     @echo "  just sentry-gdscript-clean            # Clean build artifacts"
@@ -45,9 +49,10 @@ build-sentry-gdscript-all force="no":
     # Force rebuild if explicitly requested OR if submodule changed
     if [ "{{force}}" = "yes" ] || [ "{{force}}" = "force=yes" ]; then
         echo "🔥 Force rebuild enabled - rebuilding GDScript Sentry..."
-        just build-sentry-gdscript-desktop {{force}}
+        just build-sentry-gdscript-macos {{force}}
         just build-sentry-gdscript-android {{force}}
         just build-sentry-gdscript-ios {{force}}
+        just build-sentry-gdscript-windows {{force}}
     elif [ -f "{{IOS_EXPORT_PATH}}/libsentry.ios.release.xcframework/ios-arm64/libsentry.ios.release.arm64.dylib" ]; then
         echo "✅ GDScript Sentry already built:"
         echo "   📱 {{IOS_EXPORT_PATH}}/libsentry.ios.release.xcframework"
@@ -55,28 +60,29 @@ build-sentry-gdscript-all force="no":
         echo "💡 Use 'just build-sentry-gdscript-all force=yes' to force rebuild"
     else
         echo "🔧 Building GDScript Sentry (this will take 3-8 minutes)..."
-        just build-sentry-gdscript-desktop {{force}}
+        just build-sentry-gdscript-macos {{force}}
         just build-sentry-gdscript-android {{force}}
         just build-sentry-gdscript-ios {{force}}
+        just build-sentry-gdscript-windows {{force}}
     fi
     echo "✅ GDScript Sentry builds for all platforms completed"
 
-# Desktop builds (current platform)
-build-sentry-gdscript-desktop force="no":
-    just build-sentry-gdscript-editor-desktop
-    just build-sentry-gdscript-template-desktop
+# macOS builds
+build-sentry-gdscript-macos force="no":
+    just build-sentry-gdscript-editor-macos
+    just build-sentry-gdscript-template-macos
     just sentry-sync-macos
-    @echo "✅ GDScript Sentry desktop builds completed"
+    @echo "✅ GDScript Sentry macOS builds completed"
 
-build-sentry-gdscript-editor-desktop:
-    @echo "🏗️  Building GDScript Sentry for desktop editor..."
+build-sentry-gdscript-editor-macos:
+    @echo "🏗️  Building GDScript Sentry for macOS editor..."
     @cd {{SENTRY_PATH}} && scons target=editor debug_symbols=yes
-    @echo "✅ GDScript Sentry desktop editor build completed"
+    @echo "✅ GDScript Sentry macOS editor build completed"
 
-build-sentry-gdscript-template-desktop:
-    @echo "🏗️  Building GDScript Sentry for desktop template..."
+build-sentry-gdscript-template-macos:
+    @echo "🏗️  Building GDScript Sentry for macOS template..."
     @cd {{SENTRY_PATH}} && scons target=template_release debug_symbols=yes
-    @echo "✅ GDScript Sentry desktop template build completed"
+    @echo "✅ GDScript Sentry macOS template build completed"
 
 # Android builds
 build-sentry-gdscript-android force="no":
@@ -105,6 +111,7 @@ build-sentry-gdscript-template-android:
 build-sentry-gdscript-ios force="no":
     just build-sentry-gdscript-editor-ios {{force}}
     just build-sentry-gdscript-template-ios {{force}}
+    just sentry-sync-ios
     @echo "✅ GDScript Sentry iOS device builds completed"
 
 build-sentry-gdscript-editor-ios force="no":
@@ -256,21 +263,42 @@ sentry-gdscript-verify:
     fi
     @echo "✅ GDScript Sentry SDK setup verified"
 
-# Clean build artifacts
-sentry-gdscript-clean:
-    @echo "🧹 Cleaning GDScript Sentry build artifacts..."
-    # Remove built GDExtension libraries (NOT the pre-packaged native SDK frameworks)
-    @rm -f {{SENTRY_PATH}}/project/addons/sentry/bin/macos/libsentry.macos.*.framework/libsentry.macos.*
-    @rm -rf {{SENTRY_PATH}}/project/addons/sentry/bin/macos/dSYMs/libsentry.macos.*.framework.dSYM
-    @rm -f {{SENTRY_PATH}}/project/addons/sentry/bin/android/libsentry.android.*.so
-    @rm -f {{SENTRY_PATH}}/project/addons/sentry/bin/android/libsentry.android.*.so.debug
+# Platform-specific GDScript Sentry cleanup (aligned with native Sentry pattern)
+
+sentry-gdscript-ios-clean:
+    @echo "🧹 Cleaning GDScript Sentry iOS build artifacts..."
     @rm -f {{SENTRY_PATH}}/project/addons/sentry/bin/ios/libsentry.ios.*.dylib
-    # Remove exported xcframeworks
     @rm -rf {{IOS_EXPORT_PATH}}/libsentry.ios.release.xcframework
     @rm -rf {{IOS_EXPORT_PATH}}/libsentry.ios.debug.xcframework
     @rm -rf {{IOS_EXPORT_PATH}}/Build/Products/Debug-iphoneos/gametwo.app/Frameworks/libsentry.ios.*
     @rm -rf {{IOS_EXPORT_PATH}}/Build/Products/Release-iphoneos/gametwo.app/Frameworks/libsentry.ios.*
-    @echo "✅ GDScript Sentry build artifacts cleaned (native SDK frameworks preserved)"
+    @echo "✅ GDScript Sentry iOS artifacts cleaned"
+
+sentry-gdscript-android-clean:
+    @echo "🧹 Cleaning GDScript Sentry Android build artifacts..."
+    @rm -f {{SENTRY_PATH}}/project/addons/sentry/bin/android/libsentry.android.*.so
+    @rm -f {{SENTRY_PATH}}/project/addons/sentry/bin/android/libsentry.android.*.so.debug
+    @echo "✅ GDScript Sentry Android artifacts cleaned"
+
+sentry-gdscript-macos-clean:
+    @echo "🧹 Cleaning GDScript Sentry macOS build artifacts..."
+    @rm -f {{SENTRY_PATH}}/project/addons/sentry/bin/macos/libsentry.macos.*.framework/libsentry.macos.*
+    @rm -rf {{SENTRY_PATH}}/project/addons/sentry/bin/macos/dSYMs/libsentry.macos.*.framework.dSYM
+    @echo "✅ GDScript Sentry macOS artifacts cleaned"
+
+sentry-gdscript-windows-clean:
+    @echo "🧹 Cleaning GDScript Sentry Windows build artifacts..."
+    @rm -f {{PROJECT_SENTRY_PATH}}/bin/windows/x86_64/libsentry.windows.*.x86_64.dll
+    @echo "✅ GDScript Sentry Windows artifacts cleaned"
+
+# Clean all GDScript Sentry build artifacts
+sentry-gdscript-clean-all:
+    @echo "🧹 Cleaning all GDScript Sentry build artifacts..."
+    @just sentry-gdscript-ios-clean
+    @just sentry-gdscript-android-clean
+    @just sentry-gdscript-macos-clean
+    @just sentry-gdscript-windows-clean
+    @echo "✅ All GDScript Sentry build artifacts cleaned"
 
 # Check build status
 sentry-gdscript-status:
@@ -356,6 +384,13 @@ sentry-sync-android:
         echo "✅ Copied AAR files"; \
     fi
     @echo "✅ Android Sentry sync complete"
+
+# Windows builds (via VM - cross-compilation from macOS)
+build-sentry-gdscript-windows force="no":
+    @echo "🏗️  Building GDScript Sentry for Windows (via VM)..."
+    just build-sentry-native-windows-vm-build-all
+    just build-sentry-native-windows-vm-package
+    @echo "✅ GDScript Sentry Windows builds completed"
 
 # Validate GDScript Sentry integration
 sentry-gdscript-validate:

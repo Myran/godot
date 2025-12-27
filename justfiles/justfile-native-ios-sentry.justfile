@@ -88,7 +88,7 @@ sentry-native-ios-verify:
 # Clean native build artifacts
 sentry-native-ios-clean:
     @echo "🧹 Cleaning native Sentry build artifacts..."
-    @rm -rf {{SENTRY_PATH}}/project/addons/sentry/bin/
+    @rm -rf {{SENTRY_PATH}}/modules/godot-cpp/bin/libgodot-cpp.ios.*.a
     @rm -rf {{IOS_EXPORT_PATH}}/Sentry.xcframework
     @echo "✅ Native Sentry build artifacts cleaned"
 

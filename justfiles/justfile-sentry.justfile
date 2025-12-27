@@ -17,6 +17,8 @@ SENTRY_GDEXT_DIR := "extras/sentry-godot-gdextension-" + SENTRY_VERSION + "+" + 
 # Import specialized Sentry build modules
 import "justfile-native-ios-sentry.justfile"
 import "justfile-native-android-sentry.justfile"
+import "justfile-native-macos-sentry.justfile"
+import "justfile-native-windows-template-sentry.justfile"
 import "justfile-gdscript-sentry.justfile"
 import "justfile-native-windows-sentry.justfile"
 
@@ -36,30 +38,38 @@ help-sentry:
     @echo "  just build-sentry-native-android-all     # Build native Sentry for Android (debug + release)"
     @echo "  just sentry-native-android-complete     # Complete native build + validation"
     @echo ""
-    @echo "🎮 GDSCRIPT SENTRY (RUNTIME GDEXTENSION):"
-    @echo "  just help-sentry-gdscript             # Show GDScript Sentry commands"
-    @echo "  just build-sentry-gdscript-all         # Build GDScript Sentry for all platforms"
-    @echo "  just sentry-gdscript-complete        # Complete GDScript build + validation"
+    @echo "🍎 NATIVE MACOS SENTRY (BUILT-IN):"
+    @echo "  just help-sentry-native-macos            # Show native macOS commands"
+    @echo "  just build-sentry-native-macos-all       # Build native Sentry for macOS (debug + release)"
+    @echo "  just sentry-native-macos-complete        # Complete native build + validation"
     @echo ""
-    @echo "🪟 WINDOWS SENTRY (VM NATIVE BUILD):"
-    @echo "  just build-sentry-windows-vm         # Build Windows Sentry on VM (crashpad backend)"
-    @echo "  just sentry-windows-vm-complete      # Build + package from VM"
-    @echo "  just sentry-windows-vm-package       # Copy built DLLs from VM"
+    @echo "🪟 NATIVE WINDOWS SENTRY (BUILT-IN):"
+    @echo "  just help-sentry-native-windows          # Show native Windows commands"
+    @echo "  just build-sentry-native-windows-all     # Build native Sentry for Windows (debug + release)"
+    @echo "  just sentry-native-windows-complete      # Complete native build + validation"
+    @echo ""
+    @echo "🎮 GDSCRIPT SENTRY (RUNTIME GDEXTENSION):"
+    @echo "  just help-sentry-gdscript                # Show GDScript Sentry commands"
+    @echo "  just build-sentry-gdscript-all           # Build GDScript Sentry for all platforms"
+    @echo "  just sentry-gdscript-complete            # Complete GDScript build + validation"
+    @echo ""
+    @echo "🪟 WINDOWS GDEXTENSION (VM BUILD):"
+    @echo "  just build-sentry-gdscript-windows       # Build Windows GDExtension (via VM)"
+    @echo "  just build-sentry-native-windows-vm-complete  # Build + package GDExtension"
     @echo ""
     @echo "🚀 UNIFIED WORKFLOWS:"
-    @echo "  just build-sentry-all               # Build all Sentry integrations (smart rebuild)"
-    @echo "  just build-sentry-all force=yes      # Force rebuild all Sentry integrations"
-    @echo "  just validate-sentry-all             # Validate all Sentry integrations"
+    @echo "  just build-sentry-all                   # Build all Sentry integrations (smart rebuild)"
+    @echo "  just build-sentry-all force=yes          # Force rebuild all Sentry integrations"
+    @echo "  just validate-sentry-all                 # Validate all Sentry integrations"
     @echo ""
     @echo "🧧 MAINTENANCE:"
-    @echo "  just clean-sentry-all                # Clean all Sentry build artifacts"
-    @echo "  just status-sentry-quick             # Quick status check (2 lines)"
-    @echo "  just status-sentry-all               # Check status of all integrations"
+    @echo "  just clean-sentry-all                    # Clean all Sentry build artifacts"
+    @echo "  just status-sentry-quick                 # Quick status check (2 lines)"
+    @echo "  just status-sentry-all                   # Check status of all integrations"
     @echo ""
-    @echo "ℹ️  NATIVE iOS = Built into Godot executable (crash reporting)"
-    @echo "ℹ️  NATIVE ANDROID = Built into Godot executable (crash reporting)"
-    @echo "ℹ️  GDSCRIPT = Runtime GDExtension (script-level functionality)"
-    @echo "ℹ️  WINDOWS = Native MSVC build on VM with crashpad backend"
+    @echo "ℹ️  NATIVE Sentry = Compiled INTO Godot executable (C++ crash capture)"
+    @echo "ℹ️  GDScript Sentry = Runtime GDExtension (script-level crash capture)"
+    @echo "ℹ️  You need BOTH for complete crash reporting coverage"
 
 
 # Smart Sentry rebuild detection
@@ -75,9 +85,11 @@ build-sentry-all force="no":
     @echo ""
     @just build-sentry-native-android-all {{force}}
     @echo ""
-    @just build-sentry-gdscript-all
+    @just build-sentry-native-macos-all {{force}}
     @echo ""
-    @just build-sentry-windows-vm {{force}}
+    @just build-sentry-native-windows-all {{force}}
+    @echo ""
+    @just build-sentry-gdscript-all
     @echo ""
     @just validate-sentry-all
     @echo ""
@@ -98,7 +110,7 @@ build-sentry-windows-vm force="no":
     fi
 
     echo "🪟 Building Windows Sentry with crashpad backend on VM..."
-    just sentry-windows-vm-complete
+    just build-sentry-native-windows-vm-complete
 
 # Quick Sentry status check
 status-sentry-quick:
@@ -135,15 +147,42 @@ validate-sentry-all:
     @echo "🍎 Validating Native iOS Sentry..."
     @if [ ! -d "{{IOS_EXPORT_PATH}}/Sentry.xcframework" ]; then \
         echo "❌ Native Sentry SDK not built - run 'just build-sentry-native-ios-all'"; \
-        echo "❌" > /tmp/native_status; \
+        echo "❌" > /tmp/native_ios_status; \
     else \
         if [ ! -f "{{IOS_EXPORT_PATH}}/Sentry.xcframework/ios-arm64/Sentry.framework/Sentry" ]; then \
             echo "❌ Native Sentry SDK binary missing"; \
-            echo "❌" > /tmp/native_status; \
+            echo "❌" > /tmp/native_ios_status; \
         else \
             echo "✅ Native Sentry SDK validation passed"; \
-            echo "✅" > /tmp/native_status; \
+            echo "✅" > /tmp/native_ios_status; \
         fi; \
+    fi
+    @echo ""
+    @echo "🤖 Validating Native Android Sentry..."
+    @if [ ! -f "{{SENTRY_PATH}}/modules/godot-cpp/bin/libgodot-cpp.android.template_release.arm64.a" ]; then \
+        echo "❌ Native Android Sentry not built - run 'just build-sentry-native-android-all'"; \
+        echo "❌" > /tmp/native_android_status; \
+    else \
+        echo "✅ Native Android Sentry validation passed"; \
+        echo "✅" > /tmp/native_android_status; \
+    fi
+    @echo ""
+    @echo "🍎 Validating Native macOS Sentry..."
+    @if [ ! -f "{{SENTRY_PATH}}/modules/godot-cpp/bin/libgodot-cpp.macos.template_release.universal.a" ]; then \
+        echo "❌ Native macOS Sentry not built - run 'just build-sentry-native-macos-all'"; \
+        echo "❌" > /tmp/native_macos_status; \
+    else \
+        echo "✅ Native macOS Sentry validation passed"; \
+        echo "✅" > /tmp/native_macos_status; \
+    fi
+    @echo ""
+    @echo "🪟 Validating Native Windows Sentry..."
+    @if ssh {{WIN_VM_USER}}@{{WIN_VM_HOST}} "if exist {{WIN_VM_REPO}}\\extras\\sentry-godot\\modules\\godot-cpp\\bin\\libgodot-cpp.windows.template_release.x86_64.lib echo exists" 2>/dev/null | grep -q exists; then \
+        echo "✅ Native Windows Sentry validation passed"; \
+        echo "✅" > /tmp/native_windows_status; \
+    else \
+        echo "❌ Native Windows Sentry not built - run 'just build-sentry-native-windows-all'"; \
+        echo "❌" > /tmp/native_windows_status; \
     fi
     @echo ""
     @echo "🎮 Validating GDScript Sentry..."
@@ -165,37 +204,20 @@ validate-sentry-all:
         fi; \
     fi
     @echo ""
-    @echo "🪟 Validating Windows Sentry..."
-    @if [ ! -f "{{SENTRY_ADDON_PATH}}/sentry.gdextension" ]; then \
-        echo "❌ Sentry GDExtension not found"; \
-        echo "❌" > /tmp/windows_status; \
-    else \
-        if [ ! -f "{{PROJECT_SENTRY_PATH}}/bin/windows/x86_64/libsentry.windows.release.x86_64.dll" ]; then \
-            echo "❌ Windows Sentry DLL not built - run 'just build-sentry-windows-vm'"; \
-            echo "❌" > /tmp/windows_status; \
-        else \
-            if [ ! -f "{{PROJECT_SENTRY_PATH}}/bin/windows/x86_64/crashpad_handler.exe" ]; then \
-                echo "❌ Windows crashpad_handler.exe missing - run 'just build-sentry-windows-vm force=yes'"; \
-                echo "❌" > /tmp/windows_status; \
-            else \
-                echo "✅ Windows Sentry (crashpad backend) validation passed"; \
-                echo "✅" > /tmp/windows_status; \
-            fi; \
-        fi; \
-    fi
-    @echo ""
     @echo "📊 Validation Summary:"
-    @echo "   🍎 Native iOS Sentry: $(cat /tmp/native_status 2>/dev/null || echo '❌')"
+    @echo "   🍎 Native iOS Sentry: $(cat /tmp/native_ios_status 2>/dev/null || echo '❌')"
+    @echo "   🤖 Native Android Sentry: $(cat /tmp/native_android_status 2>/dev/null || echo '❌')"
+    @echo "   🍎 Native macOS Sentry: $(cat /tmp/native_macos_status 2>/dev/null || echo '❌')"
+    @echo "   🪟 Native Windows Sentry: $(cat /tmp/native_windows_status 2>/dev/null || echo '❌')"
     @echo "   🎮 GDScript Sentry: $(cat /tmp/gdscript_status 2>/dev/null || echo '❌')"
-    @echo "   🪟 Windows Sentry: $(cat /tmp/windows_status 2>/dev/null || echo '❌')"
-    @if [ "$(cat /tmp/native_status 2>/dev/null || echo '❌')" = "✅" ] && [ "$(cat /tmp/gdscript_status 2>/dev/null || echo '❌')" = "✅" ] && [ "$(cat /tmp/windows_status 2>/dev/null || echo '❌')" = "✅" ]; then \
+    @if [ "$(cat /tmp/native_ios_status 2>/dev/null || echo '❌')" = "✅" ] && [ "$(cat /tmp/native_android_status 2>/dev/null || echo '❌')" = "✅" ] && [ "$(cat /tmp/native_macos_status 2>/dev/null || echo '❌')" = "✅" ] && [ "$(cat /tmp/native_windows_status 2>/dev/null || echo '❌')" = "✅" ] && [ "$(cat /tmp/gdscript_status 2>/dev/null || echo '❌')" = "✅" ]; then \
         echo ""; \
         echo "✅ All Sentry integrations validated successfully"; \
-        rm -f /tmp/native_status /tmp/gdscript_status /tmp/windows_status; \
+        rm -f /tmp/native_ios_status /tmp/native_android_status /tmp/native_macos_status /tmp/native_windows_status /tmp/gdscript_status; \
     else \
         echo ""; \
         echo "⚠️  Some Sentry integrations need attention - see details above"; \
-        rm -f /tmp/native_status /tmp/gdscript_status /tmp/windows_status; \
+        rm -f /tmp/native_ios_status /tmp/native_android_status /tmp/native_macos_status /tmp/native_windows_status /tmp/gdscript_status; \
         exit 1; \
     fi
 
@@ -210,11 +232,14 @@ clean-sentry-all:
     @echo "🤖 Cleaning Native Android Sentry..."
     @just sentry-native-android-clean
     @echo ""
-    @echo "🎮 Cleaning GDScript Sentry..."
-    @just sentry-gdscript-clean
+    @echo "🍎 Cleaning Native macOS Sentry..."
+    @just sentry-native-macos-clean
     @echo ""
-    @echo "🪟 Cleaning Windows Sentry..."
-    @just sentry-windows-clean
+    @echo "🪟 Cleaning Native Windows Sentry..."
+    @just sentry-native-windows-clean
+    @echo ""
+    @echo "🎮 Cleaning GDScript Sentry (all platforms)..."
+    @just sentry-gdscript-clean-all
     @echo ""
     @echo "✅ All Sentry build artifacts cleaned"
 

@@ -98,15 +98,15 @@ win-vm-status:
     echo "📊 Windows VM build status..."
     ssh {{WIN_VM_USER}}@{{WIN_VM_HOST}} '{{WIN_VM_VCVARS}} && cd {{WIN_VM_REPO}} && just --justfile justfiles\justfile-windows-native.justfile --working-directory . windows-native-status'
 
-# Build Sentry DLLs natively on VM
-sentry-windows-vm-build-all:
+# Build Sentry DLLs natively on VM (native Sentry - compiled into Godot executable)
+build-sentry-native-windows-vm-build-all:
     #!/usr/bin/env bash
     set -euo pipefail
     echo "🔨 Building Sentry DLLs on Windows VM..."
     ssh {{WIN_VM_USER}}@{{WIN_VM_HOST}} '{{WIN_VM_VCVARS}} && cd {{WIN_VM_REPO}} && just --justfile justfiles\justfile-windows-native.justfile --working-directory . windows-native-sentry-all'
 
-# Package Sentry DLLs from VM to macOS
-sentry-windows-vm-package:
+# Package Sentry DLLs from VM to macOS (native Sentry - compiled into Godot executable)
+build-sentry-native-windows-vm-package:
     #!/usr/bin/env bash
     set -euo pipefail
     echo "📦 Copying Sentry DLLs from Windows VM..."
@@ -158,7 +158,7 @@ sentry-windows-vm-package:
     ls -la project/addons/sentry/bin/windows/x86_64/
 
 # Build and package Sentry from VM (complete workflow)
-sentry-windows-vm-complete: win-vm-verify sentry-windows-vm-build-all sentry-windows-vm-package
+build-sentry-native-windows-vm-complete: win-vm-verify build-sentry-native-windows-vm-build-all build-sentry-native-windows-vm-package
     @echo "✅ Windows Sentry build complete with crashpad backend"
 
 # Sync repository to Windows VM
@@ -198,7 +198,7 @@ win-vm-sync:
     fi
 
 # Full Windows native pipeline: sync → templates → sentry → package
-win-vm-full-pipeline jobs="6": win-vm-sync (win-vm-templates jobs) sentry-windows-vm-build-all win-vm-templates-package
+win-vm-full-pipeline jobs="6": win-vm-sync (win-vm-templates jobs) build-sentry-native-windows-vm-build-all win-vm-templates-package
     @echo ""
     @echo "✅ Full Windows native pipeline completed!"
     @echo "   Templates and Sentry DLLs built with MSVC + Firebase support"
@@ -218,7 +218,7 @@ build-all-windows force="no" jobs="6": win-vm-verify
     @echo ""
     just win-vm-sync
     just win-vm-templates "{{jobs}}"
-    just sentry-windows-vm-build-all
+    just build-sentry-native-windows-vm-build-all
     just win-vm-templates-package
     @echo ""
     @echo "✅ Windows full build complete!"
@@ -363,7 +363,7 @@ validate-windows-export:
     if [ ${#MISSING_SENTRY[@]} -gt 0 ]; then
         echo "❌ Missing Sentry files:"
         printf '   %s\n' "${MISSING_SENTRY[@]}"
-        echo "💡 Run 'just sentry-windows-vm-complete' to build missing files"
+        echo "💡 Run 'just build-sentry-native-windows-vm-complete' to build missing files"
         exit 1
     else
         echo "✅ Sentry DLLs found"
@@ -511,7 +511,7 @@ help-windows:
     @echo "  just win-vm-template-release - Build release template (~18 min)"
     @echo "  just win-vm-templates        - Build both templates"
     @echo "  just win-vm-templates-package - Copy templates to macOS"
-    @echo "  just sentry-windows-vm-build-all - Build Sentry DLLs on VM"
+    @echo "  just build-sentry-native-windows-vm-build-all - Build Sentry DLLs on VM"
     @echo "  just win-vm-full-pipeline    - Full pipeline: sync → build → package"
     @echo ""
     @echo "─────────────────────────────────────────────────────────────"

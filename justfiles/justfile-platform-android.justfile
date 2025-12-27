@@ -27,7 +27,10 @@ build-all-android force="no": validate-env validate-android-env
 
     just _build-common {{force}}
     just _build-android-full {{force}}
-    
+    @echo ""
+    @echo "🔥 Building Native Sentry (crash reporting SDK)..."
+    just build-sentry-native-android-all {{force}}
+
     @echo "✅ Android full build complete!"
 
 # Force rebuild everything from scratch (30-40 minutes)

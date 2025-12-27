@@ -150,6 +150,41 @@ clean:
     @echo "Cleaning build artifacts..."
     cd {{GODOT_SUBMODULE_PATH}} && scons --clean
 
+# Clean iOS Xcode build intermediates (can free 10-15 GB)
+clean-ios-build:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    echo "🧹 Cleaning iOS Xcode build intermediates..."
+    if [ -d "export/ios/Build" ]; then
+        SIZE=$(du -sh export/ios/Build 2>/dev/null | cut -f1)
+        echo "   Removing export/ios/Build/ ($SIZE)"
+        rm -rf export/ios/Build
+        echo "✅ iOS build intermediates cleaned"
+    else
+        echo "✅ No iOS build intermediates to clean"
+    fi
+
+# Clean Android Gradle build intermediates (can free 400-600 MB)
+clean-android-build:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    echo "🧹 Cleaning Android Gradle build intermediates..."
+    if [ -d "project/android/build/build" ]; then
+        SIZE=$(du -sh project/android/build/build 2>/dev/null | cut -f1)
+        echo "   Removing project/android/build/build/ ($SIZE)"
+        rm -rf project/android/build/build
+        echo "✅ Android build intermediates cleaned"
+    else
+        echo "✅ No Android build intermediates to clean"
+    fi
+
+# Clean all platform build intermediates (iOS + Android)
+clean-build-intermediates:
+    @echo "🧹 Cleaning all platform build intermediates..."
+    just clean-ios-build
+    just clean-android-build
+    @echo "✅ All build intermediates cleaned"
+
 # Update all submodules
 update-all-submodules:
     @echo "Updating all submodules..."
