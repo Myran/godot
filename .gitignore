@@ -86,3 +86,4 @@ extras/sentry-godot-gdextension-*/
 export/android/fastlane/fastlaneaccountkey.json
 export/android/fastlane/report.xml
 upload_cert.pem
+export/android/fastlane/report.xml
