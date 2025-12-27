@@ -90,3 +90,6 @@ export/android/fastlane/report.xml
 
 # Sentry macOS framework binary files
 project/addons/sentry/bin/macos/**/*.dylib
+
+# Claude Code local settings
+.claude/settings.local.json
