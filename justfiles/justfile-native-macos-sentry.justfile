@@ -116,8 +116,8 @@ sentry-native-macos-validate:
     @echo "✅ Native macOS Sentry SDK validation passed"
 
 # Complete native build + validation workflow
-sentry-native-macos-complete:
+sentry-native-macos-complete force="no":
     @just sentry-native-macos-verify
-    @just build-sentry-native-macos-all
+    @just build-sentry-native-macos-all {{force}}
     @just sentry-native-macos-validate
     @echo "🎉 Native macOS Sentry SDK complete build workflow finished"

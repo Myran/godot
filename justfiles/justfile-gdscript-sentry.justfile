@@ -410,8 +410,8 @@ sentry-gdscript-validate:
     @echo "✅ GDScript Sentry SDK validation passed"
 
 # Complete build + validation workflow
-sentry-gdscript-complete:
+sentry-gdscript-complete force="no":
     @just sentry-gdscript-verify
-    @just build-sentry-gdscript-all
+    @just build-sentry-gdscript-all {{force}}
     @just sentry-gdscript-validate
     @echo "🎉 GDScript Sentry complete build workflow finished"

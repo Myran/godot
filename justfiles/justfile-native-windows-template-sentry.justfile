@@ -75,7 +75,9 @@ build-sentry-native-windows-release force="no":
     echo "✅ Native Sentry Windows release build completed"
 
 # Complete native build + validation
-sentry-native-windows-complete: build-sentry-native-windows-all sentry-native-windows-validate
+sentry-native-windows-complete force="no":
+    @just build-sentry-native-windows-all {{force}}
+    @just sentry-native-windows-validate
     @echo "✅ Native Windows Sentry complete with validation"
 
 # Check build status (queries VM for .lib files - MSVC format)

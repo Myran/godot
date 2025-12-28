@@ -119,8 +119,8 @@ sentry-native-ios-validate:
     @echo "✅ Native Sentry SDK validation passed"
 
 # Complete native build + validation workflow
-sentry-native-ios-complete:
+sentry-native-ios-complete force="no":
     @just sentry-native-ios-verify
-    @just sentry-native-ios-build
+    @just build-sentry-native-ios-all {{force}}
     @just sentry-native-ios-validate
     @echo "🎉 Native iOS Sentry SDK complete build workflow finished"

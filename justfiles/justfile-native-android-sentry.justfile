@@ -120,8 +120,8 @@ sentry-native-android-validate:
     @echo "✅ Native Android Sentry SDK validation passed"
 
 # Complete native build + validation workflow
-sentry-native-android-complete:
+sentry-native-android-complete force="no":
     @just sentry-native-android-verify
-    @just build-native-android-all
+    @just build-sentry-native-android-all {{force}}
     @just sentry-native-android-validate
     @echo "🎉 Native Android Sentry SDK complete build workflow finished"
