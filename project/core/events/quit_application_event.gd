@@ -133,11 +133,13 @@ func _perform_firebase_cleanup() -> void:
 	## Enhanced Firebase cleanup as final step before app termination
 	## This replaces separate debug action approach (Task-230) with integrated cleanup
 
-	# Perform Firebase cleanup on Android and macOS to prevent use-after-free crashes
-	if OS.get_name() != "Android" and OS.get_name() != "macOS":
+	# Perform Firebase cleanup on Android, macOS, and Windows to prevent use-after-free crashes
+	# Windows added for task-396: Firebase callbacks completing after Logger freed during shutdown
+	var supported_platforms: Array[String] = ["Android", "macOS", "Windows"]
+	if not supported_platforms.has(OS.get_name()):
 		Log.debug(
-			"QuitApplicationEvent: Skipping Firebase cleanup on non-Android/non-macOS platform",
-			{"platform": OS.get_name()},
+			"QuitApplicationEvent: Skipping Firebase cleanup on unsupported platform",
+			{"platform": OS.get_name(), "supported": supported_platforms},
 			["debug", "quit", "firebase"]
 		)
 		return

@@ -6,7 +6,7 @@ title: >-
 status: Done
 assignee: []
 created_date: '2025-12-29 15:48'
-updated_date: '2025-12-29 19:15'
+updated_date: '2025-12-29 20:46'
 labels:
   - bug
   - windows
@@ -96,4 +96,35 @@ Added `is_instance_valid(Log)` guards throughout the codebase:
 - 3 consecutive tests passed on Windows physical machine
 - No "previously freed" errors in logs
 - All 7 Firebase C++ layer actions pass with 100% success rate
+
+## Root Cause Fix (2025-12-29)
+
+### True Root Cause
+Firebase cleanup was only enabled for Android and macOS, NOT Windows. This meant `begin_shutdown()` (which sets `is_shutting_down = true`) was never called on Windows, so C++ callbacks continued firing during shutdown.
+
+### Fix Applied
+Modified `quit_application_event.gd:137` to include Windows in the supported platforms:
+```gdscript
+var supported_platforms: Array[String] = ["Android", "macOS", "Windows"]
+if not supported_platforms.has(OS.get_name()):
+    return
+```
+
+This ensures Firebase cleanup (including `begin_shutdown()`) is called on Windows before shutdown.
+
+### Architecture Flow (After Fix)
+1. Test completes → `QuitApplicationEvent.execute()` called
+2. `_perform_firebase_cleanup()` runs on Windows (now included)
+3. `cleanup_firebase()` calls `FirebaseDatabase::begin_shutdown()`
+4. `begin_shutdown()` sets `is_shutting_down = true`
+5. Any pending callbacks check `is_app_shutting_down()` and return early
+6. Logger isn't accessed by shutdown-time callbacks → no crash
+
+### Defense in Depth
+The `is_instance_valid(Log)` guards added earlier remain as backup protection for edge cases.
+
+### Verification
+- 3 consecutive Windows physical tests passed
+- 0 "previously freed" errors
+- Firebase cleanup logs confirm proper shutdown sequence
 <!-- SECTION:NOTES:END -->
