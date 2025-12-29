@@ -1301,8 +1301,8 @@ _analyze-test-errors test_id platform config_file="":
 
                 # Validate by checking action results instead of log patterns
                 RESULTS_DIR="/Users/mattiasmyhrman/Library/Application Support/Godot/app_userdata/gametwo/logs"
-                # Try both naming patterns: test_action_results_${TEST_ID}_*.json and test_action_results_*_${TEST_ID}.json
-                RESULTS_FILE=$(find "$RESULTS_DIR" -name "test_action_results_${TEST_ID}_*.json" -o -name "test_action_results_*_${TEST_ID}.json" | head -1)
+                # Try naming patterns: exact match, suffix after TEST_ID, or prefix before TEST_ID
+                RESULTS_FILE=$(find "$RESULTS_DIR" -name "test_action_results_${TEST_ID}.json" -o -name "test_action_results_${TEST_ID}_*.json" -o -name "test_action_results_*_${TEST_ID}.json" | head -1)
                 if [[ -n "$RESULTS_FILE" && -f "$RESULTS_FILE" ]]; then
                     echo "📄 Checking action results in: $(basename "$RESULTS_FILE")"
 
@@ -1326,7 +1326,7 @@ _analyze-test-errors test_id platform config_file="":
                 else
                     echo "❌ ACTION RESULT VALIDATION FAILED"
                     echo "💡 Action results file not found in: $RESULTS_DIR"
-                    echo "💡 Searched for pattern: test_action_results_${TEST_ID}_*.json"
+                    echo "💡 Searched for patterns: test_action_results_${TEST_ID}.json, test_action_results_${TEST_ID}_*.json"
                     echo "💡 Cannot perform trust-based validation - falling back to error analysis"
                     EXPECTED_RESULT_VALIDATION=false
                 fi
