@@ -42,13 +42,15 @@ func _execute_action_logic(_params: Dictionary = {}) -> DebugActionResult:
 		if op_success:
 			successful_operations += 1
 			total_duration += TestUtils.get_duration_ms(operation)
-			Log.debug(
+			# Guard against shutdown (task-396)
+			_safe_log_debug(
 				"Signal integrity operation " + str(i) + " succeeded",
 				{"duration_ms": TestUtils.get_duration_ms(operation)},
 				["debug", "cpp_firebase"]
 			)
 		else:
-			Log.warning(
+			# Guard against shutdown (task-396)
+			_safe_log_warning(
 				"Signal integrity operation " + str(i) + " failed",
 				{"duration_ms": TestUtils.get_duration_ms(operation)},
 				["debug", "cpp_firebase", "warning"]
@@ -90,7 +92,8 @@ func _execute_action_logic(_params: Dictionary = {}) -> DebugActionResult:
 				+ ")"
 			)
 		)
-		Log.info("C++ Signal integrity test passed", test_result, ["debug", "cpp_firebase"])
+		# Guard against shutdown (task-396)
+		_safe_log_info("C++ Signal integrity test passed", test_result, ["debug", "cpp_firebase"])
 		return TestUtils.make_success_result(
 			"C++ signal integrity test passed", total_duration, action_name, test_result
 		)
@@ -105,7 +108,8 @@ func _execute_action_logic(_params: Dictionary = {}) -> DebugActionResult:
 		),
 		true
 	)
-	Log.error("C++ Signal integrity test failed", test_result, ["debug", "cpp_firebase", "error"])
+	# Guard against shutdown (task-396)
+	_safe_log_error("C++ Signal integrity test failed", test_result, ["debug", "cpp_firebase", "error"])
 	return TestUtils.make_failure_result(
 		"C++ signal integrity test failed",
 		TestConstants.ERROR_CODES.SIGNAL_INTEGRITY_FAILED,

@@ -74,7 +74,8 @@ func _execute_action_logic(_params: Dictionary = {}) -> DebugActionResult:
 			if get_success:
 				data_matches = true
 
-				Log.info(
+				# Guard against shutdown (task-396)
+				_safe_log_info(
 					"Large data operation completed",
 					{"size": config_name, "data_length": large_data.length()},
 					["debug", "cpp_firebase"]

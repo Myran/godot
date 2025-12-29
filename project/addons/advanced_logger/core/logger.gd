@@ -217,6 +217,9 @@ var _has_custom_buffer_dump: bool = false
 
 var _config: ConfigManager = null
 
+# Shutdown guard - prevents logging after PREDELETE notification (task-396)
+var _shutting_down: bool = false
+
 
 func _init() -> void:
 	_config = ConfigManager.get_instance()
@@ -339,6 +342,9 @@ func _forward_to_sentry(message: String, level: String, context: Dictionary, tag
 
 
 func _log(level: LogLevel, message: String, context: Dictionary, tags: Array[String]) -> void:
+	# Guard against logging during shutdown (task-396)
+	if _shutting_down:
+		return
 	if not _validate_message(message):
 		return
 
@@ -850,6 +856,8 @@ func _update_format_setting(key: String, value: bool) -> void:
 
 func _notification(what: int) -> void:
 	if what == NOTIFICATION_PREDELETE:
+		# Set shutdown flag to prevent further logging (task-396)
+		_shutting_down = true
 		if _config != null:
 			if is_instance_valid(_config) and _config.has_signal("config_changed"):
 				if _config.config_changed.is_connected(_on_config_changed):

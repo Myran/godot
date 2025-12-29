@@ -5,6 +5,27 @@ var cpp_db: Object = null
 var cpp_db_instance_id: int = -1
 
 
+# Safe logging helpers - guard against shutdown race condition (task-396)
+func _safe_log_debug(message: String, context: Dictionary = {}, tags: Array[String] = []) -> void:
+	if is_instance_valid(Log):
+		Log.debug(message, context, tags)
+
+
+func _safe_log_info(message: String, context: Dictionary = {}, tags: Array[String] = []) -> void:
+	if is_instance_valid(Log):
+		Log.info(message, context, tags)
+
+
+func _safe_log_warning(message: String, context: Dictionary = {}, tags: Array[String] = []) -> void:
+	if is_instance_valid(Log):
+		Log.warning(message, context, tags)
+
+
+func _safe_log_error(message: String, context: Dictionary = {}, tags: Array[String] = []) -> void:
+	if is_instance_valid(Log):
+		Log.error(message, context, tags)
+
+
 func _init() -> void:
 	super._init()
 	category = "C++ Firebase"
@@ -15,23 +36,27 @@ func get_cpp_firebase_database() -> Object:
 	if cpp_db != null and is_instance_valid(cpp_db):
 		return cpp_db
 
-	Log.debug("Creating direct C++ Firebase instance", {}, ["debug", "cpp_firebase"])
+	# Guard against shutdown (task-396)
+	_safe_log_debug("Creating direct C++ Firebase instance", {}, ["debug", "cpp_firebase"])
 
 	if not ClassDB.class_exists("FirebaseDatabase"):
-		Log.error(
+		# Guard against shutdown (task-396)
+		_safe_log_error(
 			"FirebaseDatabase C++ class not available", {}, ["debug", "cpp_firebase", "error"]
 		)
 		return null
 
 	cpp_db = ClassDB.instantiate("FirebaseDatabase")
 	if not is_instance_valid(cpp_db):
-		Log.error(
+		# Guard against shutdown (task-396)
+		_safe_log_error(
 			"Failed to instantiate C++ FirebaseDatabase", {}, ["debug", "cpp_firebase", "error"]
 		)
 		return null
 
 	cpp_db_instance_id = cpp_db.get_instance_id()
-	Log.info(
+	# Guard against shutdown (task-396)
+	_safe_log_info(
 		"C++ Firebase instance created",
 		{"cpp_instance_id": cpp_db_instance_id},
 		["debug", "cpp_firebase"]
@@ -119,47 +144,59 @@ func _create_get_value_state_handler(
 	op_data: Dictionary, request_id: int, start_time: int, _op_name: String, method_name: String
 ) -> Callable:
 	return func(recv_request_id: int, rtdb_key: String, value: Variant) -> void:
+		# Guard against shutdown - Log may be freed before callback fires (task-396)
+		if not is_instance_valid(Log):
+			return
 		if recv_request_id == request_id:
 			var duration: int = Time.get_ticks_msec() - start_time
 
 			op_data.completed = true
 			# Firebase operation completed successfully - null means no data at path, which is valid
 			op_data.result = value
-			Log.info(
-				"C++ get_value operation completed",
-				{
-					"method": method_name,
-					"duration_ms": duration,
-					"rtdb_key": rtdb_key,
-					"value_type": typeof(value),
-					"data_exists": value != null
-				},
-				["debug", "cpp_firebase"]
-			)
+			# Double-guard against shutdown race (task-396) - check validity right before call
+			if is_instance_valid(Log):
+				Log.info(
+					"C++ get_value operation completed",
+					{
+						"method": method_name,
+						"duration_ms": duration,
+						"rtdb_key": rtdb_key,
+						"value_type": typeof(value),
+						"data_exists": value != null
+					},
+					["debug", "cpp_firebase"]
+				)
 
 
 func _create_set_value_state_handler(
 	op_data: Dictionary, request_id: int, start_time: int, _op_name: String, method_name: String
 ) -> Callable:
 	return func(recv_request_id: int, success: bool, error_message: String) -> void:
+		# Guard against shutdown - Log may be freed before callback fires (task-396)
+		if not is_instance_valid(Log):
+			return
 		if recv_request_id == request_id:
 			var duration: int = Time.get_ticks_msec() - start_time
 
 			op_data.completed = true
 			if success:
 				op_data.result = true
-				Log.info(
-					"C++ set/remove operation completed",
-					{"method": method_name, "duration_ms": duration},
-					["debug", "cpp_firebase"]
-				)
+				# Double-guard against shutdown race (task-396) - check validity right before call
+				if is_instance_valid(Log):
+					Log.info(
+						"C++ set/remove operation completed",
+						{"method": method_name, "duration_ms": duration},
+						["debug", "cpp_firebase"]
+					)
 			else:
 				op_data.error = error_message
-				Log.error(
-					"C++ set/remove operation failed",
-					{"method": method_name, "duration_ms": duration, "error": error_message},
-					["debug", "cpp_firebase", "error"]
-				)
+				# Double-guard against shutdown race (task-396) - check validity right before call
+				if is_instance_valid(Log):
+					Log.error(
+						"C++ set/remove operation failed",
+						{"method": method_name, "duration_ms": duration, "error": error_message},
+						["debug", "cpp_firebase", "error"]
+					)
 
 
 func execute_with_state_validation(
@@ -168,7 +205,8 @@ func execute_with_state_validation(
 	"""Execute C++ Firebase action with state validation integration"""
 	var start_time: int = Time.get_ticks_msec()
 
-	Log.info(
+	# Guard against shutdown (task-396)
+	_safe_log_info(
 		"Executing C++ Firebase action with state validation",
 		{"action_name": action_name, "session_id": session_id, "sequence": sequence},
 		["debug", "cpp_firebase", "state_validation"]
@@ -178,7 +216,8 @@ func execute_with_state_validation(
 	var duration: int = Time.get_ticks_msec() - start_time
 
 	if success:
-		Log.info(
+		# Guard against shutdown (task-396)
+		_safe_log_info(
 			"C++ Firebase action completed successfully",
 			{"action_name": action_name, "duration_ms": duration},
 			["debug", "cpp_firebase", "success"]
@@ -187,7 +226,8 @@ func execute_with_state_validation(
 			success, duration, action_name, {"session_id": session_id, "sequence": sequence}
 		)
 
-	Log.error(
+	# Guard against shutdown (task-396)
+	_safe_log_error(
 		"C++ Firebase action failed",
 		{"action_name": action_name, "duration_ms": duration},
 		["debug", "cpp_firebase", "error"]
