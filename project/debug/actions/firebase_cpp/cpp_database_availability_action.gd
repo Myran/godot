@@ -20,8 +20,7 @@ func _execute_action_logic(_params: Dictionary = {}) -> DebugActionResult:
 		"timestamp": Time.get_unix_time_from_system()
 	}
 
-	# Guard against shutdown (task-396)
-	_safe_log_info(
+	Log.info(
 		"🔍 FIREBASE CLASS AVAILABILITY CHECK",
 		availability_info,
 		["debug", "cpp_firebase", "availability"]

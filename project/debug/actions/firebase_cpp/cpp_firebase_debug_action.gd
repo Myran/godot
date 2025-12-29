@@ -5,27 +5,6 @@ var cpp_db: Object = null
 var cpp_db_instance_id: int = -1
 
 
-# Safe logging helpers - guard against shutdown race condition (task-396)
-func _safe_log_debug(message: String, context: Dictionary = {}, tags: Array[String] = []) -> void:
-	if is_instance_valid(Log):
-		Log.debug(message, context, tags)
-
-
-func _safe_log_info(message: String, context: Dictionary = {}, tags: Array[String] = []) -> void:
-	if is_instance_valid(Log):
-		Log.info(message, context, tags)
-
-
-func _safe_log_warning(message: String, context: Dictionary = {}, tags: Array[String] = []) -> void:
-	if is_instance_valid(Log):
-		Log.warning(message, context, tags)
-
-
-func _safe_log_error(message: String, context: Dictionary = {}, tags: Array[String] = []) -> void:
-	if is_instance_valid(Log):
-		Log.error(message, context, tags)
-
-
 func _init() -> void:
 	super._init()
 	category = "C++ Firebase"
@@ -36,27 +15,23 @@ func get_cpp_firebase_database() -> Object:
 	if cpp_db != null and is_instance_valid(cpp_db):
 		return cpp_db
 
-	# Guard against shutdown (task-396)
-	_safe_log_debug("Creating direct C++ Firebase instance", {}, ["debug", "cpp_firebase"])
+	Log.debug("Creating direct C++ Firebase instance", {}, ["debug", "cpp_firebase"])
 
 	if not ClassDB.class_exists("FirebaseDatabase"):
-		# Guard against shutdown (task-396)
-		_safe_log_error(
+		Log.error(
 			"FirebaseDatabase C++ class not available", {}, ["debug", "cpp_firebase", "error"]
 		)
 		return null
 
 	cpp_db = ClassDB.instantiate("FirebaseDatabase")
 	if not is_instance_valid(cpp_db):
-		# Guard against shutdown (task-396)
-		_safe_log_error(
+		Log.error(
 			"Failed to instantiate C++ FirebaseDatabase", {}, ["debug", "cpp_firebase", "error"]
 		)
 		return null
 
 	cpp_db_instance_id = cpp_db.get_instance_id()
-	# Guard against shutdown (task-396)
-	_safe_log_info(
+	Log.info(
 		"C++ Firebase instance created",
 		{"cpp_instance_id": cpp_db_instance_id},
 		["debug", "cpp_firebase"]
@@ -205,8 +180,7 @@ func execute_with_state_validation(
 	"""Execute C++ Firebase action with state validation integration"""
 	var start_time: int = Time.get_ticks_msec()
 
-	# Guard against shutdown (task-396)
-	_safe_log_info(
+	Log.info(
 		"Executing C++ Firebase action with state validation",
 		{"action_name": action_name, "session_id": session_id, "sequence": sequence},
 		["debug", "cpp_firebase", "state_validation"]
@@ -216,8 +190,7 @@ func execute_with_state_validation(
 	var duration: int = Time.get_ticks_msec() - start_time
 
 	if success:
-		# Guard against shutdown (task-396)
-		_safe_log_info(
+		Log.info(
 			"C++ Firebase action completed successfully",
 			{"action_name": action_name, "duration_ms": duration},
 			["debug", "cpp_firebase", "success"]
@@ -226,8 +199,7 @@ func execute_with_state_validation(
 			success, duration, action_name, {"session_id": session_id, "sequence": sequence}
 		)
 
-	# Guard against shutdown (task-396)
-	_safe_log_error(
+	Log.error(
 		"C++ Firebase action failed",
 		{"action_name": action_name, "duration_ms": duration},
 		["debug", "cpp_firebase", "error"]

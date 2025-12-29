@@ -276,13 +276,11 @@ func _execute_core(
 		if params.is_empty():
 			result = await action_callable.call()
 		else:
-			# Guard against shutdown (task-396)
-			if is_instance_valid(Log):
-				Log.debug(
-					"Action called with parameters",
-					{"action": action_name, "params": params},
-					["debug", "action", "params", "unified"]
-				)
+			Log.debug(
+				"Action called with parameters",
+				{"action": action_name, "params": params},
+				["debug", "action", "params", "unified"]
+			)
 			result = await action_callable.call(params)
 
 		# VALIDATION CONTEXT: Detailed result logging
@@ -291,20 +289,18 @@ func _execute_core(
 			if object_name == "null":
 				object_name = "not_object"
 
-			# Guard against shutdown (task-396)
-			if is_instance_valid(Log):
-				Log.info(
-					"CALLABLE_EXECUTION_DEBUG: Callable execution completed",
-					{
-						"action": action_name,
-						"result": result,
-						"result_type": typeof(result),
-						"result_class": object_name,
-						"is_bool": typeof(result) == TYPE_BOOL,
-						"bool_value": result if typeof(result) == TYPE_BOOL else "not_bool"
-					},
-					["debug", "callable", "task148", "unified"]
-				)
+			Log.info(
+				"CALLABLE_EXECUTION_DEBUG: Callable execution completed",
+				{
+					"action": action_name,
+					"result": result,
+					"result_type": typeof(result),
+					"result_class": object_name,
+					"is_bool": typeof(result) == TYPE_BOOL,
+					"bool_value": result if typeof(result) == TYPE_BOOL else "not_bool"
+				},
+				["debug", "callable", "task148", "unified"]
+			)
 
 		# UNIFIED RESULT EVALUATION
 		success = _evaluate_action_result(result)
@@ -405,72 +401,62 @@ func execute_with_params(params: Dictionary = {}) -> void:
 
 func _evaluate_action_result(result: Variant) -> bool:
 	# CALLABLE_EXECUTION_DEBUG: Add detailed result evaluation logging for TASK-148
-	# Guard against shutdown (task-396)
-	if is_instance_valid(Log):
-		Log.info(
-			"CALLABLE_EXECUTION_DEBUG: Evaluating action result",
-			{
-				"action": action_name,
-				"result_is_null": result == null,
-				"result_type": typeof(result),
-				"result_value": str(result) if result != null else "null"
-			},
-			["debug", "callable", "task148", "evaluation"]
-		)
+	Log.info(
+		"CALLABLE_EXECUTION_DEBUG: Evaluating action result",
+		{
+			"action": action_name,
+			"result_is_null": result == null,
+			"result_type": typeof(result),
+			"result_value": str(result) if result != null else "null"
+		},
+		["debug", "callable", "task148", "evaluation"]
+	)
 
 	if result == null:
-		# Guard against shutdown (task-396)
-		if is_instance_valid(Log):
-			Log.info(
-				"CALLABLE_EXECUTION_DEBUG: Result is null - returning false",
-				{"action": action_name},
-				["debug", "callable", "task148", "evaluation"]
-			)
+		Log.info(
+			"CALLABLE_EXECUTION_DEBUG: Result is null - returning false",
+			{"action": action_name},
+			["debug", "callable", "task148", "evaluation"]
+		)
 		return false
 
 	if result is DebugActionResult:
 		var is_success: bool = result.is_success()
 		var error_code: String = result.get_error_code()
-		# Guard against shutdown (task-396)
-		if is_instance_valid(Log):
-			Log.info(
-				"CALLABLE_EXECUTION_DEBUG: DebugActionResult evaluation",
-				{
-					"action": action_name,
-					"is_success": is_success,
-					"error_code": error_code,
-					"restart_needed": error_code == "RESTART_NEEDED"
-				},
-				["debug", "callable", "task148", "evaluation"]
-			)
+		Log.info(
+			"CALLABLE_EXECUTION_DEBUG: DebugActionResult evaluation",
+			{
+				"action": action_name,
+				"is_success": is_success,
+				"error_code": error_code,
+				"restart_needed": error_code == "RESTART_NEEDED"
+			},
+			["debug", "callable", "task148", "evaluation"]
+		)
 		if error_code == "RESTART_NEEDED":
 			return true  # Treat restart pending as success to avoid test failure
 		return is_success
 
 	if result is bool:
-		# Guard against shutdown (task-396)
-		if is_instance_valid(Log):
-			Log.info(
-				"CALLABLE_EXECUTION_DEBUG: Boolean result evaluation",
-				{"action": action_name, "bool_result": result, "returning": result},
-				["debug", "callable", "task148", "evaluation"]
-			)
+		Log.info(
+			"CALLABLE_EXECUTION_DEBUG: Boolean result evaluation",
+			{"action": action_name, "bool_result": result, "returning": result},
+			["debug", "callable", "task148", "evaluation"]
+		)
 		return result
 
 	if result is Array and result.size() >= 1:
 		var array_result: bool = result[0] == true
-		# Guard against shutdown (task-396)
-		if is_instance_valid(Log):
-			Log.info(
-				"CALLABLE_EXECUTION_DEBUG: Array result evaluation",
-				{
-					"action": action_name,
-					"array_size": result.size(),
-					"first_element": result[0],
-					"returning": array_result
-				},
-				["debug", "callable", "task148", "evaluation"]
-			)
+		Log.info(
+			"CALLABLE_EXECUTION_DEBUG: Array result evaluation",
+			{
+				"action": action_name,
+				"array_size": result.size(),
+				"first_element": result[0],
+				"returning": array_result
+			},
+			["debug", "callable", "task148", "evaluation"]
+		)
 		return array_result
 
 	if result is Dictionary and result.has("error"):
@@ -513,13 +499,11 @@ func _update_status(text: String, is_error: bool = false) -> void:
 
 	status_updated.emit(text, is_error)
 
-	# Guard against shutdown - Log may be freed before callback fires (task-396)
-	if is_instance_valid(Log):
-		Log.info(
-			text,
-			{"category": category, "group": group, "action": action_name, "error": is_error},
-			["debug", "test"]
-		)
+	Log.info(
+		text,
+		{"category": category, "group": group, "action": action_name, "error": is_error},
+		["debug", "test"]
+	)
 
 
 func execute_with_state_validation(

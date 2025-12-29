@@ -86,9 +86,6 @@ static func format_completion_report(action: DebugAction, success: bool, result:
 
 
 static func _log_to_system(action: DebugAction, text: String, is_error: bool) -> void:
-	# Guard against shutdown - Log may be freed before callback fires (task-396)
-	if not is_instance_valid(Log):
-		return
 	if is_error:
 		Log.error(text, {"action": action.action_name}, [Log.TAG_DEBUG, Log.TAG_TEST])
 	else:
