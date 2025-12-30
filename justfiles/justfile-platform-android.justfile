@@ -394,6 +394,12 @@ export-android-aab force="no": _validate-godot-editor (_ensure-directory-exists 
         exit 1
     fi
 
+    # Verify Sentry AAR files exist (should be there from build-sentry-gdscript-android)
+    if [ ! -f "project/android/build/libs/debug/sentry_android_godot_plugin.debug.aar" ] || [ ! -f "project/android/build/libs/release/sentry_android_godot_plugin.release.aar" ]; then
+        echo "❌ Sentry AAR files not found - run: just build-sentry-gdscript-android"
+        exit 1
+    fi
+
     # Debug build
     ./editor/{{GODOT_EXECUTABLE}} --path {{PROJECT_PATH}} \
         --export-debug "Android aab" \
@@ -407,9 +413,6 @@ export-android-aab force="no": _validate-godot-editor (_ensure-directory-exists 
     echo "✅ Android AAB files exported successfully"
     echo "📁 Debug: export/android/{{GAME_NAME}}_debug.aab"
     echo "📁 Release: export/android/{{GAME_NAME}}.aab"
-
-    # Ensure Sentry AAR files are in place for Gradle builds
-    @just sentry-sync-android
 
 # Export all Android formats (APK + AAB)
 export-all-android force="no":
@@ -485,13 +488,16 @@ export-android-apk-debug: _validate-godot-editor (_ensure-directory-exists "expo
         exit 1
     fi
 
+    # Verify Sentry AAR files exist (should be there from build-sentry-gdscript-android)
+    if [ ! -f "project/android/build/libs/debug/sentry_android_godot_plugin.debug.aar" ]; then
+        echo "❌ Sentry AAR files not found - run: just build-sentry-gdscript-android"
+        exit 1
+    fi
+
     # Debug build
     ./editor/{{GODOT_EXECUTABLE}} --path {{PROJECT_PATH}} \
         --export-debug "Android apk" \
         ../export/android/{{GAME_NAME}}_debug.apk --headless
-
-    # Ensure Sentry AAR files are in place for Gradle builds
-    just sentry-sync-android
 
     echo "✅ Android debug APK exported successfully"
     echo "📁 Debug: export/android/{{GAME_NAME}}_debug.apk"
@@ -514,13 +520,16 @@ export-android-apk-release: _validate-godot-editor (_ensure-directory-exists "ex
         exit 1
     fi
 
+    # Verify Sentry AAR files exist (should be there from build-sentry-gdscript-android)
+    if [ ! -f "project/android/build/libs/release/sentry_android_godot_plugin.release.aar" ]; then
+        echo "❌ Sentry AAR files not found - run: just build-sentry-gdscript-android"
+        exit 1
+    fi
+
     # Release build
     ./editor/{{GODOT_EXECUTABLE}} --path {{PROJECT_PATH}} \
         --export-release "Android apk" \
         ../export/android/{{GAME_NAME}}.apk --headless
-
-    # Ensure Sentry AAR files are in place for Gradle builds
-    just sentry-sync-android
 
     echo "✅ Android release APK exported successfully"
     echo "📁 Release: export/android/{{GAME_NAME}}.apk"
