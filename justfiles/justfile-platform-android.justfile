@@ -408,12 +408,8 @@ export-android-aab force="no": _validate-godot-editor (_ensure-directory-exists 
     echo "📁 Debug: export/android/{{GAME_NAME}}_debug.aab"
     echo "📁 Release: export/android/{{GAME_NAME}}.aab"
 
-    # Copy Sentry AAR files to addons directory for automatic discovery
-    echo "📦 Copying Sentry AAR files to addons directory..."
-    mkdir -p {{PROJECT_PATH}}/addons/sentry/
-    cp {{PROJECT_PATH}}/addons/sentry/bin/android/sentry_android_godot_plugin.debug.aar {{PROJECT_PATH}}/addons/sentry/ 2>/dev/null || echo "⚠️  Debug AAR file not found in build output"
-    cp {{PROJECT_PATH}}/addons/sentry/bin/android/sentry_android_godot_plugin.release.aar {{PROJECT_PATH}}/addons/sentry/ 2>/dev/null || echo "⚠️  Release AAR file not found in build output"
-    echo "✅ Sentry AAR files copied to addons directory"
+    # Ensure Sentry AAR files are in place for Gradle builds
+    @just sentry-sync-android
 
 # Export all Android formats (APK + AAB)
 export-all-android force="no":
@@ -494,12 +490,8 @@ export-android-apk-debug: _validate-godot-editor (_ensure-directory-exists "expo
         --export-debug "Android apk" \
         ../export/android/{{GAME_NAME}}_debug.apk --headless
 
-    # Copy Sentry AAR files to addons directory for automatic discovery
-    echo "📦 Copying Sentry AAR files to addons directory..."
-    mkdir -p {{PROJECT_PATH}}/addons/sentry/
-    cp {{PROJECT_PATH}}/addons/sentry/bin/android/sentry_android_godot_plugin.debug.aar {{PROJECT_PATH}}/addons/sentry/ 2>/dev/null || echo "⚠️  Debug AAR file not found in build output"
-    cp {{PROJECT_PATH}}/addons/sentry/bin/android/sentry_android_godot_plugin.release.aar {{PROJECT_PATH}}/addons/sentry/ 2>/dev/null || echo "⚠️  Release AAR file not found in build output"
-    echo "✅ Sentry AAR files copied to addons directory"
+    # Ensure Sentry AAR files are in place for Gradle builds
+    @just sentry-sync-android
 
     echo "✅ Android debug APK exported successfully"
     echo "📁 Debug: export/android/{{GAME_NAME}}_debug.apk"
@@ -527,12 +519,8 @@ export-android-apk-release: _validate-godot-editor (_ensure-directory-exists "ex
         --export-release "Android apk" \
         ../export/android/{{GAME_NAME}}.apk --headless
 
-    # Copy Sentry AAR files to addons directory for automatic discovery
-    echo "📦 Copying Sentry AAR files to addons directory..."
-    mkdir -p {{PROJECT_PATH}}/addons/sentry/
-    cp {{PROJECT_PATH}}/addons/sentry/bin/android/sentry_android_godot_plugin.debug.aar {{PROJECT_PATH}}/addons/sentry/ 2>/dev/null || echo "⚠️  Debug AAR file not found in build output"
-    cp {{PROJECT_PATH}}/addons/sentry/bin/android/sentry_android_godot_plugin.release.aar {{PROJECT_PATH}}/addons/sentry/ 2>/dev/null || echo "⚠️  Release AAR file not found in build output"
-    echo "✅ Sentry AAR files copied to addons directory"
+    # Ensure Sentry AAR files are in place for Gradle builds
+    @just sentry-sync-android
 
     echo "✅ Android release APK exported successfully"
     echo "📁 Release: export/android/{{GAME_NAME}}.apk"
@@ -863,30 +851,30 @@ clear-android-test-cache:
     
     echo "💡 App will use embedded config on next restart"
 
-# Build Sentry native libraries (.so files) from source using SCons
+# Build Sentry Android libraries from source (AAR via Gradle, .so via SCons)
 sentry-android-setup-libraries:
     #!/usr/bin/env bash
     set -euo pipefail
 
-    echo "🔧 Building Sentry native libraries for Android from source..."
+    echo "🔧 Building Sentry Android libraries from source..."
+    echo "   This builds both AAR (Gradle) and native .so (SCons) files"
 
-    # Build Sentry Android libraries from source using SCons
-    echo "🏗️  Building Sentry for Android (debug + release)..."
-    cd {{SENTRY_PATH}}
+    # Build AAR files using Gradle
+    echo "🏗️  Building Sentry Android AAR files..."
+    cd {{SENTRY_PATH}} && ./gradlew assemble
 
-    # Build debug version
-    echo "🔨 Building debug libraries..."
-    scons platform=android target=template_debug arch=arm64 debug_symbols=yes
+    # Build native .so files using SCons (template_debug)
+    echo "🔨 Building debug native libraries..."
+    cd {{SENTRY_PATH}} && scons platform=android target=template_debug arch=arm64 debug_symbols=yes
 
-    # Build release version
-    echo "🔨 Building release libraries..."
-    scons platform=android target=template_release arch=arm64 debug_symbols=yes optimize=size
+    # Build native .so files using SCons (template_release)
+    echo "🔨 Building release native libraries..."
+    cd {{SENTRY_PATH}} && scons platform=android target=template_release arch=arm64 debug_symbols=yes optimize=size
 
-    # Copy AAR files built by Gradle to addon directory
-    echo "📦 Copying Sentry AAR files to addon directory..."
-    mkdir -p project/addons/sentry/
-    cp project/addons/sentry/bin/android/sentry_android_godot_plugin.debug.aar project/addons/sentry/ 2>/dev/null || echo "⚠️  Debug AAR file not found in build output"
-    cp project/addons/sentry/bin/android/sentry_android_godot_plugin.release.aar project/addons/sentry/ 2>/dev/null || echo "⚠️  Release AAR file not found in build output"
+    # Sync all built files to correct locations
+    echo "📦 Syncing built files to project..."
+    @just sentry-sync-android
 
     echo "✅ Sentry Android libraries built from source"
-    echo "   Libraries located in: project/addons/sentry/bin/android/"
+    echo "   AAR files: {{SENTRY_PATH}}/android_lib/build/outputs/aar/"
+    echo "   .so files: {{SENTRY_ADDON_PATH}}/bin/android/"
