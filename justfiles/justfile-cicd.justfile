@@ -67,8 +67,119 @@ ship-ios: export-pck-ios
     @echo "🚀 Shipping to App Store..."
     cd export/ios && fastlane beta
 
-# Ship to Play Store (production release)
-# Renamed from deploy-android to clarify: ship = app store, deploy = dev device
-ship-android: export-android-aab
-    @echo "🚀 Shipping to Play Store..."
-    cd export/android && fastlane internal
+# Ship to Play Store
+# Workflow: bump version → export AAB → upload
+# Usage: just ship-android [track] [draft]
+#   track: internal (default), alpha, beta, production
+#   draft: yes (for first upload to track), no (default)
+ship-android track="internal" draft="no":
+    #!/usr/bin/env bash
+    set -euo pipefail
+    echo "🚀 Shipping to Play Store ({{track}} track)..."
+
+    # Step 1: Bump version code
+    echo "📈 Bumping version code..."
+    cd export/android && fastlane bump_version
+
+    # Step 2: Export AAB
+    echo "📦 Exporting AAB..."
+    cd ../.. && just export-android-aab
+
+    # Step 3: Upload to Play Store
+    echo "☁️  Uploading to Play Store..."
+    if [ "{{draft}}" = "yes" ]; then
+        cd export/android && fastlane {{track}} draft:true
+    else
+        cd export/android && fastlane {{track}}
+    fi
+
+    echo "✅ Ship complete!"
+
+# Aliases
+ship-android-internal draft="no":
+    just ship-android internal {{draft}}
+
+ship-android-production draft="no":
+    just ship-android production {{draft}}
+
+# Internal: Shared pipeline steps for export → test → ship
+# Used by both pipeline-ship and pipeline-rebuild-ship
+_pipeline-export-test-ship track draft:
+    #!/usr/bin/env bash
+    set -euo pipefail
+
+    # Export all platforms
+    echo "2️⃣ Exporting all platforms..."
+    if ! just export-all; then
+        echo "❌ Export failed - aborting ship"
+        exit 1
+    fi
+    echo "✅ Exports completed"
+    echo ""
+
+    # Run tests
+    echo "3️⃣ Running cross-platform tests..."
+    if ! just log-run test; then
+        echo "❌ Tests failed - aborting ship"
+        exit 1
+    fi
+    echo "✅ Tests passed"
+    echo ""
+
+    # Ship to Play Store
+    echo "4️⃣ Shipping to Play Store ({{track}})..."
+    just ship-android {{track}} {{draft}}
+
+# Pipeline: build → export → test → ship
+# Standard release workflow - builds if needed, only ships if all tests pass
+# Usage: just pipeline-ship [track] [draft]
+#   track: internal (default), production
+#   draft: yes (first upload), no (default)
+pipeline-ship track="internal" draft="no":
+    #!/usr/bin/env bash
+    set -euo pipefail
+
+    echo "🚀 Running pipeline-ship: build → export → test → ship"
+    echo "⏱️  This takes 20-45 minutes"
+    echo ""
+
+    # Step 1: Build (incremental, not forced)
+    echo "1️⃣ Building (incremental)..."
+    if ! just build; then
+        echo "❌ Build failed - aborting ship"
+        exit 1
+    fi
+    echo "✅ Build completed"
+    echo ""
+
+    # Steps 2-4: Export, test, ship (shared)
+    just _pipeline-export-test-ship {{track}} {{draft}}
+
+    echo ""
+    echo "🎉 Pipeline-ship completed!"
+
+# Pipeline: rebuild → export → test → ship
+# Full rebuild before shipping - use after C++ or template changes
+# Usage: just pipeline-rebuild-ship [track] [draft]
+pipeline-rebuild-ship track="internal" draft="no":
+    #!/usr/bin/env bash
+    set -euo pipefail
+
+    echo "🔄 Running pipeline-rebuild-ship: rebuild → export → test → ship"
+    echo "⏱️  This may take 45-90 minutes"
+    echo ""
+
+    # Step 1: Rebuild
+    echo "1️⃣ Rebuilding all components..."
+    if ! just rebuild; then
+        echo "❌ Rebuild failed - aborting ship"
+        exit 1
+    fi
+    echo "✅ Rebuild completed"
+    echo ""
+
+    # Steps 2-4: Export, test, ship (shared)
+    just _pipeline-export-test-ship {{track}} {{draft}}
+
+    echo ""
+    echo "🎉 Pipeline-rebuild-ship completed!"

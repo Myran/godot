@@ -361,7 +361,7 @@ setup-android:
 
 # Export Android AAB files (Google Play Store format)
 # Renamed from export-aab-android for platform naming consistency (Task-378)
-export-android-aab force="no": _validate-godot-editor (_ensure-directory-exists "export/android") pre-build
+export-android-aab force="yes": _validate-godot-editor (_ensure-directory-exists "export/android") pre-build
     #!/usr/bin/env bash
     set -euo pipefail
     echo "📦 Exporting Android AAB files (debug + release)..."
@@ -415,7 +415,7 @@ export-android-aab force="no": _validate-godot-editor (_ensure-directory-exists 
     echo "📁 Release: export/android/{{GAME_NAME}}.aab"
 
 # Export all Android formats (APK + AAB)
-export-all-android force="no":
+export-all-android force="yes":
     @echo "📦 Exporting all Android formats (APK + AAB)..."
     just export-android-apk {{force}}
     just export-android-aab {{force}}
@@ -423,7 +423,7 @@ export-all-android force="no":
 
 # Export Android APK files
 # Renamed from export-apk-android for platform naming consistency (Task-378)
-export-android-apk force="no": _validate-godot-editor (_ensure-directory-exists "export/android")
+export-android-apk force="yes": _validate-godot-editor (_ensure-directory-exists "export/android")
     #!/usr/bin/env bash
     set -euo pipefail
     echo "📦 Exporting Android APK files (debug + release)..."
