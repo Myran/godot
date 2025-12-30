@@ -278,6 +278,10 @@ sentry-gdscript-android-clean:
     @echo "🧹 Cleaning GDScript Sentry Android build artifacts..."
     @rm -f {{SENTRY_PATH}}/project/addons/sentry/bin/android/libsentry.android.*.so
     @rm -f {{SENTRY_PATH}}/project/addons/sentry/bin/android/libsentry.android.*.so.debug
+    @rm -f {{SENTRY_PATH}}/project/addons/sentry/bin/android/sentry_android_godot_plugin.*.aar
+    @rm -f {{PROJECT_SENTRY_PATH}}/sentry_android_godot_plugin.*.aar
+    @rm -f project/android/build/libs/debug/sentry_android_godot_plugin.debug.aar
+    @rm -f project/android/build/libs/release/sentry_android_godot_plugin.release.aar
     @echo "✅ GDScript Sentry Android artifacts cleaned"
 
 sentry-gdscript-macos-clean:
@@ -380,19 +384,19 @@ sentry-sync-android:
     fi
     @if [ -f "{{SENTRY_ADDON_PATH}}/bin/android/sentry_android_godot_plugin.release.aar" ]; then \
         echo "📦 Copying Android AAR files..."; \
-        cp -f {{SENTRY_ADDON_PATH}}/bin/android/sentry_android_godot_plugin.*.aar {{PROJECT_SENTRY_PATH}}/bin/android/; \
+        cp -f {{SENTRY_ADDON_PATH}}/bin/android/sentry_android_godot_plugin.*.aar {{PROJECT_SENTRY_PATH}}/; \
         echo "✅ Copied AAR files to addon"; \
     fi
     # Also copy AAR files to project/android/build/libs for Gradle
-    @if [ -f "{{PROJECT_SENTRY_PATH}}/bin/android/sentry_android_godot_plugin.debug.aar" ]; then \
+    @if [ -f "{{PROJECT_SENTRY_PATH}}/sentry_android_godot_plugin.debug.aar" ]; then \
         echo "📦 Copying AAR to android build libs..."; \
         mkdir -p project/android/build/libs/debug project/android/build/libs/release; \
-        cp -f {{PROJECT_SENTRY_PATH}}/bin/android/sentry_android_godot_plugin.debug.aar project/android/build/libs/debug/; \
+        cp -f {{PROJECT_SENTRY_PATH}}/sentry_android_godot_plugin.debug.aar project/android/build/libs/debug/; \
         echo "✅ Copied debug AAR to libs/debug"; \
     fi
-    @if [ -f "{{PROJECT_SENTRY_PATH}}/bin/android/sentry_android_godot_plugin.release.aar" ]; then \
+    @if [ -f "{{PROJECT_SENTRY_PATH}}/sentry_android_godot_plugin.release.aar" ]; then \
         mkdir -p project/android/build/libs/release; \
-        cp -f {{PROJECT_SENTRY_PATH}}/bin/android/sentry_android_godot_plugin.release.aar project/android/build/libs/release/; \
+        cp -f {{PROJECT_SENTRY_PATH}}/sentry_android_godot_plugin.release.aar project/android/build/libs/release/; \
         echo "✅ Copied release AAR to libs/release"; \
     fi
     @echo "✅ Android Sentry sync complete"
@@ -421,6 +425,16 @@ sentry-gdscript-validate:
     fi
     # Validate Android AAR files in build libs
     @echo "🤖 Validating Android AAR files..."
+    @if [ ! -f "{{PROJECT_SENTRY_PATH}}/sentry_android_godot_plugin.debug.aar" ]; then \
+        echo "❌ Android debug AAR not found in {{PROJECT_SENTRY_PATH}}/"; \
+        echo "   Run: just sentry-sync-android"; \
+        exit 1; \
+    fi
+    @if [ ! -f "{{PROJECT_SENTRY_PATH}}/sentry_android_godot_plugin.release.aar" ]; then \
+        echo "❌ Android release AAR not found in {{PROJECT_SENTRY_PATH}}/"; \
+        echo "   Run: just sentry-sync-android"; \
+        exit 1; \
+    fi
     @if [ ! -f "project/android/build/libs/debug/sentry_android_godot_plugin.debug.aar" ]; then \
         echo "❌ Android debug AAR not found in project/android/build/libs/debug/"; \
         echo "   Run: just sentry-sync-android"; \
@@ -431,7 +445,7 @@ sentry-gdscript-validate:
         echo "   Run: just sentry-sync-android"; \
         exit 1; \
     fi
-    @echo "✅ Android AAR files found in build libs"
+    @echo "✅ Android AAR files found in all locations"
     @echo "✅ GDScript Sentry SDK validation passed"
 
 # Complete build + validation workflow
