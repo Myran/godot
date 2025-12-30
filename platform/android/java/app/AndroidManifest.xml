@@ -29,6 +29,8 @@
             android:enabled="true"
             tools:targetApi="29" />
 
+        <!--ADD_SENTRY_METADATA_HERE_-->
+
         <activity
             android:name=".GodotApp"
             android:label="@string/godot_project_name_string"

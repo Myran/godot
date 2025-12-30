@@ -1,9 +1,11 @@
 // Gradle build config for Godot Engine's Android port.
 //ADD_FIREBASE_BUILDSCRIPT_HERE_
+//ADD_SENTRY_BUILDSCRIPT_HERE_
 plugins {
     id 'com.android.application'
     id 'org.jetbrains.kotlin.android'
 }
+//ADD_SENTRY_PLUGIN_APPLY_HERE_
 
 apply from: 'config.gradle'
 
