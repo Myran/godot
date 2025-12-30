@@ -868,21 +868,21 @@ sentry-android-setup-libraries:
     echo "🔧 Building Sentry Android libraries from source..."
     echo "   This builds both AAR (Gradle) and native .so (SCons) files"
 
-    # Build AAR files using Gradle
+    # Build AAR files using Gradle (use subshell to preserve working directory)
     echo "🏗️  Building Sentry Android AAR files..."
-    cd {{SENTRY_PATH}} && ./gradlew assemble
+    (cd {{SENTRY_PATH}} && ./gradlew assemble)
 
     # Build native .so files using SCons (template_debug)
     echo "🔨 Building debug native libraries..."
-    cd {{SENTRY_PATH}} && scons platform=android target=template_debug arch=arm64 debug_symbols=yes
+    (cd {{SENTRY_PATH}} && scons platform=android target=template_debug arch=arm64 debug_symbols=yes)
 
     # Build native .so files using SCons (template_release)
     echo "🔨 Building release native libraries..."
-    cd {{SENTRY_PATH}} && scons platform=android target=template_release arch=arm64 debug_symbols=yes optimize=size
+    (cd {{SENTRY_PATH}} && scons platform=android target=template_release arch=arm64 debug_symbols=yes optimize=size)
 
     # Sync all built files to correct locations
     echo "📦 Syncing built files to project..."
-    @just sentry-sync-android
+    just sentry-sync-android
 
     echo "✅ Sentry Android libraries built from source"
     echo "   AAR files: {{SENTRY_PATH}}/android_lib/build/outputs/aar/"
