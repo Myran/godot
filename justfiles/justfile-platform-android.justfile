@@ -491,7 +491,7 @@ export-android-apk-debug: _validate-godot-editor (_ensure-directory-exists "expo
         ../export/android/{{GAME_NAME}}_debug.apk --headless
 
     # Ensure Sentry AAR files are in place for Gradle builds
-    @just sentry-sync-android
+    just sentry-sync-android
 
     echo "✅ Android debug APK exported successfully"
     echo "📁 Debug: export/android/{{GAME_NAME}}_debug.apk"
@@ -520,7 +520,7 @@ export-android-apk-release: _validate-godot-editor (_ensure-directory-exists "ex
         ../export/android/{{GAME_NAME}}.apk --headless
 
     # Ensure Sentry AAR files are in place for Gradle builds
-    @just sentry-sync-android
+    just sentry-sync-android
 
     echo "✅ Android release APK exported successfully"
     echo "📁 Release: export/android/{{GAME_NAME}}.apk"
