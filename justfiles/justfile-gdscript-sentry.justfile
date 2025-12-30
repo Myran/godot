@@ -419,6 +419,19 @@ sentry-gdscript-validate:
         echo "❌ GDScript Sentry GDExtension binary missing"; \
         exit 1; \
     fi
+    # Validate Android AAR files in build libs
+    @echo "🤖 Validating Android AAR files..."
+    @if [ ! -f "project/android/build/libs/debug/sentry_android_godot_plugin.debug.aar" ]; then \
+        echo "❌ Android debug AAR not found in project/android/build/libs/debug/"; \
+        echo "   Run: just sentry-sync-android"; \
+        exit 1; \
+    fi
+    @if [ ! -f "project/android/build/libs/release/sentry_android_godot_plugin.release.aar" ]; then \
+        echo "❌ Android release AAR not found in project/android/build/libs/release/"; \
+        echo "   Run: just sentry-sync-android"; \
+        exit 1; \
+    fi
+    @echo "✅ Android AAR files found in build libs"
     @echo "✅ GDScript Sentry SDK validation passed"
 
 # Complete build + validation workflow
