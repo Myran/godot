@@ -124,12 +124,6 @@ android-inject-sdks:
     @echo "🛡️ Sentry: Inserting manifest metadata..."
     just replace project/android/build/AndroidManifest.xml "<!--ADD_SENTRY_METADATA_HERE_-->" inject/sentry_metadata.xml
 
-    # Sentry: Copy AAR files to libs directories
-    @echo "🛡️ Sentry: Copying AAR files to libs directories..."
-    mkdir -p project/android/build/libs/debug project/android/build/libs/release
-    cp -f project/addons/sentry/bin/android/sentry_android_godot_plugin.debug.aar project/android/build/libs/debug/ 2>/dev/null || echo "⚠️  Debug AAR not found"
-    cp -f project/addons/sentry/bin/android/sentry_android_godot_plugin.release.aar project/android/build/libs/release/ 2>/dev/null || echo "⚠️  Release AAR not found"
-
     @echo ""
     @echo "✅ Android SDKs injected successfully!"
     @echo "   🔥 Firebase: Auth, Database, Messaging, Analytics, Config"

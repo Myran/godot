@@ -381,7 +381,19 @@ sentry-sync-android:
     @if [ -f "{{SENTRY_ADDON_PATH}}/bin/android/sentry_android_godot_plugin.release.aar" ]; then \
         echo "📦 Copying Android AAR files..."; \
         cp -f {{SENTRY_ADDON_PATH}}/bin/android/sentry_android_godot_plugin.*.aar {{PROJECT_SENTRY_PATH}}/bin/android/; \
-        echo "✅ Copied AAR files"; \
+        echo "✅ Copied AAR files to addon"; \
+    fi
+    # Also copy AAR files to project/android/build/libs for Gradle
+    @if [ -f "{{PROJECT_SENTRY_PATH}}/bin/android/sentry_android_godot_plugin.debug.aar" ]; then \
+        echo "📦 Copying AAR to android build libs..."; \
+        mkdir -p project/android/build/libs/debug project/android/build/libs/release; \
+        cp -f {{PROJECT_SENTRY_PATH}}/bin/android/sentry_android_godot_plugin.debug.aar project/android/build/libs/debug/; \
+        echo "✅ Copied debug AAR to libs/debug"; \
+    fi
+    @if [ -f "{{PROJECT_SENTRY_PATH}}/bin/android/sentry_android_godot_plugin.release.aar" ]; then \
+        mkdir -p project/android/build/libs/release; \
+        cp -f {{PROJECT_SENTRY_PATH}}/bin/android/sentry_android_godot_plugin.release.aar project/android/build/libs/release/; \
+        echo "✅ Copied release AAR to libs/release"; \
     fi
     @echo "✅ Android Sentry sync complete"
 
