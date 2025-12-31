@@ -132,22 +132,32 @@ ship-windows: export-windows-release
     @echo "📁 Executable location: export/windows/gametwo.exe"
 
 # Ship all platforms
-# Ships all platforms in parallel with default settings:
+# Ships all platforms sequentially with default settings:
 # - iOS: fastlane beta
 # - Android: internal track
 # - macOS: export + symbols
 # - Windows: export + symbols
 # Usage: just ship-all
-ship-all: &-ship-ios &-ship-android-internal &-ship-macos &-ship-windows
-    @echo ""
-    @echo "🎉 All platforms shipped!"
-    @echo ""
-    @echo "iOS:        Shipped to TestFlight (fastlane beta)"
-    @echo "Android:    Shipped to Play Store (internal track)"
-    @echo "macOS:      Exported to export/macos/gametwo.app"
-    @echo "Windows:    Exported to export/windows/gametwo.exe"
-    @echo ""
-    @echo "Debug symbols uploaded to Sentry for all platforms"
+ship-all:
+    #!/usr/bin/env bash
+    set -euo pipefail
+
+    echo "🚀 Shipping all platforms..."
+
+    just ship-ios
+    just ship-android-internal
+    just ship-macos
+    just ship-windows
+
+    echo ""
+    echo "🎉 All platforms shipped!"
+    echo ""
+    echo "iOS:        Shipped to TestFlight (fastlane beta)"
+    echo "Android:    Shipped to Play Store (internal track)"
+    echo "macOS:      Exported to export/macos/gametwo.app"
+    echo "Windows:    Exported to export/windows/gametwo.exe"
+    echo ""
+    echo "Debug symbols uploaded to Sentry for all platforms"
 
 # Internal: Export all platforms and run tests
 # Shared by all pipeline variants
@@ -188,32 +198,32 @@ _pipeline-ship platforms track draft:
         platforms="ios android macos windows"
     fi
 
-    # Default to android if no platforms specified
+    # Default to all platforms if not specified
     if [ -z "$platforms" ]; then
-        platforms="android"
+        platforms="ios android macos windows"
     fi
 
     echo "4️⃣ Shipping to: $platforms"
     echo ""
 
-    # Ship to each platform in parallel (background jobs)
+    # Ship to each platform sequentially
     for platform in $platforms; do
         case "$platform" in
             ios)
                 echo "  → Shipping iOS..."
-                just ship-ios &
+                just ship-ios
                 ;;
             android)
                 echo "  → Shipping Android ($track)..."
-                just ship-android "$track" "$draft" &
+                just ship-android "$track" "$draft"
                 ;;
             macos)
                 echo "  → Shipping macOS..."
-                just ship-macos &
+                just ship-macos
                 ;;
             windows)
                 echo "  → Shipping Windows..."
-                just ship-windows &
+                just ship-windows
                 ;;
             *)
                 echo "  ⚠️  Unknown platform: $platform (skipping)"
@@ -221,21 +231,19 @@ _pipeline-ship platforms track draft:
         esac
     done
 
-    # Wait for all background jobs
-    wait
     echo ""
     echo "✅ Shipping complete!"
 
 # Pipeline: build → export → test → ship
 # Standard release workflow - builds if needed, only ships if all tests pass
 # Usage: just pipeline-ship [platforms...] [track] [draft]
-#   platforms: all, ios, android, macos, windows, or space-separated list (default: android)
+#   platforms: all (default), ios, android, macos, windows, or space-separated list
 #   track: internal (default), alpha, beta, production (Android only)
 #   draft: yes (first upload), no (default) (Android only)
 # Examples:
-#   just pipeline-ship              # Android only
-#   just pipeline-ship all         # All platforms
-#   just pipeline-ship ios macos   # iOS + macOS only
+#   just pipeline-ship              # All platforms (default)
+#   just pipeline-ship android      # Android only
+#   just pipeline-ship ios macos    # iOS + macOS only
 #   just pipeline-ship android production yes  # Android production draft
 pipeline-ship platforms="" track="internal" draft="no":
     #!/usr/bin/env bash
@@ -266,13 +274,13 @@ pipeline-ship platforms="" track="internal" draft="no":
 # Pipeline: rebuild → export → test → ship
 # Full rebuild before shipping - use after C++ or template changes
 # Usage: just pipeline-rebuild-ship [platforms...] [track] [draft]
-#   platforms: all, ios, android, macos, windows, or space-separated list (default: android)
+#   platforms: all (default), ios, android, macos, windows, or space-separated list
 #   track: internal (default), alpha, beta, production (Android only)
 #   draft: yes (first upload), no (default) (Android only)
 # Examples:
-#   just pipeline-rebuild-ship              # Android only
-#   just pipeline-rebuild-ship all         # All platforms
-#   just pipeline-rebuild-ship ios macos   # iOS + macOS only
+#   just pipeline-rebuild-ship              # All platforms (default)
+#   just pipeline-rebuild-ship android      # Android only
+#   just pipeline-rebuild-ship ios macos    # iOS + macOS only
 pipeline-rebuild-ship platforms="" track="internal" draft="no":
     #!/usr/bin/env bash
     set -euo pipefail
@@ -299,9 +307,9 @@ pipeline-rebuild-ship platforms="" track="internal" draft="no":
     echo ""
     echo "🎉 Pipeline-rebuild-ship completed!"
 
-# Convenience aliases
-pipeline-ship-all: pipeline-ship all
-    @echo "🎉 All-platform pipeline completed!"
+# Convenience aliases (explicitly pass "all" as argument)
+pipeline-ship-all:
+    just pipeline-ship all
 
-pipeline-rebuild-ship-all: pipeline-rebuild-ship all
-    @echo "🎉 All-platform rebuild pipeline completed!"
+pipeline-rebuild-ship-all:
+    just pipeline-rebuild-ship all
