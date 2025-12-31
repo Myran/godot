@@ -4,13 +4,14 @@ title: 'Rename Sentry build recipes: desktop → macos for consistency'
 status: Done
 assignee: []
 created_date: '2025-12-27 10:00'
-updated_date: '2025-12-27 14:51'
+updated_date: '2025-12-29 00:07'
 labels:
   - refactor
   - sentry
   - naming-consistency
 dependencies: []
 priority: low
+ordinal: 254000
 ---
 
 ## Description

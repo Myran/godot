@@ -4,7 +4,7 @@ title: Implement comprehensive Windows desktop testing methodology and infrastru
 status: Done
 assignee: []
 created_date: '2025-11-19 20:19'
-updated_date: '2025-12-22 23:44'
+updated_date: '2025-12-29 00:07'
 labels:
   - windows
   - testing
@@ -15,6 +15,7 @@ labels:
 dependencies:
   - task-277
 priority: high
+ordinal: 293000
 ---
 
 ## Description

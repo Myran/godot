@@ -4,13 +4,14 @@ title: Create platform parity tracking document
 status: Done
 assignee: []
 created_date: '2025-12-23 23:01'
-updated_date: '2025-12-24 00:03'
+updated_date: '2025-12-29 00:07'
 labels:
   - documentation
   - parity
   - infrastructure
 dependencies: []
 priority: high
+ordinal: 262000
 ---
 
 ## Description

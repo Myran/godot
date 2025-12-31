@@ -4,7 +4,7 @@ title: Revert Sentry build system to build all platforms from source
 status: Done
 assignee: []
 created_date: '2025-12-20 10:49'
-updated_date: '2025-12-20 11:07'
+updated_date: '2025-12-29 00:07'
 labels:
   - sentry
   - build-system
@@ -13,6 +13,7 @@ labels:
   - source-build
 dependencies: []
 priority: high
+ordinal: 281000
 ---
 
 ## Description

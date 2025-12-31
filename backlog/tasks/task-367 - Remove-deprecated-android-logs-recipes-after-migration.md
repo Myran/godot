@@ -4,7 +4,7 @@ title: Remove deprecated android-logs-* recipes after migration
 status: Done
 assignee: []
 created_date: '2025-12-23 22:59'
-updated_date: '2025-12-25 17:06'
+updated_date: '2025-12-29 00:07'
 labels:
   - cleanup
   - android
@@ -13,6 +13,7 @@ labels:
 dependencies:
   - task-375
 priority: low
+ordinal: 270000
 ---
 
 ## Description

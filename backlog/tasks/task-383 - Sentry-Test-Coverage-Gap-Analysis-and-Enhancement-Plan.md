@@ -1,9 +1,10 @@
 ---
 id: task-383
 title: Sentry Test Coverage Gap Analysis and Enhancement Plan
-status: To Do
+status: Done
 assignee: []
 created_date: '2025-12-26 09:12'
+updated_date: '2025-12-29 00:07'
 labels:
   - sentry
   - testing
@@ -11,6 +12,7 @@ labels:
   - documentation
 dependencies: []
 priority: medium
+ordinal: 125
 ---
 
 ## Description

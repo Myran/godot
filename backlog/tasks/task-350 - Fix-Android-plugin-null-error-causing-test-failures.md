@@ -4,7 +4,7 @@ title: Fix Android plugin null error causing test failures
 status: Done
 assignee: []
 created_date: '2025-12-19 05:20'
-updated_date: '2025-12-22 23:44'
+updated_date: '2025-12-29 00:07'
 labels:
   - android
   - bugfix
@@ -13,6 +13,7 @@ labels:
   - high-priority
 dependencies: []
 priority: high
+ordinal: 286000
 ---
 
 ## Description

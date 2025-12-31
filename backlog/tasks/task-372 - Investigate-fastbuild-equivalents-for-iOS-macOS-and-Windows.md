@@ -4,7 +4,7 @@ title: 'Investigate fastbuild equivalents for iOS, macOS, and Windows'
 status: Consider
 assignee: []
 created_date: '2025-12-23 23:00'
-updated_date: '2025-12-23 23:43'
+updated_date: '2025-12-29 00:07'
 labels:
   - build
   - performance
@@ -12,6 +12,7 @@ labels:
   - phase-3
 dependencies: []
 priority: low
+ordinal: 7000
 ---
 
 ## Description
@@ -59,10 +60,10 @@ Only Android has a fast iteration build command (`fastbuild-android`, 30-60s). O
 
 ## Acceptance Criteria
 <!-- AC:BEGIN -->
-- [ ] #1 Benchmark current build times documented for all platforms
-- [ ] #2 Bottlenecks identified for iOS, macOS, and Windows builds
-- [ ] #3 Feasibility assessment completed for each platform
-- [ ] #4 Prototype fastbuild-* implemented where feasible (target: <2 min)
+- [ ] #1 #1 Benchmark current build times documented for all platforms
+- [ ] #2 #2 Bottlenecks identified for iOS, macOS, and Windows builds
+- [ ] #3 #3 Feasibility assessment completed for each platform
+- [ ] #4 #4 Prototype fastbuild-* implemented where feasible (target: <2 min)
 
 ## Reference
 
@@ -115,6 +116,8 @@ Create findings doc with:
 - Recommended optimizations
 - "Not feasible" explanations where applicable
 <!-- SECTION:PLAN:END -->
+
+<!-- AC:END -->
 
 - [ ] #5 Validation: Any new fastbuild-* recipe tested with GDScript-only changes
 - [ ] #6 Limitations documented in CLAUDE.md or platform-specific docs

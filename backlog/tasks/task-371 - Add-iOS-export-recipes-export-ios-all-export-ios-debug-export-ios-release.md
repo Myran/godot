@@ -4,7 +4,7 @@ title: 'Add iOS export recipes (export-ios-all, export-ios-debug, export-ios-rel
 status: Done
 assignee: []
 created_date: '2025-12-23 23:00'
-updated_date: '2025-12-25 17:06'
+updated_date: '2025-12-29 00:07'
 labels:
   - export
   - ios
@@ -13,6 +13,7 @@ labels:
 dependencies:
   - task-365
 priority: medium
+ordinal: 266000
 ---
 
 ## Description

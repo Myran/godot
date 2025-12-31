@@ -4,6 +4,7 @@ title: Migrate CI/CD to ephemeral macOS VMs using Tart + Ekiden
 status: Consider
 assignee: []
 created_date: '2025-12-14 00:33'
+updated_date: '2025-12-29 00:07'
 labels:
   - ci-cd
   - github-actions
@@ -15,6 +16,7 @@ labels:
 dependencies:
   - task-337
 priority: low
+ordinal: 3000
 ---
 
 ## Description

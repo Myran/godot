@@ -4,7 +4,7 @@ title: Consolidate Android device log naming (android-logs-* vs logs-android-*)
 status: Done
 assignee: []
 created_date: '2025-12-23 23:01'
-updated_date: '2025-12-24 00:06'
+updated_date: '2025-12-29 00:07'
 labels:
   - naming
   - android
@@ -13,6 +13,7 @@ labels:
 dependencies:
   - task-374
 priority: medium
+ordinal: 263000
 ---
 
 ## Description

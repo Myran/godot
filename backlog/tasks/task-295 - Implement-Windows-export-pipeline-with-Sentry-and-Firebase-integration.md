@@ -4,7 +4,7 @@ title: Implement Windows export pipeline with Sentry and Firebase integration
 status: Done
 assignee: []
 created_date: '2025-11-19 21:42'
-updated_date: '2025-12-21 09:40'
+updated_date: '2025-12-29 00:07'
 labels:
   - windows
   - export
@@ -17,6 +17,7 @@ dependencies:
   - task-277
   - task-293
 priority: high
+ordinal: 291000
 ---
 
 ## Description

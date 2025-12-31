@@ -4,7 +4,7 @@ title: 'Add iOS device diagnostic commands (logs-ios-health, logs-ios-status)'
 status: Done
 assignee: []
 created_date: '2025-12-23 23:00'
-updated_date: '2025-12-24 00:15'
+updated_date: '2025-12-29 00:07'
 labels:
   - logs
   - ios
@@ -13,6 +13,7 @@ labels:
 dependencies:
   - task-375
 priority: medium
+ordinal: 268000
 ---
 
 ## Description

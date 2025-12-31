@@ -4,7 +4,7 @@ title: Remove Windows prebuilt Sentry binaries after switching to source builds
 status: Done
 assignee: []
 created_date: '2025-12-20 10:47'
-updated_date: '2025-12-23 14:41'
+updated_date: '2025-12-29 00:07'
 labels:
   - sentry
   - cleanup
@@ -12,6 +12,7 @@ labels:
   - prebuilt-binaries
 dependencies: []
 priority: low
+ordinal: 282000
 ---
 
 ## Description

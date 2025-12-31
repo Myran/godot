@@ -5,7 +5,7 @@ status: Done
 assignee:
   - '@claude'
 created_date: '2025-12-19 10:58'
-updated_date: '2025-12-22 09:46'
+updated_date: '2025-12-29 00:07'
 labels:
   - critical
   - android
@@ -14,6 +14,7 @@ labels:
   - test-framework
 dependencies: []
 priority: high
+ordinal: 284000
 ---
 
 ## Description

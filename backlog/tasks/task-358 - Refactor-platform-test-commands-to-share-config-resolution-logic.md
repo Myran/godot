@@ -4,7 +4,7 @@ title: Refactor platform test commands to share config resolution logic
 status: Done
 assignee: []
 created_date: '2025-12-21 15:33'
-updated_date: '2025-12-21 22:10'
+updated_date: '2025-12-29 00:07'
 labels:
   - testing
   - windows
@@ -12,6 +12,7 @@ labels:
   - bug
 dependencies: []
 priority: medium
+ordinal: 279000
 ---
 
 ## Description

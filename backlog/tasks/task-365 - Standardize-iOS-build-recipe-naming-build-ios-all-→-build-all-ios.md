@@ -4,7 +4,7 @@ title: Standardize iOS build recipe naming (build-ios-all → build-all-ios)
 status: Done
 assignee: []
 created_date: '2025-12-23 22:59'
-updated_date: '2025-12-25 17:06'
+updated_date: '2025-12-29 00:07'
 labels:
   - naming
   - ios
@@ -13,6 +13,7 @@ labels:
 dependencies:
   - task-376
 priority: low
+ordinal: 272000
 ---
 
 ## Description

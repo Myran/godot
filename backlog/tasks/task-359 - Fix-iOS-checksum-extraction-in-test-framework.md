@@ -4,13 +4,14 @@ title: Fix iOS checksum extraction in test framework
 status: Done
 assignee: []
 created_date: '2025-12-22 14:01'
-updated_date: '2025-12-23 12:18'
+updated_date: '2025-12-29 00:07'
 labels:
   - test-framework
   - ios
   - checksum
 dependencies: []
 priority: high
+ordinal: 278000
 ---
 
 ## Description

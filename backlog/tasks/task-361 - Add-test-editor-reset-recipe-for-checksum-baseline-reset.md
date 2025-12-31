@@ -4,7 +4,7 @@ title: Add test-editor-reset recipe for checksum baseline reset
 status: Done
 assignee: []
 created_date: '2025-12-23 22:58'
-updated_date: '2025-12-24 00:07'
+updated_date: '2025-12-29 00:07'
 labels:
   - testing
   - parity
@@ -13,6 +13,7 @@ labels:
 dependencies:
   - task-376
 priority: medium
+ordinal: 276000
 ---
 
 ## Description

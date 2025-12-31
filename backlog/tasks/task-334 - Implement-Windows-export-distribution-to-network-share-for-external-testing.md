@@ -1,9 +1,10 @@
 ---
 id: task-334
 title: Implement Windows export distribution to network share for external testing
-status: To Do
+status: Done
 assignee: []
 created_date: '2025-12-13 20:20'
+updated_date: '2025-12-29 00:07'
 labels:
   - windows
   - testing
@@ -13,6 +14,7 @@ labels:
 dependencies:
   - task-295
 priority: medium
+ordinal: 31.25
 ---
 
 ## Description

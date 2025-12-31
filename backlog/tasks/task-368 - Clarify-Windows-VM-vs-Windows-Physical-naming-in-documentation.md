@@ -4,7 +4,7 @@ title: Clarify Windows VM vs Windows Physical naming in documentation
 status: Done
 assignee: []
 created_date: '2025-12-23 22:59'
-updated_date: '2025-12-25 17:06'
+updated_date: '2025-12-29 00:07'
 labels:
   - documentation
   - windows
@@ -13,6 +13,7 @@ labels:
 dependencies:
   - task-376
 priority: low
+ordinal: 269000
 ---
 
 ## Description

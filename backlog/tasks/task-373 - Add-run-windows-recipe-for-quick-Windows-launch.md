@@ -4,7 +4,7 @@ title: Add run-windows recipe for quick Windows launch
 status: Done
 assignee: []
 created_date: '2025-12-23 23:00'
-updated_date: '2025-12-24 00:10'
+updated_date: '2025-12-29 00:07'
 labels:
   - windows
   - run
@@ -13,6 +13,7 @@ labels:
 dependencies:
   - task-376
 priority: low
+ordinal: 265000
 ---
 
 ## Description

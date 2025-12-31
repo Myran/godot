@@ -4,7 +4,7 @@ title: Add Windows platform support to Sentry test configurations
 status: Done
 assignee: []
 created_date: '2025-12-25 23:59'
-updated_date: '2025-12-26 00:08'
+updated_date: '2025-12-29 00:07'
 labels:
   - sentry
   - windows
@@ -12,6 +12,7 @@ labels:
   - platform-parity
 dependencies: []
 priority: high
+ordinal: 260000
 ---
 
 ## Description

@@ -4,7 +4,7 @@ title: Implement automated App Store and Google Play deployment with Fastlane
 status: Consider
 assignee: []
 created_date: '2025-12-14 00:35'
-updated_date: '2025-12-15 09:35'
+updated_date: '2025-12-29 00:07'
 labels:
   - ci-cd
   - deployment
@@ -17,6 +17,7 @@ labels:
 dependencies:
   - task-336
 priority: medium
+ordinal: 4000
 ---
 
 ## Description

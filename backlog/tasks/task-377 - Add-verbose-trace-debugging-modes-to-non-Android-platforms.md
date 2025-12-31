@@ -4,7 +4,7 @@ title: Add verbose/trace debugging modes to non-Android platforms
 status: Consider
 assignee: []
 created_date: '2025-12-23 23:01'
-updated_date: '2025-12-23 23:43'
+updated_date: '2025-12-29 00:07'
 labels:
   - testing
   - debugging
@@ -13,6 +13,7 @@ labels:
 dependencies:
   - task-374
 priority: low
+ordinal: 8000
 ---
 
 ## Description

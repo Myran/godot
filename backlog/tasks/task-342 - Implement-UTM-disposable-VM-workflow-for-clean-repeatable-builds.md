@@ -4,6 +4,7 @@ title: 'Implement UTM disposable VM workflow for clean, repeatable builds'
 status: Consider
 assignee: []
 created_date: '2025-12-15 08:25'
+updated_date: '2025-12-29 00:07'
 labels:
   - infrastructure
   - ci-cd
@@ -12,6 +13,7 @@ labels:
 dependencies:
   - task-336
 priority: medium
+ordinal: 5000
 ---
 
 ## Description

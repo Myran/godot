@@ -4,13 +4,14 @@ title: Fix action results file pattern matching in trust-based validation
 status: Done
 assignee: []
 created_date: '2025-12-29 11:14'
-updated_date: '2025-12-29 11:17'
+updated_date: '2025-12-30 14:05'
 labels:
   - bug
   - test-framework
   - validation
 dependencies: []
 priority: high
+ordinal: 296000
 ---
 
 ## Description

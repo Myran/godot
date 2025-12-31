@@ -4,7 +4,7 @@ title: Add build-all-macos recipe for consistency
 status: Done
 assignee: []
 created_date: '2025-12-23 23:00'
-updated_date: '2025-12-24 00:09'
+updated_date: '2025-12-29 00:07'
 labels:
   - build
   - macos
@@ -13,6 +13,7 @@ labels:
 dependencies:
   - task-376
 priority: low
+ordinal: 267000
 ---
 
 ## Description

@@ -4,7 +4,7 @@ title: Clean up Sentry file structure - remove duplicates and stale binaries
 status: Done
 assignee: []
 created_date: '2025-12-26 21:59'
-updated_date: '2025-12-27 12:44'
+updated_date: '2025-12-29 00:07'
 labels:
   - cleanup
   - sentry
@@ -13,6 +13,7 @@ labels:
   - android
 dependencies: []
 priority: medium
+ordinal: 255000
 ---
 
 ## Description

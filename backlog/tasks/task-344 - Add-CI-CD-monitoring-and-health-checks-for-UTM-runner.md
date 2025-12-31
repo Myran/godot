@@ -4,6 +4,7 @@ title: Add CI/CD monitoring and health checks for UTM runner
 status: Consider
 assignee: []
 created_date: '2025-12-15 09:47'
+updated_date: '2025-12-29 00:07'
 labels:
   - ci-cd
   - monitoring
@@ -12,6 +13,7 @@ labels:
   - automation
 dependencies: []
 priority: medium
+ordinal: 6000
 ---
 
 ## Description

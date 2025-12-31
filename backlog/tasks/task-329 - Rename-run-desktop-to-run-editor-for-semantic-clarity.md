@@ -1,16 +1,17 @@
 ---
 id: task-329
 title: Rename run-desktop to run-editor for semantic clarity
-status: To Do
+status: Done
 assignee: []
 created_date: '2025-12-08 23:42'
-updated_date: '2025-12-08 23:42'
+updated_date: '2025-12-29 00:07'
 labels:
   - refactoring
   - just-recipes
   - developer-experience
 dependencies: []
 priority: low
+ordinal: 62.5
 ---
 
 ## Description

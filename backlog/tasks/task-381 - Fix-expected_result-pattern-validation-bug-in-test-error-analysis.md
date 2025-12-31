@@ -4,7 +4,7 @@ title: Fix expected_result pattern validation bug in test error analysis
 status: Done
 assignee: []
 created_date: '2025-12-26 00:08'
-updated_date: '2025-12-26 00:17'
+updated_date: '2025-12-29 00:07'
 labels:
   - testing
   - bug
@@ -12,6 +12,7 @@ labels:
 dependencies:
   - task-380
 priority: medium
+ordinal: 259000
 ---
 
 ## Description

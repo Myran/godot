@@ -4,12 +4,14 @@ title: Setup UTM VM on Mac Mini for unrestricted Claude task execution
 status: Consider
 assignee: []
 created_date: '2025-12-13 23:48'
+updated_date: '2025-12-29 00:07'
 labels:
   - infrastructure
   - automation
   - mac-mini
 dependencies: []
 priority: medium
+ordinal: 1000
 ---
 
 ## Description

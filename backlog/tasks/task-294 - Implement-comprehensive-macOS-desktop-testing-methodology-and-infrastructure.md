@@ -4,7 +4,7 @@ title: Implement comprehensive macOS desktop testing methodology and infrastruct
 status: Done
 assignee: []
 created_date: '2025-11-19 20:19'
-updated_date: '2025-12-22 23:44'
+updated_date: '2025-12-29 00:07'
 labels:
   - macos
   - testing
@@ -14,6 +14,7 @@ labels:
   - desktop
 dependencies: []
 priority: high
+ordinal: 292000
 ---
 
 ## Description

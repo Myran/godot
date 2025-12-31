@@ -6,7 +6,7 @@ title: >-
 status: Done
 assignee: []
 created_date: '2025-12-29 15:48'
-updated_date: '2025-12-29 22:43'
+updated_date: '2025-12-30 14:05'
 labels:
   - bug
   - windows
@@ -15,6 +15,7 @@ labels:
   - race-condition
 dependencies: []
 priority: high
+ordinal: 295000
 ---
 
 ## Description

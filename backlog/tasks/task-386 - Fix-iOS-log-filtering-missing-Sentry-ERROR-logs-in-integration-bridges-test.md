@@ -4,7 +4,7 @@ title: Fix iOS log filtering missing Sentry ERROR logs in integration-bridges te
 status: Done
 assignee: []
 created_date: '2025-12-26 11:48'
-updated_date: '2025-12-26 12:16'
+updated_date: '2025-12-29 00:07'
 labels:
   - ios
   - logging
@@ -13,6 +13,7 @@ labels:
   - filtering
 dependencies: []
 priority: medium
+ordinal: 256000
 ---
 
 ## Description

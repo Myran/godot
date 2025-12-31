@@ -4,7 +4,7 @@ title: Investigate iOS and macOS Sentry GDExtension setup failures
 status: Done
 assignee: []
 created_date: '2025-12-26 10:39'
-updated_date: '2025-12-26 11:43'
+updated_date: '2025-12-29 00:07'
 labels:
   - sentry
   - ios
@@ -13,6 +13,7 @@ labels:
   - build
 dependencies: []
 priority: high
+ordinal: 257000
 ---
 
 ## Description

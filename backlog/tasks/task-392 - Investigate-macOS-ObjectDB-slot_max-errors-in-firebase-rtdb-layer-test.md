@@ -4,7 +4,7 @@ title: Investigate macOS ObjectDB slot_max errors in firebase-rtdb-layer test
 status: Done
 assignee: []
 created_date: '2025-12-28 09:59'
-updated_date: '2025-12-28 11:40'
+updated_date: '2025-12-29 00:07'
 labels:
   - macos
   - sentry
@@ -12,6 +12,7 @@ labels:
   - low-priority
 dependencies: []
 priority: low
+ordinal: 252000
 ---
 
 ## Description

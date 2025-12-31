@@ -4,7 +4,7 @@ title: Fix Firebase config loading for macOS editor mode
 status: Done
 assignee: []
 created_date: '2025-12-28 09:59'
-updated_date: '2025-12-28 10:07'
+updated_date: '2025-12-29 00:07'
 labels:
   - firebase
   - macos
@@ -12,6 +12,7 @@ labels:
   - test-infrastructure
 dependencies: []
 priority: medium
+ordinal: 253000
 ---
 
 ## Description

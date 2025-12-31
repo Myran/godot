@@ -4,10 +4,11 @@ title: Rename 'desktop' platform to 'editor' for clarity
 status: Done
 assignee: []
 created_date: '2025-12-23 17:24'
-updated_date: '2025-12-23 22:50'
+updated_date: '2025-12-29 00:07'
 labels: []
 dependencies: []
 priority: medium
+ordinal: 277000
 ---
 
 ## Description

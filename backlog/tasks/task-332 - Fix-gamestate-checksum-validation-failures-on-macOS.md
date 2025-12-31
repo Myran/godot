@@ -4,7 +4,7 @@ title: Fix gamestate checksum validation failures on macOS
 status: Done
 assignee: []
 created_date: '2025-12-11 11:02'
-updated_date: '2025-12-22 23:44'
+updated_date: '2025-12-29 00:07'
 labels:
   - macos
   - testing
@@ -13,6 +13,7 @@ labels:
   - validation
 dependencies: []
 priority: medium
+ordinal: 289000
 ---
 
 ## Description

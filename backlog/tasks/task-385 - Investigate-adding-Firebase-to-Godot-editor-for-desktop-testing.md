@@ -4,6 +4,7 @@ title: Investigate adding Firebase to Godot editor for desktop testing
 status: Consider
 assignee: []
 created_date: '2025-12-26 10:39'
+updated_date: '2025-12-29 00:07'
 labels:
   - firebase
   - editor
@@ -12,6 +13,7 @@ labels:
   - developer-experience
 dependencies: []
 priority: low
+ordinal: 9000
 ---
 
 ## Description

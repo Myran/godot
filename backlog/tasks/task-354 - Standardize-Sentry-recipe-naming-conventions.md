@@ -4,7 +4,7 @@ title: Standardize Sentry recipe naming conventions
 status: Done
 assignee: []
 created_date: '2025-12-20 10:27'
-updated_date: '2025-12-20 10:43'
+updated_date: '2025-12-29 00:07'
 labels:
   - sentry
   - justfile
@@ -12,6 +12,7 @@ labels:
   - naming-convention
 dependencies: []
 priority: medium
+ordinal: 283000
 ---
 
 ## Description

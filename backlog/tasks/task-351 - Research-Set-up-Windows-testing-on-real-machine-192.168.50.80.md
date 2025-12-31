@@ -4,7 +4,7 @@ title: 'Research: Set up Windows testing on real machine (192.168.50.80)'
 status: Done
 assignee: []
 created_date: '2025-12-19 09:30'
-updated_date: '2025-12-19 23:44'
+updated_date: '2025-12-29 00:07'
 labels:
   - research
   - windows
@@ -12,6 +12,7 @@ labels:
   - infrastructure
 dependencies: []
 priority: medium
+ordinal: 285000
 ---
 
 ## Description

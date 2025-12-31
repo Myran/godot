@@ -4,7 +4,7 @@ title: 'Add iOS checksum baseline management (test-ios-update, test-ios-reset)'
 status: Done
 assignee: []
 created_date: '2025-12-23 23:18'
-updated_date: '2025-12-24 00:12'
+updated_date: '2025-12-29 00:07'
 labels:
   - testing
   - parity
@@ -15,6 +15,7 @@ dependencies:
   - task-376
   - task-361
 priority: high
+ordinal: 261000
 ---
 
 ## Description

@@ -4,7 +4,7 @@ title: Review and consolidate potentially redundant Android recipes
 status: Done
 assignee: []
 created_date: '2025-12-23 23:01'
-updated_date: '2025-12-24 00:04'
+updated_date: '2025-12-29 00:07'
 labels:
   - cleanup
   - android
@@ -12,6 +12,7 @@ labels:
   - infrastructure
 dependencies: []
 priority: medium
+ordinal: 264000
 ---
 
 ## Description

@@ -1,10 +1,10 @@
 ---
 id: task-378
 title: Standardize Android export recipe naming to export-android-apk/aab pattern
-status: To Do
+status: Done
 assignee: []
 created_date: '2025-12-23 23:16'
-updated_date: '2025-12-23 23:43'
+updated_date: '2025-12-29 00:07'
 labels:
   - naming
   - android
@@ -13,6 +13,7 @@ labels:
 dependencies:
   - task-376
 priority: low
+ordinal: 250
 ---
 
 ## Description
