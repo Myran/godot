@@ -111,6 +111,26 @@ ship-android-internal draft="no":
 ship-android-production draft="no":
     just ship-android production {{draft}}
 
+# Ship macOS release
+# Includes debug symbol upload to Sentry for crash symbolication
+ship-macos: export-macos-release
+    @echo "🚀 Shipping macOS release..."
+    @echo "📦 Release export complete: export/macos/"
+    @echo "📤 Uploading debug symbols to Sentry..."
+    just sentry-upload-symbols-macos
+    @echo "✅ Ship complete with crash symbols uploaded!"
+    @echo "📁 Bundle location: export/macos/gametwo.app"
+
+# Ship Windows release
+# Includes debug symbol upload to Sentry for crash symbolication
+ship-windows: export-windows-release
+    @echo "🚀 Shipping Windows release..."
+    @echo "📦 Release export complete: export/windows/"
+    @echo "📤 Uploading debug symbols to Sentry..."
+    just sentry-upload-symbols-windows
+    @echo "✅ Ship complete with crash symbols uploaded!"
+    @echo "📁 Executable location: export/windows/gametwo.exe"
+
 # Internal: Shared pipeline steps for export → test → ship
 # Used by both pipeline-ship and pipeline-rebuild-ship
 _pipeline-export-test-ship track draft:
