@@ -149,9 +149,9 @@ ship-all: &-ship-ios &-ship-android-internal &-ship-macos &-ship-windows
     @echo ""
     @echo "Debug symbols uploaded to Sentry for all platforms"
 
-# Internal: Shared pipeline steps for export → test → ship
-# Used by both pipeline-ship and pipeline-rebuild-ship
-_pipeline-export-test-ship track draft:
+# Internal: Export all platforms and run tests
+# Shared by all pipeline variants
+_pipeline-export-test:
     #!/usr/bin/env bash
     set -euo pipefail
 
@@ -173,49 +173,76 @@ _pipeline-export-test-ship track draft:
     echo "✅ Tests passed"
     echo ""
 
-    # Ship to Play Store
-    echo "4️⃣ Shipping to Play Store ({{track}})..."
-    just ship-android {{track}} {{draft}}
-
-# Internal: Shared pipeline steps for export → test → ship-all
-# Used by both pipeline-ship-all and pipeline-rebuild-ship-all
-_pipeline-export-test-ship-all:
+# Internal: Ship to specified platforms
+# Usage: _pipeline-ship "platform1 platform2 ..." [track] [draft]
+_pipeline-ship platforms track draft:
     #!/usr/bin/env bash
     set -euo pipefail
 
-    # Export all platforms
-    echo "2️⃣ Exporting all platforms..."
-    if ! just export-all; then
-        echo "❌ Export failed - aborting ship"
-        exit 1
+    platforms="{{platforms}}"
+    track="{{track}}"
+    draft="{{draft}}"
+
+    # Expand "all" to all platforms
+    if [ "$platforms" = "all" ]; then
+        platforms="ios android macos windows"
     fi
-    echo "✅ Exports completed"
+
+    # Default to android if no platforms specified
+    if [ -z "$platforms" ]; then
+        platforms="android"
+    fi
+
+    echo "4️⃣ Shipping to: $platforms"
     echo ""
 
-    # Run tests
-    echo "3️⃣ Running cross-platform tests..."
-    if ! just log-run test; then
-        echo "❌ Tests failed - aborting ship"
-        exit 1
-    fi
-    echo "✅ Tests passed"
-    echo ""
+    # Ship to each platform in parallel (background jobs)
+    for platform in $platforms; do
+        case "$platform" in
+            ios)
+                echo "  → Shipping iOS..."
+                just ship-ios &
+                ;;
+            android)
+                echo "  → Shipping Android ($track)..."
+                just ship-android "$track" "$draft" &
+                ;;
+            macos)
+                echo "  → Shipping macOS..."
+                just ship-macos &
+                ;;
+            windows)
+                echo "  → Shipping Windows..."
+                just ship-windows &
+                ;;
+            *)
+                echo "  ⚠️  Unknown platform: $platform (skipping)"
+                ;;
+        esac
+    done
 
-    # Ship to all platforms
-    echo "4️⃣ Shipping to all platforms..."
-    just ship-all
+    # Wait for all background jobs
+    wait
+    echo ""
+    echo "✅ Shipping complete!"
 
 # Pipeline: build → export → test → ship
 # Standard release workflow - builds if needed, only ships if all tests pass
-# Usage: just pipeline-ship [track] [draft]
-#   track: internal (default), production
-#   draft: yes (first upload), no (default)
-pipeline-ship track="internal" draft="no":
+# Usage: just pipeline-ship [platforms...] [track] [draft]
+#   platforms: all, ios, android, macos, windows, or space-separated list (default: android)
+#   track: internal (default), alpha, beta, production (Android only)
+#   draft: yes (first upload), no (default) (Android only)
+# Examples:
+#   just pipeline-ship              # Android only
+#   just pipeline-ship all         # All platforms
+#   just pipeline-ship ios macos   # iOS + macOS only
+#   just pipeline-ship android production yes  # Android production draft
+pipeline-ship platforms="" track="internal" draft="no":
     #!/usr/bin/env bash
     set -euo pipefail
 
     echo "🚀 Running pipeline-ship: build → export → test → ship"
-    echo "⏱️  This takes 20-45 minutes"
+    echo "⏱️  This takes 20-60 minutes depending on platforms"
     echo ""
 
     # Step 1: Build (incremental, not forced)
@@ -227,21 +254,31 @@ pipeline-ship track="internal" draft="no":
     echo "✅ Build completed"
     echo ""
 
-    # Steps 2-4: Export, test, ship (shared)
-    just _pipeline-export-test-ship {{track}} {{draft}}
+    # Steps 2-3: Export and test
+    just _pipeline-export-test
+
+    # Step 4: Ship
+    just _pipeline-ship {{platforms}} {{track}} {{draft}}
 
     echo ""
     echo "🎉 Pipeline-ship completed!"
 
 # Pipeline: rebuild → export → test → ship
 # Full rebuild before shipping - use after C++ or template changes
-# Usage: just pipeline-rebuild-ship [track] [draft]
-pipeline-rebuild-ship track="internal" draft="no":
+# Usage: just pipeline-rebuild-ship [platforms...] [track] [draft]
+#   platforms: all, ios, android, macos, windows, or space-separated list (default: android)
+#   track: internal (default), alpha, beta, production (Android only)
+#   draft: yes (first upload), no (default) (Android only)
+# Examples:
+#   just pipeline-rebuild-ship              # Android only
+#   just pipeline-rebuild-ship all         # All platforms
+#   just pipeline-rebuild-ship ios macos   # iOS + macOS only
+pipeline-rebuild-ship platforms="" track="internal" draft="no":
     #!/usr/bin/env bash
     set -euo pipefail
 
     echo "🔄 Running pipeline-rebuild-ship: rebuild → export → test → ship"
-    echo "⏱️  This may take 45-90 minutes"
+    echo "⏱️  This may take 45-120 minutes depending on platforms"
     echo ""
 
     # Step 1: Rebuild
@@ -253,60 +290,18 @@ pipeline-rebuild-ship track="internal" draft="no":
     echo "✅ Rebuild completed"
     echo ""
 
-    # Steps 2-4: Export, test, ship (shared)
-    just _pipeline-export-test-ship {{track}} {{draft}}
+    # Steps 2-3: Export and test
+    just _pipeline-export-test
+
+    # Step 4: Ship
+    just _pipeline-ship {{platforms}} {{track}} {{draft}}
 
     echo ""
     echo "🎉 Pipeline-rebuild-ship completed!"
 
-# Pipeline: build → export → test → ship-all
-# Full platform release workflow - builds, tests, then ships to all platforms
-# Usage: just pipeline-ship-all
-pipeline-ship-all:
-    #!/usr/bin/env bash
-    set -euo pipefail
+# Convenience aliases
+pipeline-ship-all: pipeline-ship all
+    @echo "🎉 All-platform pipeline completed!"
 
-    echo "🚀 Running pipeline-ship-all: build → export → test → ship-all"
-    echo "⏱️  This takes 30-60 minutes"
-    echo ""
-
-    # Step 1: Build (incremental, not forced)
-    echo "1️⃣ Building (incremental)..."
-    if ! just build; then
-        echo "❌ Build failed - aborting ship"
-        exit 1
-    fi
-    echo "✅ Build completed"
-    echo ""
-
-    # Steps 2-4: Export, test, ship-all (shared)
-    just _pipeline-export-test-ship-all
-
-    echo ""
-    echo "🎉 Pipeline-ship-all completed!"
-
-# Pipeline: rebuild → export → test → ship-all
-# Full rebuild before shipping to all platforms - use after C++ or template changes
-# Usage: just pipeline-rebuild-ship-all
-pipeline-rebuild-ship-all:
-    #!/usr/bin/env bash
-    set -euo pipefail
-
-    echo "🔄 Running pipeline-rebuild-ship-all: rebuild → export → test → ship-all"
-    echo "⏱️  This may take 60-120 minutes"
-    echo ""
-
-    # Step 1: Rebuild
-    echo "1️⃣ Rebuilding all components..."
-    if ! just rebuild; then
-        echo "❌ Rebuild failed - aborting ship"
-        exit 1
-    fi
-    echo "✅ Rebuild completed"
-    echo ""
-
-    # Steps 2-4: Export, test, ship-all (shared)
-    just _pipeline-export-test-ship-all
-
-    echo ""
-    echo "🎉 Pipeline-rebuild-ship-all completed!"
+pipeline-rebuild-ship-all: pipeline-rebuild-ship all
+    @echo "🎉 All-platform rebuild pipeline completed!"
