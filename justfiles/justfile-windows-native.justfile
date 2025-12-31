@@ -163,24 +163,26 @@ windows-native-templates-clean:
 windows-native-sentry-release:
     @echo "Building Sentry GDExtension for Windows (Release, SCons + MSVC)..."
     @echo "Using toolchain: C:\gametwo\win_x64.cmake"
-    set SENTRY_WIN_X64_TOOLCHAIN=C:\gametwo\win_x64.cmake && cd {{WIN_SENTRY_PATH}} && scons platform=windows target=template_release arch=x86_64 -j6
+    set SENTRY_WIN_X64_TOOLCHAIN=C:\gametwo\win_x64.cmake && cd {{WIN_SENTRY_PATH}} && scons platform=windows target=template_release arch=x86_64 debug_symbols=yes -j6
     @echo.
     @echo "Copying Sentry GDExtension to addon directory..."
     if not exist {{WIN_PROJECT_PATH}}\addons\sentry\bin\windows\x86_64 mkdir {{WIN_PROJECT_PATH}}\addons\sentry\bin\windows\x86_64
-    copy {{WIN_SENTRY_PATH}}\project\addons\sentry\bin\windows\x86_64\libsentry.windows.release.x86_64.dll {{WIN_PROJECT_PATH}}\addons\sentry\bin\windows\x86_64\ /Y
-    copy {{WIN_SENTRY_PATH}}\modules\sentry-native\install\bin\crashpad_handler.exe {{WIN_PROJECT_PATH}}\addons\sentry\bin\windows\x86_64\ /Y
-    if exist {{WIN_SENTRY_PATH}}\modules\sentry-native\install\bin\crashpad_wer.dll copy {{WIN_SENTRY_PATH}}\modules\sentry-native\install\bin\crashpad_wer.dll {{WIN_PROJECT_PATH}}\addons\sentry\bin\windows\x86_64\ /Y
+    copy /Y "{{WIN_SENTRY_PATH}}\project\addons\sentry\bin\windows\x86_64\libsentry.windows.release.x86_64.dll" "{{WIN_PROJECT_PATH}}\addons\sentry\bin\windows\x86_64\"
+    copy /Y "{{WIN_SENTRY_PATH}}\project\addons\sentry\bin\windows\x86_64\libsentry.windows.release.x86_64.pdb" "{{WIN_PROJECT_PATH}}\addons\sentry\bin\windows\x86_64\"
+    copy /Y "{{WIN_SENTRY_PATH}}\modules\sentry-native\install\bin\crashpad_handler.exe" "{{WIN_PROJECT_PATH}}\addons\sentry\bin\windows\x86_64\"
+    if exist "{{WIN_SENTRY_PATH}}\modules\sentry-native\install\bin\crashpad_wer.dll" copy /Y "{{WIN_SENTRY_PATH}}\modules\sentry-native\install\bin\crashpad_wer.dll" "{{WIN_PROJECT_PATH}}\addons\sentry\bin\windows\x86_64\"
     @echo [OK] Sentry Release GDExtension built and installed
 
 # Build Sentry GDExtension for Windows (Debug) using SCons + MSVC
 windows-native-sentry-debug:
     @echo "Building Sentry GDExtension for Windows (Debug, SCons + MSVC)..."
     @echo "Using toolchain: C:\gametwo\win_x64.cmake"
-    set SENTRY_WIN_X64_TOOLCHAIN=C:\gametwo\win_x64.cmake && cd {{WIN_SENTRY_PATH}} && scons platform=windows target=template_debug arch=x86_64 -j6
+    set SENTRY_WIN_X64_TOOLCHAIN=C:\gametwo\win_x64.cmake && cd {{WIN_SENTRY_PATH}} && scons platform=windows target=template_debug arch=x86_64 debug_symbols=yes -j6
     @echo.
     @echo "Copying Sentry Debug GDExtension to addon directory..."
     if not exist {{WIN_PROJECT_PATH}}\addons\sentry\bin\windows\x86_64 mkdir {{WIN_PROJECT_PATH}}\addons\sentry\bin\windows\x86_64
-    copy {{WIN_SENTRY_PATH}}\project\addons\sentry\bin\windows\x86_64\libsentry.windows.debug.x86_64.dll {{WIN_PROJECT_PATH}}\addons\sentry\bin\windows\x86_64\ /Y
+    copy /Y "{{WIN_SENTRY_PATH}}\project\addons\sentry\bin\windows\x86_64\libsentry.windows.debug.x86_64.dll" "{{WIN_PROJECT_PATH}}\addons\sentry\bin\windows\x86_64\"
+    copy /Y "{{WIN_SENTRY_PATH}}\project\addons\sentry\bin\windows\x86_64\libsentry.windows.debug.x86_64.pdb" "{{WIN_PROJECT_PATH}}\addons\sentry\bin\windows\x86_64\"
     @echo [OK] Sentry Debug GDExtension built and installed
 
 # Build both Sentry variants

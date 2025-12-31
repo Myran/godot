@@ -63,15 +63,20 @@ ci-cd: validate-env
     just full-process
 
 # Ship to App Store (production release)
+# Includes debug symbol upload to Sentry for crash symbolication
 ship-ios: export-pck-ios
     @echo "🚀 Shipping to App Store..."
     cd export/ios && fastlane beta
+    @echo "📤 Uploading debug symbols to Sentry..."
+    just sentry-upload-symbols-ios
+    @echo "✅ Ship complete with crash symbols uploaded!"
 
 # Ship to Play Store
-# Workflow: bump version → export AAB → upload
+# Workflow: bump version → export AAB → upload → upload debug symbols
 # Usage: just ship-android [track] [draft]
 #   track: internal (default), alpha, beta, production
 #   draft: yes (for first upload to track), no (default)
+# Includes debug symbol upload to Sentry for crash symbolication
 ship-android track="internal" draft="no":
     #!/usr/bin/env bash
     set -euo pipefail
@@ -93,7 +98,11 @@ ship-android track="internal" draft="no":
         cd export/android && fastlane {{track}}
     fi
 
-    echo "✅ Ship complete!"
+    # Step 4: Upload debug symbols to Sentry
+    echo "📤 Uploading debug symbols to Sentry..."
+    cd ../.. && just sentry-upload-symbols-android
+
+    echo "✅ Ship complete with crash symbols uploaded!"
 
 # Aliases
 ship-android-internal draft="no":

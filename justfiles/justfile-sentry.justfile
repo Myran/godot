@@ -67,9 +67,18 @@ help-sentry:
     @echo "  just status-sentry-quick                 # Quick status check (2 lines)"
     @echo "  just status-sentry-all                   # Check status of all integrations"
     @echo ""
+    @echo "📤 DEBUG SYMBOL UPLOAD (Crash Symbolication):"
+    @echo "  just sentry-upload-symbols-all           # Upload all debug symbols"
+    @echo "  just sentry-upload-symbols-ios           # Upload iOS debug symbols"
+    @echo "  just sentry-upload-symbols-macos         # Upload macOS debug symbols"
+    @echo "  just sentry-upload-symbols-android       # Upload Android debug symbols"
+    @echo "  just sentry-upload-symbols-windows       # Upload Windows debug symbols"
+    @echo "  just sentry-symbols-status                # Check debug symbol configuration"
+    @echo ""
     @echo "ℹ️  NATIVE Sentry = Compiled INTO Godot executable (C++ crash capture)"
     @echo "ℹ️  GDScript Sentry = Runtime GDExtension (script-level crash capture)"
     @echo "ℹ️  You need BOTH for complete crash reporting coverage"
+    @echo "ℹ️  Upload dSYMs to enable symbolicated crash reports in Sentry"
 
 
 # Smart Sentry rebuild detection
@@ -255,3 +264,254 @@ status-sentry-all:
     @echo ""
     @echo "🪟 WINDOWS SENTRY STATUS:"
     @just sentry-windows-status
+
+# =============================================================================
+# dSYM Upload to Sentry (Crash Symbolication)
+# =============================================================================
+# Requires: sentry-cli installed and configured
+# Install: brew install getsentry/tools/sentry-cli
+# Configure: Create .sentryclirc with auth token, org, and project
+#            Or set SENTRY_AUTH_TOKEN, SENTRY_ORG, SENTRY_PROJECT env vars
+
+# Debug symbol paths (dSYM for Apple, .so.debug for Android, .pdb for Windows)
+DSYM_IOS_PATH := "project/addons/sentry/bin/ios/dSYMs"
+DSYM_MACOS_PATH := "project/addons/sentry/bin/macos/dSYMs"
+DEBUG_ANDROID_PATH := "project/addons/sentry/bin/android"
+DEBUG_WINDOWS_PATH := "project/addons/sentry/bin/windows/x86_64"
+
+# Upload iOS debug symbols to Sentry for crash symbolication
+sentry-upload-symbols-ios:
+    #!/usr/bin/env bash
+    set -euo pipefail
+
+    echo "📱 Uploading iOS debug symbols to Sentry..."
+
+    if ! command -v sentry-cli &> /dev/null; then
+        echo "❌ sentry-cli not found. Install with: brew install getsentry/tools/sentry-cli"
+        exit 1
+    fi
+
+    if [ ! -d "{{DSYM_IOS_PATH}}" ]; then
+        echo "❌ iOS debug symbols not found at {{DSYM_IOS_PATH}}"
+        echo "   Run 'just build-sentry-gdscript-ios' first"
+        exit 1
+    fi
+
+    echo "📦 Debug symbol location: {{DSYM_IOS_PATH}}"
+    ls -la "{{DSYM_IOS_PATH}}/"
+    echo ""
+
+    sentry-cli debug-files upload --include-sources "{{DSYM_IOS_PATH}}/"
+
+    echo "✅ iOS debug symbols uploaded to Sentry"
+
+# Upload macOS debug symbols to Sentry for crash symbolication
+sentry-upload-symbols-macos:
+    #!/usr/bin/env bash
+    set -euo pipefail
+
+    echo "🍎 Uploading macOS debug symbols to Sentry..."
+
+    if ! command -v sentry-cli &> /dev/null; then
+        echo "❌ sentry-cli not found. Install with: brew install getsentry/tools/sentry-cli"
+        exit 1
+    fi
+
+    if [ ! -d "{{DSYM_MACOS_PATH}}" ]; then
+        echo "❌ macOS debug symbols not found at {{DSYM_MACOS_PATH}}"
+        echo "   Run 'just build-sentry-gdscript-macos' first"
+        exit 1
+    fi
+
+    echo "📦 Debug symbol location: {{DSYM_MACOS_PATH}}"
+    ls -la "{{DSYM_MACOS_PATH}}/"
+    echo ""
+
+    sentry-cli debug-files upload --include-sources "{{DSYM_MACOS_PATH}}/"
+
+    echo "✅ macOS debug symbols uploaded to Sentry"
+
+# Upload Android debug symbols to Sentry for crash symbolication
+sentry-upload-symbols-android:
+    #!/usr/bin/env bash
+    set -euo pipefail
+
+    echo "🤖 Uploading Android debug symbols to Sentry..."
+
+    if ! command -v sentry-cli &> /dev/null; then
+        echo "❌ sentry-cli not found. Install with: brew install getsentry/tools/sentry-cli"
+        exit 1
+    fi
+
+    if [ ! -d "{{DEBUG_ANDROID_PATH}}" ]; then
+        echo "❌ Android debug symbols not found at {{DEBUG_ANDROID_PATH}}"
+        echo "   Run 'just build-sentry-gdscript-android' first"
+        exit 1
+    fi
+
+    # Check for .so.debug files
+    debug_files=$(find "{{DEBUG_ANDROID_PATH}}" -name "*.so.debug" 2>/dev/null | wc -l | tr -d ' ')
+    if [ "$debug_files" -eq 0 ]; then
+        echo "❌ No .so.debug files found in {{DEBUG_ANDROID_PATH}}"
+        exit 1
+    fi
+
+    echo "📦 Debug symbol location: {{DEBUG_ANDROID_PATH}}"
+    ls -la "{{DEBUG_ANDROID_PATH}}/"*.so.debug 2>/dev/null || true
+    echo ""
+
+    sentry-cli debug-files upload --include-sources "{{DEBUG_ANDROID_PATH}}/"
+
+    echo "✅ Android debug symbols uploaded to Sentry"
+
+# Upload Windows debug symbols (PDB files) to Sentry for crash symbolication
+# NOTE: PDB files must be copied from Windows VM during build process
+sentry-upload-symbols-windows:
+    #!/usr/bin/env bash
+    set -euo pipefail
+
+    echo "🪟 Uploading Windows debug symbols to Sentry..."
+
+    if ! command -v sentry-cli &> /dev/null; then
+        echo "❌ sentry-cli not found. Install with: brew install getsentry/tools/sentry-cli"
+        exit 1
+    fi
+
+    if [ ! -d "{{DEBUG_WINDOWS_PATH}}" ]; then
+        echo "❌ Windows debug symbols not found at {{DEBUG_WINDOWS_PATH}}"
+        echo "   Run 'just build-sentry-gdscript-windows' first"
+        exit 1
+    fi
+
+    # Check for .pdb files
+    pdb_files=$(find "{{DEBUG_WINDOWS_PATH}}" -name "*.pdb" 2>/dev/null | wc -l | tr -d ' ')
+    if [ "$pdb_files" -eq 0 ]; then
+        echo "⚠️  No .pdb files found in {{DEBUG_WINDOWS_PATH}}"
+        echo ""
+        echo "   Windows PDB files are generated on the VM during build but"
+        echo "   are not currently copied to the Mac. To enable Windows crash"
+        echo "   symbolication, the VM build process needs to be updated to"
+        echo "   copy PDB files alongside DLLs."
+        echo ""
+        echo "   For now, you can manually copy PDB files from the VM:"
+        echo "   scp matt@192.168.50.92:C:/Users/matt/repos/gametwo/extras/sentry-godot/build/*.pdb {{DEBUG_WINDOWS_PATH}}/"
+        exit 1
+    fi
+
+    echo "📦 Debug symbol location: {{DEBUG_WINDOWS_PATH}}"
+    ls -la "{{DEBUG_WINDOWS_PATH}}/"*.pdb 2>/dev/null || true
+    echo ""
+
+    sentry-cli debug-files upload --include-sources "{{DEBUG_WINDOWS_PATH}}/"
+
+    echo "✅ Windows debug symbols uploaded to Sentry"
+
+# Upload all debug symbols (iOS + macOS + Android + Windows) to Sentry
+sentry-upload-symbols-all:
+    @echo "📤 Uploading all debug symbols to Sentry..."
+    @echo ""
+    @just sentry-upload-symbols-ios
+    @echo ""
+    @just sentry-upload-symbols-macos
+    @echo ""
+    @just sentry-upload-symbols-android
+    @echo ""
+    @just sentry-upload-symbols-windows
+    @echo ""
+    @echo "🎉 All debug symbols uploaded to Sentry successfully!"
+
+# Check debug symbol upload status and configuration
+sentry-symbols-status:
+    #!/usr/bin/env bash
+    set -euo pipefail
+
+    echo "📊 Sentry Debug Symbol Status"
+    echo "============================="
+    echo ""
+
+    # Check sentry-cli installation
+    echo "🔧 sentry-cli:"
+    if command -v sentry-cli &> /dev/null; then
+        echo "   ✅ Installed ($(sentry-cli --version))"
+    else
+        echo "   ❌ Not installed"
+        echo "   Install: brew install getsentry/tools/sentry-cli"
+    fi
+    echo ""
+
+    # Check configuration
+    echo "🔑 Configuration:"
+    if [ -f ".sentryclirc" ]; then
+        echo "   ✅ .sentryclirc found"
+    elif [ -n "${SENTRY_AUTH_TOKEN:-}" ]; then
+        echo "   ✅ SENTRY_AUTH_TOKEN env var set"
+    else
+        echo "   ❌ No configuration found"
+        echo "   Create .sentryclirc or set SENTRY_AUTH_TOKEN env var"
+    fi
+
+    if [ -n "${SENTRY_ORG:-}" ]; then
+        echo "   ✅ SENTRY_ORG: ${SENTRY_ORG}"
+    elif [ -f ".sentryclirc" ] && grep -q "org=" ".sentryclirc" 2>/dev/null; then
+        echo "   ✅ org configured in .sentryclirc"
+    else
+        echo "   ⚠️  SENTRY_ORG not set"
+    fi
+
+    if [ -n "${SENTRY_PROJECT:-}" ]; then
+        echo "   ✅ SENTRY_PROJECT: ${SENTRY_PROJECT}"
+    elif [ -f ".sentryclirc" ] && grep -q "project=" ".sentryclirc" 2>/dev/null; then
+        echo "   ✅ project configured in .sentryclirc"
+    else
+        echo "   ⚠️  SENTRY_PROJECT not set"
+    fi
+    echo ""
+
+    # Check dSYM files
+    echo "📦 iOS dSYMs ({{DSYM_IOS_PATH}}):"
+    if [ -d "{{DSYM_IOS_PATH}}" ]; then
+        count=$(find "{{DSYM_IOS_PATH}}" -name "*.dSYM" -type d | wc -l | tr -d ' ')
+        size=$(du -sh "{{DSYM_IOS_PATH}}" 2>/dev/null | cut -f1)
+        echo "   ✅ Found ($count dSYM bundles, $size)"
+    else
+        echo "   ❌ Not found"
+    fi
+    echo ""
+
+    echo "📦 macOS dSYMs ({{DSYM_MACOS_PATH}}):"
+    if [ -d "{{DSYM_MACOS_PATH}}" ]; then
+        count=$(find "{{DSYM_MACOS_PATH}}" -name "*.dSYM" -type d | wc -l | tr -d ' ')
+        size=$(du -sh "{{DSYM_MACOS_PATH}}" 2>/dev/null | cut -f1)
+        echo "   ✅ Found ($count dSYM bundles, $size)"
+    else
+        echo "   ❌ Not found"
+    fi
+    echo ""
+
+    echo "📦 Android debug symbols ({{DEBUG_ANDROID_PATH}}):"
+    if [ -d "{{DEBUG_ANDROID_PATH}}" ]; then
+        count=$(find "{{DEBUG_ANDROID_PATH}}" -name "*.so.debug" 2>/dev/null | wc -l | tr -d ' ')
+        size=$(du -sh "{{DEBUG_ANDROID_PATH}}" 2>/dev/null | cut -f1)
+        if [ "$count" -gt 0 ]; then
+            echo "   ✅ Found ($count .so.debug files, $size total)"
+        else
+            echo "   ⚠️  Directory exists but no .so.debug files found"
+        fi
+    else
+        echo "   ❌ Not found"
+    fi
+    echo ""
+
+    echo "📦 Windows debug symbols ({{DEBUG_WINDOWS_PATH}}):"
+    if [ -d "{{DEBUG_WINDOWS_PATH}}" ]; then
+        count=$(find "{{DEBUG_WINDOWS_PATH}}" -name "*.pdb" 2>/dev/null | wc -l | tr -d ' ')
+        if [ "$count" -gt 0 ]; then
+            size=$(du -sh "{{DEBUG_WINDOWS_PATH}}"/*.pdb 2>/dev/null | cut -f1 | tail -1)
+            echo "   ✅ Found ($count .pdb files)"
+        else
+            echo "   ⚠️  No .pdb files (PDBs generated on VM, not copied to Mac)"
+            echo "      Run 'just sentry-upload-symbols-windows' for instructions"
+        fi
+    else
+        echo "   ❌ Not found"
+    fi

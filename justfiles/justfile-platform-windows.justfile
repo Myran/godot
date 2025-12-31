@@ -109,7 +109,7 @@ build-sentry-native-windows-vm-build-all:
 build-sentry-native-windows-vm-package:
     #!/usr/bin/env bash
     set -euo pipefail
-    echo "📦 Copying Sentry DLLs from Windows VM..."
+    echo "📦 Copying Sentry DLLs and PDBs from Windows VM..."
 
     # Ensure local directory exists
     mkdir -p project/addons/sentry/bin/windows/x86_64
@@ -127,6 +127,15 @@ build-sentry-native-windows-vm-package:
         echo "⚠️  Release DLL not found on VM"
     fi
 
+    # Copy release PDB
+    echo "📥 Copying release PDB..."
+    if ssh {{WIN_VM_USER}}@{{WIN_VM_HOST}} "if exist ${WIN_CMD_PATH}\\libsentry.windows.release.x86_64.pdb echo exists" | grep -q exists; then
+        scp "{{WIN_VM_USER}}@{{WIN_VM_HOST}}:${WIN_SENTRY_PATH}/libsentry.windows.release.x86_64.pdb" project/addons/sentry/bin/windows/x86_64/
+        echo "✅ Copied libsentry.windows.release.x86_64.pdb"
+    else
+        echo "⚠️  Release PDB not found on VM"
+    fi
+
     # Copy debug DLL
     echo "📥 Copying debug DLL..."
     if ssh {{WIN_VM_USER}}@{{WIN_VM_HOST}} "if exist ${WIN_CMD_PATH}\\libsentry.windows.debug.x86_64.dll echo exists" | grep -q exists; then
@@ -134,6 +143,15 @@ build-sentry-native-windows-vm-package:
         echo "✅ Copied libsentry.windows.debug.x86_64.dll"
     else
         echo "⚠️  Debug DLL not found on VM"
+    fi
+
+    # Copy debug PDB
+    echo "📥 Copying debug PDB..."
+    if ssh {{WIN_VM_USER}}@{{WIN_VM_HOST}} "if exist ${WIN_CMD_PATH}\\libsentry.windows.debug.x86_64.pdb echo exists" | grep -q exists; then
+        scp "{{WIN_VM_USER}}@{{WIN_VM_HOST}}:${WIN_SENTRY_PATH}/libsentry.windows.debug.x86_64.pdb" project/addons/sentry/bin/windows/x86_64/
+        echo "✅ Copied libsentry.windows.debug.x86_64.pdb"
+    else
+        echo "⚠️  Debug PDB not found on VM"
     fi
 
     # Copy crashpad_handler.exe (critical for crashpad backend)
