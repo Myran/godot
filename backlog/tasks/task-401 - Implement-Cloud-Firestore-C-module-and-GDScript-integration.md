@@ -4,7 +4,7 @@ title: Implement Cloud Firestore C++ module and GDScript integration
 status: To Do
 assignee: []
 created_date: '2025-12-30 21:26'
-updated_date: '2025-12-30 22:43'
+updated_date: '2025-12-31 11:53'
 labels:
   - firebase
   - firestore
@@ -14,7 +14,8 @@ labels:
 dependencies:
   - task-403
   - task-399
-priority: medium
+  - task-406
+priority: high
 ---
 
 ## Description
@@ -105,282 +106,336 @@ Follow database.h/cpp patterns:
 - [ ] #10 Cross-platform testing passes on at least Android and desktop
 - [ ] #11 Error handling tests validate permission and not-found errors
 - [ ] #12 Shutdown safety prevents crashes during app exit
+
+- [ ] #13 #13 Firestore library existence verified in Firebase C++ SDK before implementation begins
+- [ ] #14 #14 Query params schema explicitly defined and documented
+- [ ] #15 #15 Subcollection/nested document paths supported (e.g., users/uid/posts/postId)
+- [ ] #16 #16 Offline persistence explicitly configured (enabled with size limits OR disabled)
+- [ ] #17 #17 Thread-safe singleton pattern matching database.h
+- [ ] #18 #18 Shutdown safety with is_shutting_down flag
 <!-- AC:END -->
 
 ## Implementation Plan
 
 <!-- SECTION:PLAN:BEGIN -->
-## Implementation Plan - Cloud Firestore
+## Implementation Plan (Based on quickstart-cpp Analysis)
 
-### Phase 1: C++ Module Creation (firestore.h/cpp) - NEW FILES
-
-**1.1 Create firestore.h Header**
+### Key Discovery: Firestore REQUIRES Auth
+From firestore/testapp/src/common_main.cc:
 ```cpp
-#ifndef FirebaseFirestore_h
-#define FirebaseFirestore_h
-
-#include "core/object/ref_counted.h"
-#include "core/os/mutex.h"
-#include "firebase.h"
-#include "firebase/firestore.h"
-#include <atomic>
-#include <mutex>
-
-class FirebaseFirestore : public RefCounted {
-    GDCLASS(FirebaseFirestore, RefCounted);
-
-private:
-    // Thread-safe singleton (follow database.h pattern)
-    static std::mutex initialization_mutex;
-    static std::atomic<bool> inited;
-    static FirebaseFirestore* singleton_instance;
-    static std::mutex instance_mutex;
-    static std::atomic<bool> is_shutting_down;
-    
-    static firebase::firestore::Firestore* firestore_instance;
-    
-    FirebaseFirestore();  // Private constructor
-
-protected:
-    static void _bind_methods();
-    
-    // Main thread callback handlers
-    void _handle_document_get_on_main_thread(int req_id, String collection, String document, Dictionary data, bool exists, int error, String error_msg);
-    void _handle_document_set_on_main_thread(int req_id, bool success, int error, String error_msg);
-    void _handle_document_update_on_main_thread(int req_id, bool success, int error, String error_msg);
-    void _handle_document_delete_on_main_thread(int req_id, bool success, int error, String error_msg);
-    void _handle_collection_query_on_main_thread(int req_id, Array documents, int error, String error_msg);
-
-public:
-    static FirebaseFirestore& get_instance();
-    static void cleanup();
-    static void begin_shutdown();
-    static bool is_app_shutting_down();
-    
-    FirebaseFirestore(const FirebaseFirestore&) = delete;
-    ~FirebaseFirestore();
-
-    // Document CRUD operations
-    void document_get_async(int p_request_id, const String& collection, const String& document_id);
-    void document_set_async(int p_request_id, const String& collection, const String& document_id, const Dictionary& data);
-    void document_update_async(int p_request_id, const String& collection, const String& document_id, const Dictionary& data);
-    void document_delete_async(int p_request_id, const String& collection, const String& document_id);
-    
-    // Collection operations
-    void collection_add_async(int p_request_id, const String& collection, const Dictionary& data);
-    void collection_query_async(int p_request_id, const String& collection, const Dictionary& query_params);
-};
-
-#endif // FirebaseFirestore_h
+// Sign in first!
+auth->SignInAnonymously();
+// Then initialize Firestore
+firebase::firestore::Firestore* firestore = Firestore::GetInstance(app, &result);
 ```
 
-**1.2 Implement Core Methods (firestore.cpp)**
+Firestore security rules require authenticated user. **MUST complete task-399 first.**
+
+### Pre-Implementation: Verify Library Exists
+```bash
+# Check if Firestore library is linked
+ls firebase/firebase_cpp_sdk/libs/android/arm64-v8a/ | grep -i firestore
+ls firebase/firebase_cpp_sdk/libs/ios/ | grep -i firestore
+```
+
+If NOT found, this task becomes:
+1. Research Firestore C++ SDK availability
+2. Potentially upgrade Firebase SDK
+3. Re-scope implementation approach
+
+### Phase 1: C++ Module (firestore.h/cpp)
+
+**Headers Required:**
 ```cpp
-// Document Get - Firebase SDK pattern from documentation
-void FirebaseFirestore::document_get_async(int p_request_id, const String& collection, const String& document_id) {
-    if (!inited || !firestore_instance) {
-        call_deferred(SNAME("emit_signal"), SNAME("document_get_error"), p_request_id, "DB_NOT_INITIALIZED");
+#include "firebase/firestore.h"
+// Includes: Firestore, CollectionReference, DocumentReference, 
+// Query, WriteBatch, Transaction, FieldValue, MapFieldValue,
+// DocumentSnapshot, QuerySnapshot, ListenerRegistration
+```
+
+**Initialization (after Auth):**
+```cpp
+static std::mutex initialization_mutex;
+static std::atomic<bool> inited{false};
+static std::atomic<bool> is_shutting_down{false};
+static firebase::firestore::Firestore* firestore{nullptr};
+
+void FirebaseFirestore::initialize() {
+    std::lock_guard<std::mutex> lock(initialization_mutex);
+    if (inited) return;
+    
+    // Verify user is authenticated
+    firebase::auth::Auth* auth = firebase::auth::Auth::GetAuth(Firebase::AppId());
+    if (!auth->current_user().is_valid()) {
+        print_error("[Firestore] Cannot initialize - user not authenticated");
         return;
     }
     
-    firebase::firestore::DocumentReference doc_ref = 
-        firestore_instance->Collection(collection.utf8().get_data())
-                          .Document(document_id.utf8().get_data());
-    
-    firebase::Future<firebase::firestore::DocumentSnapshot> future = doc_ref.Get();
-    future.OnCompletion([this, p_request_id, collection, document_id](
-            const firebase::Future<firebase::firestore::DocumentSnapshot>& result) {
-        // WORKER THREAD - Extract thread-safe data only
-        int error = result.error();
-        String error_msg = result.error_message() ? String(result.error_message()) : "";
-        
-        Dictionary data;
-        bool exists = false;
-        
-        if (result.status() == firebase::kFutureStatusComplete && 
-            error == firebase::firestore::kErrorOk) {
-            const firebase::firestore::DocumentSnapshot* snapshot = result.result();
-            if (snapshot && snapshot->exists()) {
-                exists = true;
-                // Convert Firestore data to Dictionary
-                std::map<std::string, firebase::firestore::FieldValue> fields = snapshot->GetData();
-                for (const auto& field : fields) {
-                    data[String(field.first.c_str())] = ConvertFieldValueToVariant(field.second);
-                }
-            }
-        }
-        
-        // Marshal to main thread
-        MessageQueue::get_singleton()->push_callable(
-            callable_mp(this, &FirebaseFirestore::_handle_document_get_on_main_thread)
-                .bind(p_request_id, collection, document_id, data, exists, error, error_msg)
-        );
-    });
-}
-
-// Document Set - Firebase SDK pattern
-void FirebaseFirestore::document_set_async(int p_request_id, const String& collection, 
-                                           const String& document_id, const Dictionary& data) {
-    firebase::firestore::DocumentReference doc_ref = 
-        firestore_instance->Collection(collection.utf8().get_data())
-                          .Document(document_id.utf8().get_data());
-    
-    // Convert Dictionary to Firestore MapFieldValue
-    firebase::firestore::MapFieldValue firestore_data = ConvertDictionaryToFieldMap(data);
-    
-    firebase::Future<void> future = doc_ref.Set(firestore_data);
-    future.OnCompletion([this, p_request_id](const firebase::Future<void>& result) {
-        bool success = (result.status() == firebase::kFutureStatusComplete &&
-                       result.error() == firebase::firestore::kErrorOk);
-        MessageQueue::get_singleton()->push_callable(
-            callable_mp(this, &FirebaseFirestore::_handle_document_set_on_main_thread)
-                .bind(p_request_id, success, result.error(), String(result.error_message()))
-        );
-    });
-}
-
-// Collection Add (auto-generate ID) - Firebase SDK pattern
-void FirebaseFirestore::collection_add_async(int p_request_id, const String& collection, const Dictionary& data) {
-    firebase::firestore::CollectionReference coll_ref = 
-        firestore_instance->Collection(collection.utf8().get_data());
-    
-    firebase::firestore::MapFieldValue firestore_data = ConvertDictionaryToFieldMap(data);
-    
-    firebase::Future<firebase::firestore::DocumentReference> future = coll_ref.Add(firestore_data);
-    future.OnCompletion([this, p_request_id](
-            const firebase::Future<firebase::firestore::DocumentReference>& result) {
-        // Extract document ID from result
-        String doc_id = "";
-        if (result.status() == firebase::kFutureStatusComplete &&
-            result.error() == firebase::firestore::kErrorOk) {
-            doc_id = String(result.result()->id().c_str());
-        }
-        // Marshal to main thread...
-    });
+    firebase::InitResult result;
+    firestore = firebase::firestore::Firestore::GetInstance(Firebase::AppId(), &result);
+    if (result == firebase::kInitResultSuccess) {
+        firestore->set_log_level(firebase::kLogLevelDebug);
+        inited = true;
+    }
 }
 ```
 
-**1.3 Type Conversion Helpers (add to convertor.cpp)**
-```cpp
-// Firestore FieldValue → Godot Variant
-static Variant ConvertFieldValueToVariant(const firebase::firestore::FieldValue& field);
+### Phase 2: Document Operations
 
-// Godot Dictionary → Firestore MapFieldValue  
-static firebase::firestore::MapFieldValue ConvertDictionaryToFieldMap(const Dictionary& dict);
+**Methods to Expose:**
+```cpp
+// Document CRUD
+void get_document_async(int request_id, Array path);      // ["users", "user123"]
+void set_document_async(int request_id, Array path, Dictionary data);
+void update_document_async(int request_id, Array path, Dictionary data);
+void delete_document_async(int request_id, Array path);
+
+// Collection queries
+void query_collection_async(int request_id, String collection, Dictionary query_params);
+
+// Batch writes
+int start_batch();
+void batch_set(int batch_id, Array path, Dictionary data);
+void batch_update(int batch_id, Array path, Dictionary data);
+void batch_delete(int batch_id, Array path);
+void commit_batch_async(int request_id, int batch_id);
 ```
 
-**1.4 Query Support**
+**Type Conversion (extend convertor.cpp):**
 ```cpp
-void FirebaseFirestore::collection_query_async(int p_request_id, const String& collection, 
-                                               const Dictionary& query_params) {
-    firebase::firestore::Query query = firestore_instance->Collection(collection.utf8().get_data());
+// GDScript Dictionary → Firestore MapFieldValue
+firebase::firestore::MapFieldValue toFirestoreMap(const Dictionary& dict) {
+    firebase::firestore::MapFieldValue result;
+    for (const auto& key : dict.keys()) {
+        result[key.operator String().utf8().get_data()] = toFieldValue(dict[key]);
+    }
+    return result;
+}
+
+firebase::firestore::FieldValue toFieldValue(const Variant& v) {
+    switch (v.get_type()) {
+        case Variant::STRING: return FieldValue::String(v.operator String().utf8().get_data());
+        case Variant::INT: return FieldValue::Integer(v.operator int64_t());
+        case Variant::FLOAT: return FieldValue::Double(v.operator double());
+        case Variant::BOOL: return FieldValue::Boolean(v.operator bool());
+        case Variant::DICTIONARY: return FieldValue::Map(toFirestoreMap(v));
+        case Variant::ARRAY: return FieldValue::Array(toFirestoreArray(v));
+        // ... null, timestamp, geopoint
+    }
+}
+```
+
+### Phase 3: Query Builder
+
+```cpp
+// Query methods chained in GDScript, executed as Dictionary
+// query_params: {
+//   "where": [{"field": "score", "op": ">", "value": 100}],
+//   "order_by": [{"field": "score", "direction": "desc"}],
+//   "limit": 10
+// }
+
+void FirebaseFirestore::query_collection_async(int request_id, String collection, Dictionary query_params) {
+    firebase::firestore::Query query = firestore->Collection(collection.utf8().get_data());
     
-    // Apply query modifiers from query_params
-    if (query_params.has("where_field")) {
-        String field = query_params["where_field"];
-        String op = query_params["where_op"];
-        Variant value = query_params["where_value"];
-        // query = query.WhereEqualTo(field, value);
-    }
-    if (query_params.has("order_by")) {
-        query = query.OrderBy(String(query_params["order_by"]).utf8().get_data());
-    }
-    if (query_params.has("limit")) {
-        query = query.Limit(int(query_params["limit"]));
+    // Apply where clauses
+    Array wheres = query_params.get("where", Array());
+    for (int i = 0; i < wheres.size(); i++) {
+        Dictionary clause = wheres[i];
+        String field = clause["field"];
+        String op = clause["op"];
+        Variant value = clause["value"];
+        
+        if (op == "==") query = query.WhereEqualTo(field.utf8().get_data(), toFieldValue(value));
+        else if (op == ">") query = query.WhereGreaterThan(field.utf8().get_data(), toFieldValue(value));
+        // ... other operators
     }
     
-    firebase::Future<firebase::firestore::QuerySnapshot> future = query.Get();
-    // ... OnCompletion handler
+    // Execute query...
 }
 ```
 
-**1.5 Signal Bindings**
+### Phase 4: Real-Time Listeners
+
 ```cpp
-ADD_SIGNAL(MethodInfo("document_get_completed", PropertyInfo(Variant::INT, "request_id"), PropertyInfo(Variant::STRING, "collection"), PropertyInfo(Variant::STRING, "document_id"), PropertyInfo(Variant::DICTIONARY, "data"), PropertyInfo(Variant::BOOL, "exists")));
-ADD_SIGNAL(MethodInfo("document_get_error", PropertyInfo(Variant::INT, "request_id"), PropertyInfo(Variant::STRING, "error_code"), PropertyInfo(Variant::STRING, "error_message")));
-ADD_SIGNAL(MethodInfo("document_set_completed", PropertyInfo(Variant::INT, "request_id"), PropertyInfo(Variant::BOOL, "success"), PropertyInfo(Variant::STRING, "error_message")));
-ADD_SIGNAL(MethodInfo("document_update_completed", PropertyInfo(Variant::INT, "request_id"), PropertyInfo(Variant::BOOL, "success"), PropertyInfo(Variant::STRING, "error_message")));
-ADD_SIGNAL(MethodInfo("document_delete_completed", PropertyInfo(Variant::INT, "request_id"), PropertyInfo(Variant::BOOL, "success"), PropertyInfo(Variant::STRING, "error_message")));
-ADD_SIGNAL(MethodInfo("collection_add_completed", PropertyInfo(Variant::INT, "request_id"), PropertyInfo(Variant::STRING, "document_id"), PropertyInfo(Variant::BOOL, "success"), PropertyInfo(Variant::STRING, "error_message")));
-ADD_SIGNAL(MethodInfo("query_completed", PropertyInfo(Variant::INT, "request_id"), PropertyInfo(Variant::ARRAY, "documents")));
-ADD_SIGNAL(MethodInfo("query_error", PropertyInfo(Variant::INT, "request_id"), PropertyInfo(Variant::STRING, "error_code"), PropertyInfo(Variant::STRING, "error_message")));
+// Listener management
+int add_document_listener(Array path);
+int add_collection_listener(String collection, Dictionary query_params);
+void remove_listener(int listener_id);
+
+// Internal tracking
+std::map<int, firebase::firestore::ListenerRegistration> active_listeners;
 ```
 
-### Phase 2: Build System Integration
+### Phase 5: GDScript Service
 
-**2.1 Update SCsub**
-```python
-# Add to source files
-env.add_source_files(env.modules_sources, "firestore.cpp")
-
-# Link Firestore library (platform-specific)
-if env['platform'] == 'android':
-    env.Prepend(LIBS=[File("#/../firebase/firebase_cpp_sdk/libs/android/.../libfirebase_firestore.a")])
-if env['platform'] == 'iphone':
-    env.Prepend(LIBS=[File("#/../firebase/firebase_cpp_sdk/libs/ios/device-arm64/libfirebase_firestore.a")])
-if env['platform'] == 'macos':
-    env.Prepend(LIBS=[File("#/../firebase/firebase_cpp_sdk/libs/macos/universal/libfirebase_firestore.a")])
-if env['platform'] == 'windows':
-    env.Prepend(LIBS=[File("#/../firebase/firebase_cpp_sdk/libs/windows/VS2019/MT/x64/Release/firebase_firestore.lib")])
-```
-
-**2.2 Update register_types.cpp**
-```cpp
-#include "firestore.h"
-
-void initialize_firebase_module(ModuleInitializationLevel p_level) {
-    // ... existing registrations
-    ClassDB::register_class<FirebaseFirestore>();
-}
-```
-
-### Phase 3: GDScript Service Layer
-
-**3.1 Create firestore_service.gd**
 ```gdscript
-class_name FirestoreService
-extends RefCounted
+class_name FirestoreService extends Node
 
-var _firebase_service: Node
-var _cpp_firestore: Object
-var _request_id_counter: int = 0
+signal document_result(request_id: int, success: bool, data: Dictionary, error: String)
+signal query_result(request_id: int, success: bool, documents: Array, error: String)
+signal document_changed(listener_id: int, document: Dictionary)
 
-func get_document(collection: String, document_id: String) -> Dictionary:
-    var request_id = _get_next_request_id()
-    _cpp_firestore.document_get_async(request_id, collection, document_id)
-    var result = await _cpp_firestore.document_get_completed
-    return {"exists": result[4], "data": result[3], "error": ""}
+var _native: FirebaseFirestore
 
-func set_document(collection: String, document_id: String, data: Dictionary) -> bool:
-    var request_id = _get_next_request_id()
-    _cpp_firestore.document_set_async(request_id, collection, document_id, data)
-    var result = await _cpp_firestore.document_set_completed
-    return result[1]  # success
+func get_document(path: Array) -> Dictionary:
+    var request = FirebaseRequest.new(_request_id_counter)
+    _native.get_document_async(request.request_id, path)
+    return await request.completed
 
-func add_document(collection: String, data: Dictionary) -> String:
-    var request_id = _get_next_request_id()
-    _cpp_firestore.collection_add_async(request_id, collection, data)
-    var result = await _cpp_firestore.collection_add_completed
-    return result[1]  # document_id
+func set_document(path: Array, data: Dictionary) -> Dictionary:
+    var request = FirebaseRequest.new(_request_id_counter)
+    _native.set_document_async(request.request_id, path, data)
+    return await request.completed
 ```
 
-### Phase 4: Debug Actions & Test Configurations
+### Complexity Assessment
+This is the MOST COMPLEX task:
+- New C++ module from scratch
+- Complex type conversion (nested maps, arrays, timestamps, geopoints)
+- Query builder with multiple operators
+- Real-time listeners with lifecycle management
+- Batch writes and transactions
+- Depends on Auth being complete
 
-**4.1 Create project/debug/actions/firebase_firestore/**
-- `firestore_document_get_test_action.gd`
-- `firestore_document_set_test_action.gd`
-- `firestore_document_update_test_action.gd`
-- `firestore_document_delete_test_action.gd`
-- `firestore_collection_query_test_action.gd`
-- `firestore_error_handling_test_action.gd`
+### Recommended: Staged Implementation
+1. **v1**: Basic CRUD (get, set, update, delete)
+2. **v2**: Simple queries (where, limit)
+3. **v3**: Real-time listeners
+4. **v4**: Batch writes, transactions
 
-**4.2 Create tests/debug_configs/**
-- `firebase-firestore-layer.json`
-- `firebase-firestore-crud.json`
-- `firebase-firestore-queries.json`
-
-### Key Reference Files
-- `godot/modules/firebase/database.h` - Full thread-safe singleton pattern
-- `godot/modules/firebase/database.cpp:404-453` - Async with MessageQueue
-- Firebase docs: Collection.Add, Document.Get patterns
+Start with v1, validate on all platforms, then expand.
 <!-- SECTION:PLAN:END -->
+
+## Implementation Notes
+
+<!-- SECTION:NOTES:BEGIN -->
+## CTO Review Notes (2025-12-31)
+
+### HIGHEST RISK TASK - Extra Scrutiny Required
+
+This is the most complex task in the epic. It creates a NEW C++ module from scratch.
+
+### Critical Pre-Implementation Verification
+
+**1. Verify Firestore Library Exists**
+Before writing any code:
+```bash
+# Check if libfirebase_firestore exists in our SDK
+ls -la firebase/firebase_cpp_sdk/libs/android/arm64-v8a/ | grep firestore
+ls -la firebase/firebase_cpp_sdk/libs/ios/device-arm64/ | grep firestore
+ls -la firebase/firebase_cpp_sdk/libs/macos/universal/ | grep firestore
+ls -la firebase/firebase_cpp_sdk/libs/windows/VS2019/MT/x64/Release/ | grep firestore
+```
+If missing, need to download updated SDK or reconsider scope.
+
+**2. Query Params Schema Must Be Explicit**
+The plan shows `Dictionary query_params` but doesn't define schema. Document explicitly:
+```cpp
+// query_params schema:
+// {
+//   "where": [{"field": "status", "op": "==", "value": "active"}],
+//   "order_by": "created_at",
+//   "order_direction": "desc",  // or "asc"
+//   "limit": 10,
+//   "start_after": "document_id"  // for pagination
+// }
+//
+// Supported operators: "==", "!=", "<", "<=", ">", ">=", "array-contains", "in"
+```
+
+**3. Subcollection Paths Not Handled**
+Firestore paths can be nested: `users/uid/posts/postId`. Current plan only shows:
+```cpp
+firestore_instance->Collection(collection).Document(document_id);
+```
+Need path parser:
+```cpp
+firebase::firestore::DocumentReference parse_document_path(const String& path) {
+    // Parse "users/abc123/posts/post456" into proper reference chain
+    PackedStringArray parts = path.split("/");
+    // Alternate Collection/Document calls
+}
+```
+
+**4. Offline Persistence Decision Required**
+Firestore has offline persistence by default on mobile. This causes:
+- Stale data reads (cache vs server)
+- Pending writes queue growing
+- Disk usage growth
+
+Must explicitly decide:
+```cpp
+firebase::firestore::Settings settings;
+settings.set_persistence_enabled(false);  // Simpler, no cache issues
+// OR
+settings.set_persistence_enabled(true);
+settings.set_cache_size_bytes(10 * 1024 * 1024);  // 10MB limit
+firestore_instance->set_settings(settings);
+```
+
+**5. Transaction Support (Defer to v2)**
+Firestore transactions are critical for data consistency but complex. Recommend:
+- v1: CRUD operations only
+- v2: Add transaction support
+
+Document this explicitly in acceptance criteria.
+
+### Risk Mitigation
+
+1. **Implement in phases**: Get document CRUD working first, then queries
+2. **Test heavily on Android first**: Most complex platform
+3. **Consider Cloud Functions proxy**: If C++ complexity is too high, use Functions as intermediary
+
+## Revised Scope (2025-12-31)
+
+### CRITICAL: Firestore Library Status UNKNOWN
+
+Unlike Analytics (which is linked), Firestore was NOT found in the SCsub exploration. **Before implementing, MUST verify:**
+
+```bash
+# Run these commands to check Firestore library existence
+ls -la firebase/firebase_cpp_sdk/libs/android/arm64-v8a/ | grep -i firestore
+ls -la firebase/firebase_cpp_sdk/libs/ios/device-arm64/ | grep -i firestore
+ls -la firebase/firebase_cpp_sdk/libs/macos/universal/ | grep -i firestore
+ls -la firebase/firebase_cpp_sdk/libs/windows/VS2019/MT/x64/Release/ | grep -i firestore
+```
+
+### If Firestore Library EXISTS:
+1. Add library linking to SCsub (copy pattern from database)
+2. Proceed with C++ implementation
+3. Follow database.h patterns exactly
+
+### If Firestore Library MISSING:
+Options:
+1. **Download newer Firebase C++ SDK** that includes Firestore
+2. **Use Cloud Functions as proxy** - GDScript calls Function, Function accesses Firestore
+3. **Defer task** until SDK is updated
+
+### Why Firestore is Highest Risk:
+1. **New C++ module from scratch** (unlike Auth/Remote Config which exist)
+2. **Complex data model** (documents, collections, subcollections)
+3. **Query system** needs careful design
+4. **Offline persistence** adds complexity
+5. **Library may not exist** in current SDK
+
+### Recommended Approach:
+1. **First**: Verify library existence (blocking check)
+2. **Second**: Complete task-399 (Auth) and task-400 (Remote Config) first
+3. **Third**: Implement Firestore last with full database.h patterns
+
+### Existing Patterns to Leverage:
+From `database.cpp` (51KB reference implementation):
+- Thread-safe singleton: lines 88-120
+- MessageQueue marshalling: lines 404-453
+- Main thread handlers: lines 814-862
+- Type conversion: `convertor.cpp`
+- Signal structure: 14+ signals defined
+
+### Firestore-Specific Considerations:
+1. **Document paths** can be nested (users/uid/posts/postId)
+2. **Queries** more complex than RTDB (where, orderBy, startAt, etc.)
+3. **Offline persistence** enabled by default on mobile
+4. **Transactions** needed for atomic operations
+5. **Batch writes** for multiple document updates
+<!-- SECTION:NOTES:END -->

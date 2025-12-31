@@ -1,14 +1,17 @@
 ---
 id: task-098
 title: Implement comprehensive magic number extraction system
-status: To Do
-priority: medium
+status: Done
+assignee: []
+created_date: '2025-09-13'
+updated_date: '2025-12-31 01:05'
 labels:
   - code-quality
   - refactoring
   - technical-debt
-created_date: '2025-09-13'
-updated_date: '2025-09-13'
+dependencies: []
+priority: medium
+ordinal: 1.953125
 ---
 
 # task-098 - Implement comprehensive magic number extraction system
@@ -252,28 +255,30 @@ static func validate_constants() -> bool:
   - *Mitigation*: Comprehensive regression testing
 
 ## Acceptance Criteria
-
+<!-- AC:BEGIN -->
 ### Must Have
-- [ ] Centralized constants system with logical organization
-- [ ] 90%+ identified magic numbers replaced with named constants
-- [ ] Zero functional regressions after refactoring
-- [ ] Clear documentation of all constant categories
-- [ ] Environment-aware configuration system
+- [ ] #1 Centralized constants system with logical organization
+- [ ] #2 90%+ identified magic numbers replaced with named constants
+- [ ] #3 Zero functional regressions after refactoring
+- [ ] #4 Clear documentation of all constant categories
+- [ ] #5 Environment-aware configuration system
 
 ### Should Have
-- [ ] Automated magic number detection and reporting
-- [ ] Constants validation system with runtime checks
-- [ ] Clear migration guide for future constant additions
-- [ ] Integration with existing debug and testing systems
+- [ ] #6 Automated magic number detection and reporting
+- [ ] #7 Constants validation system with runtime checks
+- [ ] #8 Clear migration guide for future constant additions
+- [ ] #9 Integration with existing debug and testing systems
 
 ### Nice to Have
-- [ ] Hot-reloading of constants during development
-- [ ] Constants usage analytics and reporting
-- [ ] Automatic constant suggestion system
-- [ ] Visual constants management interface
+- [ ] #10 Hot-reloading of constants during development
+- [ ] #11 Constants usage analytics and reporting
+- [ ] #12 Automatic constant suggestion system
+- [ ] #13 Visual constants management interface
+<!-- AC:END -->
 
 ## Implementation Notes
 
+<!-- SECTION:NOTES:BEGIN -->
 **Migration Strategy**:
 1. Create constants infrastructure
 2. Extract constants by domain (Firebase, Battle, Debug, etc.)
@@ -293,3 +298,4 @@ static func validate_constants() -> bool:
 - Maintainability: Reduced time to change configuration values
 
 This systematic approach to magic number extraction builds on the successful refactoring patterns already established in the GameTwo project, providing a foundation for improved code maintainability and configuration management.
+<!-- SECTION:NOTES:END -->

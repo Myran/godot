@@ -1,11 +1,10 @@
 ---
 id: task-278
 title: Unify iOS Firebase Binary Management with CocoaPods and Xcode Integration
-status: To Do
-priority: medium
+status: Consider
 assignee: []
 created_date: '2025-11-12 18:15'
-updated_date: '2025-11-12 18:15'
+updated_date: '2025-12-31 01:04'
 labels:
   - firebase
   - ios
@@ -15,21 +14,13 @@ labels:
   - dependency-management
 dependencies:
   - task-277
----
-
-## Assessment (2025-12-06)
-
-**Value: MEDIUM** - iOS Firebase management consistency.
-
-**Recommendation: KEEP but DEFER** - Important for iOS build consistency, but iOS already works. This is a "nice to have" unification once Windows (task-277) is done. Lower priority than getting new platforms working.
-
-**Effort**: Medium (CocoaPods integration, Xcode project changes)
-**Blocker**: Depends on task-277
-
+priority: medium
+ordinal: 7500
 ---
 
 ## Description
 
+<!-- SECTION:DESCRIPTION:BEGIN -->
 Unify iOS Firebase binary management to work consistently with the new pre-built library system established in task-277. Currently, iOS Firebase integration uses a hybrid approach with Godot module C++ code (.mm files) and CocoaPods dependencies, leading to potential version mismatches and complexity. This task will align iOS Firebase management with the unified justfile-based approach used for Windows and Android.
 
 ## Context
@@ -69,9 +60,11 @@ Unify iOS Firebase binary management to work consistently with the new pre-built
 3. **Build Complexity**: Need both `pod install` and Firebase module compilation
 4. **Synchronization**: Keeping native and C++ Firebase versions aligned
 5. **Platform Divergence**: iOS works differently from Android/Windows
+<!-- SECTION:DESCRIPTION:END -->
 
 ## Implementation Plan
 
+<!-- SECTION:PLAN:BEGIN -->
 ### Phase 1: Analysis & Strategy Decision
 
 **1.1 Dependency Management Analysis**
@@ -233,6 +226,18 @@ firebase-sync-versions:
 ## Related Tasks
 
 - **task-277**: Integrate Firebase C++ SDK for Windows Desktop Build (dependency)
+<!-- SECTION:PLAN:END -->
+
+## Assessment (2025-12-06)
+
+**Value: MEDIUM** - iOS Firebase management consistency.
+
+**Recommendation: KEEP but DEFER** - Important for iOS build consistency, but iOS already works. This is a "nice to have" unification once Windows (task-277) is done. Lower priority than getting new platforms working.
+
+**Effort**: Medium (CocoaPods integration, Xcode project changes)
+**Blocker**: Depends on task-277
+
+---
 
 ## Notes
 

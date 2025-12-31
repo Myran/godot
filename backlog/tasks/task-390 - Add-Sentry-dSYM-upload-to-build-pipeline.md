@@ -4,7 +4,7 @@ title: Add Sentry dSYM upload to build pipeline
 status: Done
 assignee: []
 created_date: '2025-12-27 12:39'
-updated_date: '2025-12-31 00:00'
+updated_date: '2025-12-31 01:03'
 labels:
   - sentry
   - build-system
@@ -13,6 +13,7 @@ labels:
   - crash-reporting
 dependencies: []
 priority: medium
+ordinal: 299000
 ---
 
 ## Description

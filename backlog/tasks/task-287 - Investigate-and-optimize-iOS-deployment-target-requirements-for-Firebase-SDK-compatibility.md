@@ -3,26 +3,18 @@ id: task-287
 title: >-
   Investigate and optimize iOS deployment target requirements for Firebase SDK
   compatibility
-status: To Do
+status: Done
 assignee: []
 created_date: '2025-11-16 22:20'
+updated_date: '2025-12-31 01:03'
 labels: []
 dependencies: []
----
-
-## Assessment (2025-12-06)
-
-**Value: MEDIUM** - Broader iOS device compatibility.
-
-**Recommendation: KEEP** - iOS 16.6 requirement is restrictive. Lowering to 15.0 would support more devices including the iPad test device. Investigation task to find minimum viable iOS version while maintaining Firebase compatibility.
-
-**Effort**: Small (research + build configuration)
-**Impact**: Enables testing on older devices, broader user reach
-
+ordinal: 3.90625
 ---
 
 ## Description
 
+<!-- SECTION:DESCRIPTION:BEGIN -->
 Investigate why iOS deployment target is set to 16.6 and optimize for broader device compatibility. Current requirement prevents testing on iPad running iOS 15.6.1.
 
 **Current Issue:**
@@ -65,3 +57,15 @@ Investigate why iOS deployment target is set to 16.6 and optimize for broader de
 - Firebase Podfile: `export/ios/Podfile`
 - Godot export preset: `project/export_presets.cfg`
 - Template source: `templates/ios.zip` (if exists)
+<!-- SECTION:DESCRIPTION:END -->
+
+## Assessment (2025-12-06)
+
+**Value: MEDIUM** - Broader iOS device compatibility.
+
+**Recommendation: KEEP** - iOS 16.6 requirement is restrictive. Lowering to 15.0 would support more devices including the iPad test device. Investigation task to find minimum viable iOS version while maintaining Firebase compatibility.
+
+**Effort**: Small (research + build configuration)
+**Impact**: Enables testing on older devices, broader user reach
+
+---

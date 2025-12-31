@@ -4,7 +4,7 @@ title: Generate Windows PDB files during Sentry build for crash symbolication
 status: Done
 assignee: []
 created_date: '2025-12-31 00:09'
-updated_date: '2025-12-31 00:31'
+updated_date: '2025-12-31 01:03'
 labels:
   - sentry
   - windows
@@ -13,6 +13,7 @@ labels:
 dependencies:
   - task-390
 priority: medium
+ordinal: 298000
 ---
 
 ## Description
