@@ -1,0 +1,13 @@
+{
+  "description": "Firebase Analytics feature tests (6 tests)",
+  "actions": [
+    "test.analytics.log_event_basic",
+    "test.analytics.log_event_params",
+    "test.analytics.set_user_id",
+    "test.analytics.set_user_property",
+    "test.analytics.collection_enabled",
+    "test.analytics.reset_data"
+  ],
+  "platforms": ["android", "ios", "macos", "desktop"],
+  "tags": ["firebase", "analytics", "tdd"]
+}

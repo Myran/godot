@@ -1,0 +1,12 @@
+{
+  "description": "Firebase Firestore feature tests (5 tests)",
+  "actions": [
+    "test.firestore.document_get",
+    "test.firestore.document_set",
+    "test.firestore.document_update",
+    "test.firestore.document_delete",
+    "test.firestore.query"
+  ],
+  "platforms": ["android", "ios", "macos", "desktop"],
+  "tags": ["firebase", "firestore", "tdd"]
+}

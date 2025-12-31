@@ -1,0 +1,15 @@
+{
+  "description": "Firebase Remote Config feature tests (8 tests)",
+  "actions": [
+    "test.remote_config.get_boolean",
+    "test.remote_config.get_string",
+    "test.remote_config.get_int",
+    "test.remote_config.fetch_and_activate",
+    "test.remote_config.fetch_async",
+    "test.remote_config.activate_async",
+    "test.remote_config.get_keys",
+    "test.remote_config.set_defaults"
+  ],
+  "platforms": ["android", "ios", "macos", "desktop"],
+  "tags": ["firebase", "remote-config", "tdd"]
+}

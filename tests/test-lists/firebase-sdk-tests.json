@@ -1,0 +1,16 @@
+{
+  "name": "Firebase SDK Test Suite",
+  "description": "Complete TDD test suite for Firebase SDK integration. Run all Firebase service tests or individual service categories.",
+  "configs": [
+    "firebase-analytics-tests",
+    "firebase-auth-tests",
+    "firebase-remote-config-tests",
+    "firebase-firestore-tests",
+    "firebase-steam-tests"
+  ],
+  "metadata": {
+    "total_tests": 31,
+    "services": ["analytics", "auth", "remote-config", "firestore", "steam"],
+    "tdd_phase": "red"
+  }
+}

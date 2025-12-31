@@ -1,0 +1,15 @@
+{
+  "description": "Firebase Auth feature tests (8 tests)",
+  "actions": [
+    "test.auth.sign_in_anonymous",
+    "test.auth.sign_in_custom_token",
+    "test.auth.sign_in_email",
+    "test.auth.get_id_token",
+    "test.auth.sign_out",
+    "test.auth.get_uid",
+    "test.auth.is_logged_in",
+    "test.auth.state_changed"
+  ],
+  "platforms": ["android", "ios", "macos", "desktop"],
+  "tags": ["firebase", "auth", "tdd"]
+}

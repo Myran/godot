@@ -1,0 +1,11 @@
+{
+  "description": "Steam integration tests for Firebase custom token auth (4 tests - desktop only)",
+  "actions": [
+    "test.steam.init",
+    "test.steam.get_ticket",
+    "test.steam.sign_in_flow",
+    "test.steam.no_client_error"
+  ],
+  "platforms": ["desktop", "macos", "windows"],
+  "tags": ["firebase", "steam", "tdd"]
+}
