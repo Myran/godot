@@ -1,0 +1,1089 @@
+[debug] [2026-01-01T14:16:55.641Z] > command requires scopes: ["email","openid","https://www.googleapis.com/auth/cloudplatformprojects.readonly","https://www.googleapis.com/auth/firebase","https://www.googleapis.com/auth/cloud-platform"]
+[debug] [2026-01-01T14:16:55.643Z] > authorizing via signed-in user (mattias.myhrman@gmail.com)
+[debug] [2026-01-01T14:16:55.643Z] > command requires scopes: ["email","openid","https://www.googleapis.com/auth/cloudplatformprojects.readonly","https://www.googleapis.com/auth/firebase","https://www.googleapis.com/auth/cloud-platform"]
+[debug] [2026-01-01T14:16:55.644Z] > authorizing via signed-in user (mattias.myhrman@gmail.com)
+[debug] [2026-01-01T14:16:55.656Z] > command requires scopes: ["email","openid","https://www.googleapis.com/auth/cloudplatformprojects.readonly","https://www.googleapis.com/auth/firebase","https://www.googleapis.com/auth/cloud-platform"]
+[debug] [2026-01-01T14:16:55.656Z] > authorizing via signed-in user (mattias.myhrman@gmail.com)
+[debug] [2026-01-01T14:16:56.811Z] Checked if tokens are valid: true, expires at: 1767280494080
+[debug] [2026-01-01T14:16:56.811Z] Checked if tokens are valid: true, expires at: 1767280494080
+[debug] [2026-01-01T14:16:56.812Z] >>> [apiv2][query] GET https://serviceusage.googleapis.com/v1/projects//services/firebaseappdistribution.googleapis.com [none]
+[debug] [2026-01-01T14:16:56.812Z] >>> [apiv2][(partial)header] GET https://serviceusage.googleapis.com/v1/projects//services/firebaseappdistribution.googleapis.com x-goog-quota-user=projects/
+[debug] [2026-01-01T14:16:56.835Z] Checked if tokens are valid: true, expires at: 1767280494080
+[debug] [2026-01-01T14:16:56.835Z] Checked if tokens are valid: true, expires at: 1767280494080
+[debug] [2026-01-01T14:16:56.835Z] >>> [apiv2][query] GET https://serviceusage.googleapis.com/v1/projects//services/firebaseappdistribution.googleapis.com [none]
+[debug] [2026-01-01T14:16:56.835Z] >>> [apiv2][(partial)header] GET https://serviceusage.googleapis.com/v1/projects//services/firebaseappdistribution.googleapis.com x-goog-quota-user=projects/
+[debug] [2026-01-01T14:16:56.836Z] Checked if tokens are valid: true, expires at: 1767280494080
+[debug] [2026-01-01T14:16:56.836Z] Checked if tokens are valid: true, expires at: 1767280494080
+[debug] [2026-01-01T14:16:56.836Z] >>> [apiv2][query] GET https://serviceusage.googleapis.com/v1/projects//services/firebaseappdistribution.googleapis.com [none]
+[debug] [2026-01-01T14:16:56.836Z] >>> [apiv2][(partial)header] GET https://serviceusage.googleapis.com/v1/projects//services/firebaseappdistribution.googleapis.com x-goog-quota-user=projects/
+[debug] [2026-01-01T14:16:57.898Z] <<< [apiv2][status] GET https://serviceusage.googleapis.com/v1/projects//services/firebaseappdistribution.googleapis.com 400
+[debug] [2026-01-01T14:16:57.898Z] <<< [apiv2][body] GET https://serviceusage.googleapis.com/v1/projects//services/firebaseappdistribution.googleapis.com [omitted]
+[debug] [2026-01-01T14:16:57.899Z] > command requires scopes: ["email","openid","https://www.googleapis.com/auth/cloudplatformprojects.readonly","https://www.googleapis.com/auth/firebase","https://www.googleapis.com/auth/cloud-platform"]
+[debug] [2026-01-01T14:16:57.899Z] > authorizing via signed-in user (mattias.myhrman@gmail.com)
+[debug] [2026-01-01T14:16:57.909Z] <<< [apiv2][status] GET https://serviceusage.googleapis.com/v1/projects//services/firebaseappdistribution.googleapis.com 400
+[debug] [2026-01-01T14:16:57.909Z] <<< [apiv2][body] GET https://serviceusage.googleapis.com/v1/projects//services/firebaseappdistribution.googleapis.com [omitted]
+[debug] [2026-01-01T14:16:57.910Z] > command requires scopes: ["email","openid","https://www.googleapis.com/auth/cloudplatformprojects.readonly","https://www.googleapis.com/auth/firebase","https://www.googleapis.com/auth/cloud-platform"]
+[debug] [2026-01-01T14:16:57.910Z] > authorizing via signed-in user (mattias.myhrman@gmail.com)
+[debug] [2026-01-01T14:16:59.292Z] <<< [apiv2][status] GET https://serviceusage.googleapis.com/v1/projects//services/firebaseappdistribution.googleapis.com 400
+[debug] [2026-01-01T14:16:59.292Z] <<< [apiv2][body] GET https://serviceusage.googleapis.com/v1/projects//services/firebaseappdistribution.googleapis.com [omitted]
+[debug] [2026-01-01T14:17:01.909Z] > command requires scopes: ["email","openid","https://www.googleapis.com/auth/cloudplatformprojects.readonly","https://www.googleapis.com/auth/firebase","https://www.googleapis.com/auth/cloud-platform"]
+[debug] [2026-01-01T14:17:01.909Z] > authorizing via signed-in user (mattias.myhrman@gmail.com)
+[debug] [2026-01-01T14:17:01.910Z] > command requires scopes: ["email","openid","https://www.googleapis.com/auth/cloudplatformprojects.readonly","https://www.googleapis.com/auth/firebase","https://www.googleapis.com/auth/cloud-platform"]
+[debug] [2026-01-01T14:17:01.910Z] > authorizing via signed-in user (mattias.myhrman@gmail.com)
+[debug] [2026-01-01T14:17:25.576Z] > command requires scopes: ["email","openid","https://www.googleapis.com/auth/cloudplatformprojects.readonly","https://www.googleapis.com/auth/firebase","https://www.googleapis.com/auth/cloud-platform"]
+[debug] [2026-01-01T14:17:25.576Z] > authorizing via signed-in user (mattias.myhrman@gmail.com)
+[debug] [2026-01-01T14:17:29.897Z] > command requires scopes: ["email","openid","https://www.googleapis.com/auth/cloudplatformprojects.readonly","https://www.googleapis.com/auth/firebase","https://www.googleapis.com/auth/cloud-platform"]
+[debug] [2026-01-01T14:17:29.897Z] > authorizing via signed-in user (mattias.myhrman@gmail.com)
+[debug] [2026-01-01T14:18:33.075Z] > command requires scopes: ["email","openid","https://www.googleapis.com/auth/cloudplatformprojects.readonly","https://www.googleapis.com/auth/firebase","https://www.googleapis.com/auth/cloud-platform"]
+[debug] [2026-01-01T14:18:33.075Z] > authorizing via signed-in user (mattias.myhrman@gmail.com)
+[debug] [2026-01-01T14:18:41.678Z] > command requires scopes: ["email","openid","https://www.googleapis.com/auth/cloudplatformprojects.readonly","https://www.googleapis.com/auth/firebase","https://www.googleapis.com/auth/cloud-platform"]
+[debug] [2026-01-01T14:18:41.679Z] > authorizing via signed-in user (mattias.myhrman@gmail.com)
+[debug] [2026-01-01T14:18:45.018Z] > command requires scopes: ["email","openid","https://www.googleapis.com/auth/cloudplatformprojects.readonly","https://www.googleapis.com/auth/firebase","https://www.googleapis.com/auth/cloud-platform"]
+[debug] [2026-01-01T14:18:45.019Z] > authorizing via signed-in user (mattias.myhrman@gmail.com)
+[debug] [2026-01-01T14:18:45.019Z] Checked if tokens are valid: true, expires at: 1767280494080
+[debug] [2026-01-01T14:18:45.019Z] Checked if tokens are valid: true, expires at: 1767280494080
+[debug] [2026-01-01T14:18:45.020Z] >>> [apiv2][query] GET https://firebase.googleapis.com/v1beta1/projects pageSize=10
+[debug] [2026-01-01T14:18:45.494Z] <<< [apiv2][status] GET https://firebase.googleapis.com/v1beta1/projects 200
+[debug] [2026-01-01T14:18:45.495Z] <<< [apiv2][body] GET https://firebase.googleapis.com/v1beta1/projects [omitted]
+[debug] [2026-01-01T14:18:50.490Z] > command requires scopes: ["email","openid","https://www.googleapis.com/auth/cloudplatformprojects.readonly","https://www.googleapis.com/auth/firebase","https://www.googleapis.com/auth/cloud-platform"]
+[debug] [2026-01-01T14:18:50.490Z] > authorizing via signed-in user (mattias.myhrman@gmail.com)
+[debug] [2026-01-01T14:18:53.839Z] > command requires scopes: ["email","openid","https://www.googleapis.com/auth/cloudplatformprojects.readonly","https://www.googleapis.com/auth/firebase","https://www.googleapis.com/auth/cloud-platform"]
+[debug] [2026-01-01T14:18:53.839Z] > authorizing via signed-in user (mattias.myhrman@gmail.com)
+[debug] [2026-01-01T14:18:53.848Z] Checked if tokens are valid: true, expires at: 1767280494080
+[debug] [2026-01-01T14:18:53.848Z] Checked if tokens are valid: true, expires at: 1767280494080
+[debug] [2026-01-01T14:18:53.848Z] >>> [apiv2][query] GET https://serviceusage.googleapis.com/v1/projects/gametwo-89299/services/cloudresourcemanager.googleapis.com [none]
+[debug] [2026-01-01T14:18:53.848Z] >>> [apiv2][(partial)header] GET https://serviceusage.googleapis.com/v1/projects/gametwo-89299/services/cloudresourcemanager.googleapis.com x-goog-quota-user=projects/gametwo-89299
+[debug] [2026-01-01T14:18:54.813Z] <<< [apiv2][status] GET https://serviceusage.googleapis.com/v1/projects/gametwo-89299/services/cloudresourcemanager.googleapis.com 200
+[debug] [2026-01-01T14:18:54.814Z] <<< [apiv2][body] GET https://serviceusage.googleapis.com/v1/projects/gametwo-89299/services/cloudresourcemanager.googleapis.com [omitted]
+[debug] [2026-01-01T14:18:54.820Z] Checked if tokens are valid: true, expires at: 1767280494080
+[debug] [2026-01-01T14:18:54.821Z] Checked if tokens are valid: true, expires at: 1767280494080
+[debug] [2026-01-01T14:18:54.821Z] >>> [apiv2][query] GET https://cloudresourcemanager.googleapis.com/v1/projects/gametwo-89299 [none]
+[debug] [2026-01-01T14:18:56.029Z] <<< [apiv2][status] GET https://cloudresourcemanager.googleapis.com/v1/projects/gametwo-89299 200
+[debug] [2026-01-01T14:18:56.029Z] <<< [apiv2][body] GET https://cloudresourcemanager.googleapis.com/v1/projects/gametwo-89299 {"projectNumber":"308611281726","projectId":"gametwo-89299","lifecycleState":"ACTIVE","name":"gametwo","labels":{"firebase":"enabled"},"createTime":"2024-08-03T14:06:02.108839Z"}
+[info] Now using project gametwo-89299
+[debug] [2026-01-01T14:44:53.567Z] > command requires scopes: ["email","openid","https://www.googleapis.com/auth/cloudplatformprojects.readonly","https://www.googleapis.com/auth/firebase","https://www.googleapis.com/auth/cloud-platform"]
+[debug] [2026-01-01T14:44:53.569Z] > authorizing via signed-in user (mattias.myhrman@gmail.com)
+[debug] [2026-01-01T14:44:53.569Z] > command requires scopes: ["email","openid","https://www.googleapis.com/auth/cloudplatformprojects.readonly","https://www.googleapis.com/auth/firebase","https://www.googleapis.com/auth/cloud-platform"]
+[debug] [2026-01-01T14:44:53.569Z] > authorizing via signed-in user (mattias.myhrman@gmail.com)
+[debug] [2026-01-01T14:44:53.570Z] Checked if tokens are valid: true, expires at: 1767280494080
+[debug] [2026-01-01T14:44:53.570Z] Checked if tokens are valid: true, expires at: 1767280494080
+[debug] [2026-01-01T14:44:53.570Z] Checked if tokens are valid: true, expires at: 1767280494080
+[debug] [2026-01-01T14:44:53.570Z] Checked if tokens are valid: true, expires at: 1767280494080
+[debug] [2026-01-01T14:44:53.570Z] > command requires scopes: ["email","openid","https://www.googleapis.com/auth/cloudplatformprojects.readonly","https://www.googleapis.com/auth/firebase","https://www.googleapis.com/auth/cloud-platform"]
+[debug] [2026-01-01T14:44:53.570Z] > authorizing via signed-in user (mattias.myhrman@gmail.com)
+[debug] [2026-01-01T14:44:53.571Z] >>> [apiv2][query] GET https://cloudbilling.googleapis.com/v1/projects/gametwo-89299/billingInfo [none]
+[debug] [2026-01-01T14:44:53.599Z] >>> [apiv2][query] GET https://cloudbilling.googleapis.com/v1/projects/gametwo-89299/billingInfo [none]
+[debug] [2026-01-01T14:44:53.600Z] Checked if tokens are valid: true, expires at: 1767280494080
+[debug] [2026-01-01T14:44:53.600Z] Checked if tokens are valid: true, expires at: 1767280494080
+[debug] [2026-01-01T14:44:53.600Z] >>> [apiv2][query] GET https://cloudbilling.googleapis.com/v1/projects/gametwo-89299/billingInfo [none]
+[debug] [2026-01-01T14:44:54.756Z] <<< [apiv2][status] GET https://cloudbilling.googleapis.com/v1/projects/gametwo-89299/billingInfo 200
+[debug] [2026-01-01T14:44:54.756Z] <<< [apiv2][body] GET https://cloudbilling.googleapis.com/v1/projects/gametwo-89299/billingInfo {"name":"projects/gametwo-89299/billingInfo","projectId":"gametwo-89299","billingAccountName":"","billingEnabled":false}
+[debug] [2026-01-01T14:44:54.762Z] Checked if tokens are valid: true, expires at: 1767280494080
+[debug] [2026-01-01T14:44:54.762Z] Checked if tokens are valid: true, expires at: 1767280494080
+[debug] [2026-01-01T14:44:54.762Z] Checked if tokens are valid: true, expires at: 1767280494080
+[debug] [2026-01-01T14:44:54.762Z] Checked if tokens are valid: true, expires at: 1767280494080
+[debug] [2026-01-01T14:44:54.763Z] Checked if tokens are valid: true, expires at: 1767280494080
+[debug] [2026-01-01T14:44:54.763Z] Checked if tokens are valid: true, expires at: 1767280494080
+[debug] [2026-01-01T14:44:54.763Z] Checked if tokens are valid: true, expires at: 1767280494080
+[debug] [2026-01-01T14:44:54.763Z] Checked if tokens are valid: true, expires at: 1767280494080
+[debug] [2026-01-01T14:44:54.763Z] Checked if tokens are valid: true, expires at: 1767280494080
+[debug] [2026-01-01T14:44:54.763Z] Checked if tokens are valid: true, expires at: 1767280494080
+[debug] [2026-01-01T14:44:54.763Z] Checked if tokens are valid: true, expires at: 1767280494080
+[debug] [2026-01-01T14:44:54.763Z] Checked if tokens are valid: true, expires at: 1767280494080
+[debug] [2026-01-01T14:44:54.763Z] Checked if tokens are valid: true, expires at: 1767280494080
+[debug] [2026-01-01T14:44:54.763Z] Checked if tokens are valid: true, expires at: 1767280494080
+[debug] [2026-01-01T14:44:54.768Z] Checked if tokens are valid: true, expires at: 1767280494080
+[debug] [2026-01-01T14:44:54.768Z] Checked if tokens are valid: true, expires at: 1767280494080
+[debug] [2026-01-01T14:44:54.769Z] Checked if tokens are valid: true, expires at: 1767280494080
+[debug] [2026-01-01T14:44:54.769Z] Checked if tokens are valid: true, expires at: 1767280494080
+[debug] [2026-01-01T14:44:54.769Z] >>> [apiv2][query] GET https://serviceusage.googleapis.com/v1/projects/gametwo-89299/services/firestore.googleapis.com [none]
+[debug] [2026-01-01T14:44:54.769Z] >>> [apiv2][(partial)header] GET https://serviceusage.googleapis.com/v1/projects/gametwo-89299/services/firestore.googleapis.com x-goog-quota-user=projects/gametwo-89299
+[debug] [2026-01-01T14:44:54.769Z] >>> [apiv2][query] GET https://serviceusage.googleapis.com/v1/projects/gametwo-89299/services/storage.googleapis.com [none]
+[debug] [2026-01-01T14:44:54.769Z] >>> [apiv2][(partial)header] GET https://serviceusage.googleapis.com/v1/projects/gametwo-89299/services/storage.googleapis.com x-goog-quota-user=projects/gametwo-89299
+[debug] [2026-01-01T14:44:54.770Z] >>> [apiv2][query] GET https://serviceusage.googleapis.com/v1/projects/gametwo-89299/services/firebasedataconnect.googleapis.com [none]
+[debug] [2026-01-01T14:44:54.770Z] >>> [apiv2][(partial)header] GET https://serviceusage.googleapis.com/v1/projects/gametwo-89299/services/firebasedataconnect.googleapis.com x-goog-quota-user=projects/gametwo-89299
+[debug] [2026-01-01T14:44:54.770Z] >>> [apiv2][query] GET https://serviceusage.googleapis.com/v1/projects/gametwo-89299/services/identitytoolkit.googleapis.com [none]
+[debug] [2026-01-01T14:44:54.770Z] >>> [apiv2][(partial)header] GET https://serviceusage.googleapis.com/v1/projects/gametwo-89299/services/identitytoolkit.googleapis.com x-goog-quota-user=projects/gametwo-89299
+[debug] [2026-01-01T14:44:54.771Z] >>> [apiv2][query] GET https://serviceusage.googleapis.com/v1/projects/gametwo-89299/services/fcm.googleapis.com [none]
+[debug] [2026-01-01T14:44:54.771Z] >>> [apiv2][(partial)header] GET https://serviceusage.googleapis.com/v1/projects/gametwo-89299/services/fcm.googleapis.com x-goog-quota-user=projects/gametwo-89299
+[debug] [2026-01-01T14:44:54.771Z] >>> [apiv2][query] GET https://serviceusage.googleapis.com/v1/projects/gametwo-89299/services/cloudfunctions.googleapis.com [none]
+[debug] [2026-01-01T14:44:54.771Z] >>> [apiv2][(partial)header] GET https://serviceusage.googleapis.com/v1/projects/gametwo-89299/services/cloudfunctions.googleapis.com x-goog-quota-user=projects/gametwo-89299
+[debug] [2026-01-01T14:44:54.772Z] >>> [apiv2][query] GET https://serviceusage.googleapis.com/v1/projects/gametwo-89299/services/firebaseremoteconfig.googleapis.com [none]
+[debug] [2026-01-01T14:44:54.772Z] >>> [apiv2][(partial)header] GET https://serviceusage.googleapis.com/v1/projects/gametwo-89299/services/firebaseremoteconfig.googleapis.com x-goog-quota-user=projects/gametwo-89299
+[debug] [2026-01-01T14:44:54.773Z] >>> [apiv2][query] GET https://serviceusage.googleapis.com/v1/projects/gametwo-89299/services/firebaseapphosting.googleapis.com [none]
+[debug] [2026-01-01T14:44:54.773Z] >>> [apiv2][(partial)header] GET https://serviceusage.googleapis.com/v1/projects/gametwo-89299/services/firebaseapphosting.googleapis.com x-goog-quota-user=projects/gametwo-89299
+[debug] [2026-01-01T14:44:54.774Z] >>> [apiv2][query] GET https://serviceusage.googleapis.com/v1/projects/gametwo-89299/services/firebaseio.com [none]
+[debug] [2026-01-01T14:44:54.774Z] >>> [apiv2][(partial)header] GET https://serviceusage.googleapis.com/v1/projects/gametwo-89299/services/firebaseio.com x-goog-quota-user=projects/gametwo-89299
+[debug] [2026-01-01T14:44:55.374Z] Checked if tokens are valid: true, expires at: 1767280494080
+[debug] [2026-01-01T14:44:55.374Z] Checked if tokens are valid: true, expires at: 1767280494080
+[debug] [2026-01-01T14:44:55.374Z] >>> [apiv2][query] GET https://serviceusage.googleapis.com/v1/projects/gametwo-89299/services/firebaseappdistribution.googleapis.com [none]
+[debug] [2026-01-01T14:44:55.374Z] >>> [apiv2][(partial)header] GET https://serviceusage.googleapis.com/v1/projects/gametwo-89299/services/firebaseappdistribution.googleapis.com x-goog-quota-user=projects/gametwo-89299
+[debug] [2026-01-01T14:44:55.550Z] <<< [apiv2][status] GET https://cloudbilling.googleapis.com/v1/projects/gametwo-89299/billingInfo 200
+[debug] [2026-01-01T14:44:55.550Z] <<< [apiv2][body] GET https://cloudbilling.googleapis.com/v1/projects/gametwo-89299/billingInfo {"name":"projects/gametwo-89299/billingInfo","projectId":"gametwo-89299","billingAccountName":"","billingEnabled":false}
+[debug] [2026-01-01T14:44:55.551Z] Checked if tokens are valid: true, expires at: 1767280494080
+[debug] [2026-01-01T14:44:55.551Z] Checked if tokens are valid: true, expires at: 1767280494080
+[debug] [2026-01-01T14:44:55.551Z] Checked if tokens are valid: true, expires at: 1767280494080
+[debug] [2026-01-01T14:44:55.551Z] Checked if tokens are valid: true, expires at: 1767280494080
+[debug] [2026-01-01T14:44:55.551Z] Checked if tokens are valid: true, expires at: 1767280494080
+[debug] [2026-01-01T14:44:55.551Z] Checked if tokens are valid: true, expires at: 1767280494080
+[debug] [2026-01-01T14:44:55.551Z] Checked if tokens are valid: true, expires at: 1767280494080
+[debug] [2026-01-01T14:44:55.551Z] Checked if tokens are valid: true, expires at: 1767280494080
+[debug] [2026-01-01T14:44:55.551Z] Checked if tokens are valid: true, expires at: 1767280494080
+[debug] [2026-01-01T14:44:55.551Z] Checked if tokens are valid: true, expires at: 1767280494080
+[debug] [2026-01-01T14:44:55.551Z] Checked if tokens are valid: true, expires at: 1767280494080
+[debug] [2026-01-01T14:44:55.551Z] Checked if tokens are valid: true, expires at: 1767280494080
+[debug] [2026-01-01T14:44:55.551Z] Checked if tokens are valid: true, expires at: 1767280494080
+[debug] [2026-01-01T14:44:55.551Z] Checked if tokens are valid: true, expires at: 1767280494080
+[debug] [2026-01-01T14:44:55.554Z] Checked if tokens are valid: true, expires at: 1767280494080
+[debug] [2026-01-01T14:44:55.554Z] Checked if tokens are valid: true, expires at: 1767280494080
+[debug] [2026-01-01T14:44:55.554Z] Checked if tokens are valid: true, expires at: 1767280494080
+[debug] [2026-01-01T14:44:55.554Z] Checked if tokens are valid: true, expires at: 1767280494080
+[debug] [2026-01-01T14:44:55.554Z] >>> [apiv2][query] GET https://serviceusage.googleapis.com/v1/projects/gametwo-89299/services/firestore.googleapis.com [none]
+[debug] [2026-01-01T14:44:55.554Z] >>> [apiv2][(partial)header] GET https://serviceusage.googleapis.com/v1/projects/gametwo-89299/services/firestore.googleapis.com x-goog-quota-user=projects/gametwo-89299
+[debug] [2026-01-01T14:44:55.555Z] >>> [apiv2][query] GET https://serviceusage.googleapis.com/v1/projects/gametwo-89299/services/storage.googleapis.com [none]
+[debug] [2026-01-01T14:44:55.555Z] >>> [apiv2][(partial)header] GET https://serviceusage.googleapis.com/v1/projects/gametwo-89299/services/storage.googleapis.com x-goog-quota-user=projects/gametwo-89299
+[debug] [2026-01-01T14:44:55.555Z] >>> [apiv2][query] GET https://serviceusage.googleapis.com/v1/projects/gametwo-89299/services/firebasedataconnect.googleapis.com [none]
+[debug] [2026-01-01T14:44:55.556Z] >>> [apiv2][(partial)header] GET https://serviceusage.googleapis.com/v1/projects/gametwo-89299/services/firebasedataconnect.googleapis.com x-goog-quota-user=projects/gametwo-89299
+[debug] [2026-01-01T14:44:55.556Z] >>> [apiv2][query] GET https://serviceusage.googleapis.com/v1/projects/gametwo-89299/services/identitytoolkit.googleapis.com [none]
+[debug] [2026-01-01T14:44:55.556Z] >>> [apiv2][(partial)header] GET https://serviceusage.googleapis.com/v1/projects/gametwo-89299/services/identitytoolkit.googleapis.com x-goog-quota-user=projects/gametwo-89299
+[debug] [2026-01-01T14:44:55.556Z] >>> [apiv2][query] GET https://serviceusage.googleapis.com/v1/projects/gametwo-89299/services/fcm.googleapis.com [none]
+[debug] [2026-01-01T14:44:55.556Z] >>> [apiv2][(partial)header] GET https://serviceusage.googleapis.com/v1/projects/gametwo-89299/services/fcm.googleapis.com x-goog-quota-user=projects/gametwo-89299
+[debug] [2026-01-01T14:44:55.557Z] >>> [apiv2][query] GET https://serviceusage.googleapis.com/v1/projects/gametwo-89299/services/cloudfunctions.googleapis.com [none]
+[debug] [2026-01-01T14:44:55.557Z] >>> [apiv2][(partial)header] GET https://serviceusage.googleapis.com/v1/projects/gametwo-89299/services/cloudfunctions.googleapis.com x-goog-quota-user=projects/gametwo-89299
+[debug] [2026-01-01T14:44:55.557Z] >>> [apiv2][query] GET https://serviceusage.googleapis.com/v1/projects/gametwo-89299/services/firebaseremoteconfig.googleapis.com [none]
+[debug] [2026-01-01T14:44:55.557Z] >>> [apiv2][(partial)header] GET https://serviceusage.googleapis.com/v1/projects/gametwo-89299/services/firebaseremoteconfig.googleapis.com x-goog-quota-user=projects/gametwo-89299
+[debug] [2026-01-01T14:44:55.558Z] >>> [apiv2][query] GET https://serviceusage.googleapis.com/v1/projects/gametwo-89299/services/firebaseapphosting.googleapis.com [none]
+[debug] [2026-01-01T14:44:55.558Z] >>> [apiv2][(partial)header] GET https://serviceusage.googleapis.com/v1/projects/gametwo-89299/services/firebaseapphosting.googleapis.com x-goog-quota-user=projects/gametwo-89299
+[debug] [2026-01-01T14:44:55.558Z] >>> [apiv2][query] GET https://serviceusage.googleapis.com/v1/projects/gametwo-89299/services/firebaseio.com [none]
+[debug] [2026-01-01T14:44:55.558Z] >>> [apiv2][(partial)header] GET https://serviceusage.googleapis.com/v1/projects/gametwo-89299/services/firebaseio.com x-goog-quota-user=projects/gametwo-89299
+[debug] [2026-01-01T14:44:56.166Z] <<< [apiv2][status] GET https://cloudbilling.googleapis.com/v1/projects/gametwo-89299/billingInfo 200
+[debug] [2026-01-01T14:44:56.167Z] <<< [apiv2][body] GET https://cloudbilling.googleapis.com/v1/projects/gametwo-89299/billingInfo {"name":"projects/gametwo-89299/billingInfo","projectId":"gametwo-89299","billingAccountName":"","billingEnabled":false}
+[debug] [2026-01-01T14:44:56.167Z] Checked if tokens are valid: true, expires at: 1767280494080
+[debug] [2026-01-01T14:44:56.167Z] Checked if tokens are valid: true, expires at: 1767280494080
+[debug] [2026-01-01T14:44:56.167Z] Checked if tokens are valid: true, expires at: 1767280494080
+[debug] [2026-01-01T14:44:56.167Z] Checked if tokens are valid: true, expires at: 1767280494080
+[debug] [2026-01-01T14:44:56.167Z] Checked if tokens are valid: true, expires at: 1767280494080
+[debug] [2026-01-01T14:44:56.167Z] Checked if tokens are valid: true, expires at: 1767280494080
+[debug] [2026-01-01T14:44:56.167Z] Checked if tokens are valid: true, expires at: 1767280494080
+[debug] [2026-01-01T14:44:56.167Z] Checked if tokens are valid: true, expires at: 1767280494080
+[debug] [2026-01-01T14:44:56.167Z] Checked if tokens are valid: true, expires at: 1767280494080
+[debug] [2026-01-01T14:44:56.167Z] Checked if tokens are valid: true, expires at: 1767280494080
+[debug] [2026-01-01T14:44:56.167Z] Checked if tokens are valid: true, expires at: 1767280494080
+[debug] [2026-01-01T14:44:56.167Z] Checked if tokens are valid: true, expires at: 1767280494080
+[debug] [2026-01-01T14:44:56.167Z] Checked if tokens are valid: true, expires at: 1767280494080
+[debug] [2026-01-01T14:44:56.167Z] Checked if tokens are valid: true, expires at: 1767280494080
+[debug] [2026-01-01T14:44:56.168Z] Checked if tokens are valid: true, expires at: 1767280494080
+[debug] [2026-01-01T14:44:56.169Z] Checked if tokens are valid: true, expires at: 1767280494080
+[debug] [2026-01-01T14:44:56.169Z] Checked if tokens are valid: true, expires at: 1767280494080
+[debug] [2026-01-01T14:44:56.169Z] Checked if tokens are valid: true, expires at: 1767280494080
+[debug] [2026-01-01T14:44:56.169Z] >>> [apiv2][query] GET https://serviceusage.googleapis.com/v1/projects/gametwo-89299/services/firestore.googleapis.com [none]
+[debug] [2026-01-01T14:44:56.169Z] >>> [apiv2][(partial)header] GET https://serviceusage.googleapis.com/v1/projects/gametwo-89299/services/firestore.googleapis.com x-goog-quota-user=projects/gametwo-89299
+[debug] [2026-01-01T14:44:56.170Z] >>> [apiv2][query] GET https://serviceusage.googleapis.com/v1/projects/gametwo-89299/services/storage.googleapis.com [none]
+[debug] [2026-01-01T14:44:56.170Z] >>> [apiv2][(partial)header] GET https://serviceusage.googleapis.com/v1/projects/gametwo-89299/services/storage.googleapis.com x-goog-quota-user=projects/gametwo-89299
+[debug] [2026-01-01T14:44:56.170Z] >>> [apiv2][query] GET https://serviceusage.googleapis.com/v1/projects/gametwo-89299/services/firebasedataconnect.googleapis.com [none]
+[debug] [2026-01-01T14:44:56.170Z] >>> [apiv2][(partial)header] GET https://serviceusage.googleapis.com/v1/projects/gametwo-89299/services/firebasedataconnect.googleapis.com x-goog-quota-user=projects/gametwo-89299
+[debug] [2026-01-01T14:44:56.171Z] >>> [apiv2][query] GET https://serviceusage.googleapis.com/v1/projects/gametwo-89299/services/identitytoolkit.googleapis.com [none]
+[debug] [2026-01-01T14:44:56.171Z] >>> [apiv2][(partial)header] GET https://serviceusage.googleapis.com/v1/projects/gametwo-89299/services/identitytoolkit.googleapis.com x-goog-quota-user=projects/gametwo-89299
+[debug] [2026-01-01T14:44:56.171Z] >>> [apiv2][query] GET https://serviceusage.googleapis.com/v1/projects/gametwo-89299/services/fcm.googleapis.com [none]
+[debug] [2026-01-01T14:44:56.171Z] >>> [apiv2][(partial)header] GET https://serviceusage.googleapis.com/v1/projects/gametwo-89299/services/fcm.googleapis.com x-goog-quota-user=projects/gametwo-89299
+[debug] [2026-01-01T14:44:56.171Z] >>> [apiv2][query] GET https://serviceusage.googleapis.com/v1/projects/gametwo-89299/services/cloudfunctions.googleapis.com [none]
+[debug] [2026-01-01T14:44:56.171Z] >>> [apiv2][(partial)header] GET https://serviceusage.googleapis.com/v1/projects/gametwo-89299/services/cloudfunctions.googleapis.com x-goog-quota-user=projects/gametwo-89299
+[debug] [2026-01-01T14:44:56.171Z] >>> [apiv2][query] GET https://serviceusage.googleapis.com/v1/projects/gametwo-89299/services/firebaseremoteconfig.googleapis.com [none]
+[debug] [2026-01-01T14:44:56.171Z] >>> [apiv2][(partial)header] GET https://serviceusage.googleapis.com/v1/projects/gametwo-89299/services/firebaseremoteconfig.googleapis.com x-goog-quota-user=projects/gametwo-89299
+[debug] [2026-01-01T14:44:56.171Z] >>> [apiv2][query] GET https://serviceusage.googleapis.com/v1/projects/gametwo-89299/services/firebaseapphosting.googleapis.com [none]
+[debug] [2026-01-01T14:44:56.171Z] >>> [apiv2][(partial)header] GET https://serviceusage.googleapis.com/v1/projects/gametwo-89299/services/firebaseapphosting.googleapis.com x-goog-quota-user=projects/gametwo-89299
+[debug] [2026-01-01T14:44:56.171Z] >>> [apiv2][query] GET https://serviceusage.googleapis.com/v1/projects/gametwo-89299/services/firebaseio.com [none]
+[debug] [2026-01-01T14:44:56.171Z] >>> [apiv2][(partial)header] GET https://serviceusage.googleapis.com/v1/projects/gametwo-89299/services/firebaseio.com x-goog-quota-user=projects/gametwo-89299
+[debug] [2026-01-01T14:44:56.173Z] Checked if tokens are valid: true, expires at: 1767280494080
+[debug] [2026-01-01T14:44:56.173Z] Checked if tokens are valid: true, expires at: 1767280494080
+[debug] [2026-01-01T14:44:56.173Z] >>> [apiv2][query] GET https://serviceusage.googleapis.com/v1/projects/gametwo-89299/services/firebaseappdistribution.googleapis.com [none]
+[debug] [2026-01-01T14:44:56.173Z] >>> [apiv2][(partial)header] GET https://serviceusage.googleapis.com/v1/projects/gametwo-89299/services/firebaseappdistribution.googleapis.com x-goog-quota-user=projects/gametwo-89299
+[debug] [2026-01-01T14:44:56.438Z] <<< [apiv2][status] GET https://serviceusage.googleapis.com/v1/projects/gametwo-89299/services/firebaseremoteconfig.googleapis.com 200
+[debug] [2026-01-01T14:44:56.438Z] <<< [apiv2][body] GET https://serviceusage.googleapis.com/v1/projects/gametwo-89299/services/firebaseremoteconfig.googleapis.com [omitted]
+[debug] [2026-01-01T14:44:56.453Z] <<< [apiv2][status] GET https://serviceusage.googleapis.com/v1/projects/gametwo-89299/services/firestore.googleapis.com 200
+[debug] [2026-01-01T14:44:56.453Z] <<< [apiv2][body] GET https://serviceusage.googleapis.com/v1/projects/gametwo-89299/services/firestore.googleapis.com [omitted]
+[debug] [2026-01-01T14:44:56.481Z] <<< [apiv2][status] GET https://serviceusage.googleapis.com/v1/projects/gametwo-89299/services/fcm.googleapis.com 200
+[debug] [2026-01-01T14:44:56.481Z] <<< [apiv2][body] GET https://serviceusage.googleapis.com/v1/projects/gametwo-89299/services/fcm.googleapis.com [omitted]
+[debug] [2026-01-01T14:44:56.563Z] <<< [apiv2][status] GET https://serviceusage.googleapis.com/v1/projects/gametwo-89299/services/firebaseappdistribution.googleapis.com 200
+[debug] [2026-01-01T14:44:56.563Z] <<< [apiv2][body] GET https://serviceusage.googleapis.com/v1/projects/gametwo-89299/services/firebaseappdistribution.googleapis.com [omitted]
+[debug] [2026-01-01T14:44:56.630Z] <<< [apiv2][status] GET https://serviceusage.googleapis.com/v1/projects/gametwo-89299/services/firebaseapphosting.googleapis.com 200
+[debug] [2026-01-01T14:44:56.630Z] <<< [apiv2][body] GET https://serviceusage.googleapis.com/v1/projects/gametwo-89299/services/firebaseapphosting.googleapis.com [omitted]
+[debug] [2026-01-01T14:44:56.818Z] <<< [apiv2][status] GET https://serviceusage.googleapis.com/v1/projects/gametwo-89299/services/cloudfunctions.googleapis.com 200
+[debug] [2026-01-01T14:44:56.818Z] <<< [apiv2][body] GET https://serviceusage.googleapis.com/v1/projects/gametwo-89299/services/cloudfunctions.googleapis.com [omitted]
+[debug] [2026-01-01T14:44:56.818Z] <<< [apiv2][status] GET https://serviceusage.googleapis.com/v1/projects/gametwo-89299/services/firebaseio.com 403
+[debug] [2026-01-01T14:44:56.818Z] <<< [apiv2][body] GET https://serviceusage.googleapis.com/v1/projects/gametwo-89299/services/firebaseio.com [omitted]
+[debug] [2026-01-01T14:44:56.820Z] <<< [apiv2][status] GET https://serviceusage.googleapis.com/v1/projects/gametwo-89299/services/storage.googleapis.com 200
+[debug] [2026-01-01T14:44:56.820Z] <<< [apiv2][body] GET https://serviceusage.googleapis.com/v1/projects/gametwo-89299/services/storage.googleapis.com [omitted]
+[debug] [2026-01-01T14:44:56.830Z] <<< [apiv2][status] GET https://serviceusage.googleapis.com/v1/projects/gametwo-89299/services/identitytoolkit.googleapis.com 200
+[debug] [2026-01-01T14:44:56.830Z] <<< [apiv2][body] GET https://serviceusage.googleapis.com/v1/projects/gametwo-89299/services/identitytoolkit.googleapis.com [omitted]
+[debug] [2026-01-01T14:44:56.851Z] <<< [apiv2][status] GET https://serviceusage.googleapis.com/v1/projects/gametwo-89299/services/firebasedataconnect.googleapis.com 200
+[debug] [2026-01-01T14:44:56.851Z] <<< [apiv2][body] GET https://serviceusage.googleapis.com/v1/projects/gametwo-89299/services/firebasedataconnect.googleapis.com [omitted]
+[debug] [2026-01-01T14:44:56.854Z] > command requires scopes: ["email","openid","https://www.googleapis.com/auth/cloudplatformprojects.readonly","https://www.googleapis.com/auth/firebase","https://www.googleapis.com/auth/cloud-platform"]
+[debug] [2026-01-01T14:44:56.854Z] > authorizing via signed-in user (mattias.myhrman@gmail.com)
+[debug] [2026-01-01T14:44:56.854Z] Checked if tokens are valid: true, expires at: 1767280494080
+[debug] [2026-01-01T14:44:56.854Z] Checked if tokens are valid: true, expires at: 1767280494080
+[debug] [2026-01-01T14:44:56.854Z] >>> [apiv2][query] GET https://cloudbilling.googleapis.com/v1/projects/gametwo-89299/billingInfo [none]
+[debug] [2026-01-01T14:44:56.870Z] <<< [apiv2][status] GET https://serviceusage.googleapis.com/v1/projects/gametwo-89299/services/storage.googleapis.com 200
+[debug] [2026-01-01T14:44:56.870Z] <<< [apiv2][body] GET https://serviceusage.googleapis.com/v1/projects/gametwo-89299/services/storage.googleapis.com [omitted]
+[debug] [2026-01-01T14:44:56.942Z] <<< [apiv2][status] GET https://serviceusage.googleapis.com/v1/projects/gametwo-89299/services/firebaseapphosting.googleapis.com 200
+[debug] [2026-01-01T14:44:56.943Z] <<< [apiv2][body] GET https://serviceusage.googleapis.com/v1/projects/gametwo-89299/services/firebaseapphosting.googleapis.com [omitted]
+[debug] [2026-01-01T14:44:56.943Z] <<< [apiv2][status] GET https://serviceusage.googleapis.com/v1/projects/gametwo-89299/services/firebaseio.com 403
+[debug] [2026-01-01T14:44:56.943Z] <<< [apiv2][body] GET https://serviceusage.googleapis.com/v1/projects/gametwo-89299/services/firebaseio.com [omitted]
+[debug] [2026-01-01T14:44:56.944Z] <<< [apiv2][status] GET https://serviceusage.googleapis.com/v1/projects/gametwo-89299/services/firebasedataconnect.googleapis.com 200
+[debug] [2026-01-01T14:44:56.944Z] <<< [apiv2][body] GET https://serviceusage.googleapis.com/v1/projects/gametwo-89299/services/firebasedataconnect.googleapis.com [omitted]
+[debug] [2026-01-01T14:44:56.977Z] <<< [apiv2][status] GET https://serviceusage.googleapis.com/v1/projects/gametwo-89299/services/firebaseapphosting.googleapis.com 200
+[debug] [2026-01-01T14:44:56.977Z] <<< [apiv2][body] GET https://serviceusage.googleapis.com/v1/projects/gametwo-89299/services/firebaseapphosting.googleapis.com [omitted]
+[debug] [2026-01-01T14:44:56.980Z] <<< [apiv2][status] GET https://serviceusage.googleapis.com/v1/projects/gametwo-89299/services/fcm.googleapis.com 200
+[debug] [2026-01-01T14:44:56.980Z] <<< [apiv2][body] GET https://serviceusage.googleapis.com/v1/projects/gametwo-89299/services/fcm.googleapis.com [omitted]
+[debug] [2026-01-01T14:44:56.984Z] <<< [apiv2][status] GET https://serviceusage.googleapis.com/v1/projects/gametwo-89299/services/firebaseremoteconfig.googleapis.com 200
+[debug] [2026-01-01T14:44:56.984Z] <<< [apiv2][body] GET https://serviceusage.googleapis.com/v1/projects/gametwo-89299/services/firebaseremoteconfig.googleapis.com [omitted]
+[debug] [2026-01-01T14:44:56.990Z] <<< [apiv2][status] GET https://serviceusage.googleapis.com/v1/projects/gametwo-89299/services/identitytoolkit.googleapis.com 200
+[debug] [2026-01-01T14:44:56.990Z] <<< [apiv2][body] GET https://serviceusage.googleapis.com/v1/projects/gametwo-89299/services/identitytoolkit.googleapis.com [omitted]
+[debug] [2026-01-01T14:44:56.998Z] <<< [apiv2][status] GET https://serviceusage.googleapis.com/v1/projects/gametwo-89299/services/firebasedataconnect.googleapis.com 200
+[debug] [2026-01-01T14:44:56.998Z] <<< [apiv2][body] GET https://serviceusage.googleapis.com/v1/projects/gametwo-89299/services/firebasedataconnect.googleapis.com [omitted]
+[debug] [2026-01-01T14:44:56.998Z] <<< [apiv2][status] GET https://serviceusage.googleapis.com/v1/projects/gametwo-89299/services/firebaseio.com 403
+[debug] [2026-01-01T14:44:56.998Z] <<< [apiv2][body] GET https://serviceusage.googleapis.com/v1/projects/gametwo-89299/services/firebaseio.com [omitted]
+[debug] [2026-01-01T14:44:56.999Z] <<< [apiv2][status] GET https://serviceusage.googleapis.com/v1/projects/gametwo-89299/services/firestore.googleapis.com 200
+[debug] [2026-01-01T14:44:56.999Z] <<< [apiv2][body] GET https://serviceusage.googleapis.com/v1/projects/gametwo-89299/services/firestore.googleapis.com [omitted]
+[debug] [2026-01-01T14:44:56.999Z] <<< [apiv2][status] GET https://serviceusage.googleapis.com/v1/projects/gametwo-89299/services/cloudfunctions.googleapis.com 200
+[debug] [2026-01-01T14:44:56.999Z] <<< [apiv2][body] GET https://serviceusage.googleapis.com/v1/projects/gametwo-89299/services/cloudfunctions.googleapis.com [omitted]
+[debug] [2026-01-01T14:44:56.999Z] <<< [apiv2][status] GET https://serviceusage.googleapis.com/v1/projects/gametwo-89299/services/storage.googleapis.com 200
+[debug] [2026-01-01T14:44:56.999Z] <<< [apiv2][body] GET https://serviceusage.googleapis.com/v1/projects/gametwo-89299/services/storage.googleapis.com [omitted]
+[debug] [2026-01-01T14:44:57.048Z] <<< [apiv2][status] GET https://serviceusage.googleapis.com/v1/projects/gametwo-89299/services/identitytoolkit.googleapis.com 200
+[debug] [2026-01-01T14:44:57.048Z] <<< [apiv2][body] GET https://serviceusage.googleapis.com/v1/projects/gametwo-89299/services/identitytoolkit.googleapis.com [omitted]
+[debug] [2026-01-01T14:44:57.055Z] <<< [apiv2][status] GET https://serviceusage.googleapis.com/v1/projects/gametwo-89299/services/cloudfunctions.googleapis.com 200
+[debug] [2026-01-01T14:44:57.055Z] <<< [apiv2][body] GET https://serviceusage.googleapis.com/v1/projects/gametwo-89299/services/cloudfunctions.googleapis.com [omitted]
+[debug] [2026-01-01T14:44:57.062Z] <<< [apiv2][status] GET https://serviceusage.googleapis.com/v1/projects/gametwo-89299/services/firestore.googleapis.com 200
+[debug] [2026-01-01T14:44:57.062Z] <<< [apiv2][body] GET https://serviceusage.googleapis.com/v1/projects/gametwo-89299/services/firestore.googleapis.com [omitted]
+[debug] [2026-01-01T14:44:57.088Z] <<< [apiv2][status] GET https://serviceusage.googleapis.com/v1/projects/gametwo-89299/services/fcm.googleapis.com 200
+[debug] [2026-01-01T14:44:57.088Z] <<< [apiv2][body] GET https://serviceusage.googleapis.com/v1/projects/gametwo-89299/services/fcm.googleapis.com [omitted]
+[debug] [2026-01-01T14:44:57.096Z] <<< [apiv2][status] GET https://serviceusage.googleapis.com/v1/projects/gametwo-89299/services/firebaseremoteconfig.googleapis.com 200
+[debug] [2026-01-01T14:44:57.096Z] <<< [apiv2][body] GET https://serviceusage.googleapis.com/v1/projects/gametwo-89299/services/firebaseremoteconfig.googleapis.com [omitted]
+[debug] [2026-01-01T14:44:57.102Z] > command requires scopes: ["email","openid","https://www.googleapis.com/auth/cloudplatformprojects.readonly","https://www.googleapis.com/auth/firebase","https://www.googleapis.com/auth/cloud-platform"]
+[debug] [2026-01-01T14:44:57.102Z] > authorizing via signed-in user (mattias.myhrman@gmail.com)
+[debug] [2026-01-01T14:44:57.102Z] Checked if tokens are valid: true, expires at: 1767280494080
+[debug] [2026-01-01T14:44:57.102Z] Checked if tokens are valid: true, expires at: 1767280494080
+[debug] [2026-01-01T14:44:57.102Z] >>> [apiv2][query] GET https://cloudbilling.googleapis.com/v1/projects/gametwo-89299/billingInfo [none]
+[debug] [2026-01-01T14:44:57.314Z] <<< [apiv2][status] GET https://serviceusage.googleapis.com/v1/projects/gametwo-89299/services/firebaseappdistribution.googleapis.com 200
+[debug] [2026-01-01T14:44:57.314Z] <<< [apiv2][body] GET https://serviceusage.googleapis.com/v1/projects/gametwo-89299/services/firebaseappdistribution.googleapis.com [omitted]
+[debug] [2026-01-01T14:44:57.677Z] <<< [apiv2][status] GET https://cloudbilling.googleapis.com/v1/projects/gametwo-89299/billingInfo 200
+[debug] [2026-01-01T14:44:57.677Z] <<< [apiv2][body] GET https://cloudbilling.googleapis.com/v1/projects/gametwo-89299/billingInfo {"name":"projects/gametwo-89299/billingInfo","projectId":"gametwo-89299","billingAccountName":"","billingEnabled":false}
+[debug] [2026-01-01T14:44:58.020Z] <<< [apiv2][status] GET https://cloudbilling.googleapis.com/v1/projects/gametwo-89299/billingInfo 200
+[debug] [2026-01-01T14:44:58.020Z] <<< [apiv2][body] GET https://cloudbilling.googleapis.com/v1/projects/gametwo-89299/billingInfo {"name":"projects/gametwo-89299/billingInfo","projectId":"gametwo-89299","billingAccountName":"","billingEnabled":false}
+[debug] [2026-01-01T14:44:58.128Z] > command requires scopes: ["email","openid","https://www.googleapis.com/auth/cloudplatformprojects.readonly","https://www.googleapis.com/auth/firebase","https://www.googleapis.com/auth/cloud-platform"]
+[debug] [2026-01-01T14:44:58.128Z] > authorizing via signed-in user (mattias.myhrman@gmail.com)
+[debug] [2026-01-01T14:45:02.270Z] > command requires scopes: ["email","openid","https://www.googleapis.com/auth/cloudplatformprojects.readonly","https://www.googleapis.com/auth/firebase","https://www.googleapis.com/auth/cloud-platform"]
+[debug] [2026-01-01T14:45:02.271Z] > authorizing via signed-in user (mattias.myhrman@gmail.com)
+[debug] [2026-01-01T15:02:13.375Z] > command requires scopes: ["email","openid","https://www.googleapis.com/auth/cloudplatformprojects.readonly","https://www.googleapis.com/auth/firebase","https://www.googleapis.com/auth/cloud-platform"]
+[debug] [2026-01-01T15:02:13.379Z] > authorizing via signed-in user (mattias.myhrman@gmail.com)
+[debug] [2026-01-01T15:02:13.379Z] > command requires scopes: ["email","openid","https://www.googleapis.com/auth/cloudplatformprojects.readonly","https://www.googleapis.com/auth/firebase","https://www.googleapis.com/auth/cloud-platform"]
+[debug] [2026-01-01T15:02:13.379Z] > authorizing via signed-in user (mattias.myhrman@gmail.com)
+[debug] [2026-01-01T15:02:13.380Z] Checked if tokens are valid: false, expires at: 1767280494080
+[debug] [2026-01-01T15:02:13.380Z] Checked if tokens are valid: false, expires at: 1767280494080
+[debug] [2026-01-01T15:02:13.380Z] > refreshing access token with scopes: []
+[debug] [2026-01-01T15:02:13.381Z] >>> [apiv2][query] POST https://www.googleapis.com/oauth2/v3/token [none]
+[debug] [2026-01-01T15:02:13.381Z] >>> [apiv2][body] POST https://www.googleapis.com/oauth2/v3/token [omitted]
+[debug] [2026-01-01T15:02:13.408Z] Checked if tokens are valid: false, expires at: 1767280494080
+[debug] [2026-01-01T15:02:13.409Z] Checked if tokens are valid: false, expires at: 1767280494080
+[debug] [2026-01-01T15:02:13.409Z] > refreshing access token with scopes: []
+[debug] [2026-01-01T15:02:13.409Z] >>> [apiv2][query] POST https://www.googleapis.com/oauth2/v3/token [none]
+[debug] [2026-01-01T15:02:13.409Z] >>> [apiv2][body] POST https://www.googleapis.com/oauth2/v3/token [omitted]
+[debug] [2026-01-01T15:02:13.411Z] > command requires scopes: ["email","openid","https://www.googleapis.com/auth/cloudplatformprojects.readonly","https://www.googleapis.com/auth/firebase","https://www.googleapis.com/auth/cloud-platform"]
+[debug] [2026-01-01T15:02:13.411Z] > authorizing via signed-in user (mattias.myhrman@gmail.com)
+[debug] [2026-01-01T15:02:13.411Z] Checked if tokens are valid: false, expires at: 1767280494080
+[debug] [2026-01-01T15:02:13.411Z] Checked if tokens are valid: false, expires at: 1767280494080
+[debug] [2026-01-01T15:02:13.411Z] > refreshing access token with scopes: []
+[debug] [2026-01-01T15:02:13.412Z] >>> [apiv2][query] POST https://www.googleapis.com/oauth2/v3/token [none]
+[debug] [2026-01-01T15:02:13.412Z] >>> [apiv2][body] POST https://www.googleapis.com/oauth2/v3/token [omitted]
+[debug] [2026-01-01T15:02:13.504Z] <<< [apiv2][status] POST https://www.googleapis.com/oauth2/v3/token 200
+[debug] [2026-01-01T15:02:13.505Z] <<< [apiv2][body] POST https://www.googleapis.com/oauth2/v3/token [omitted]
+[debug] [2026-01-01T15:02:13.519Z] >>> [apiv2][query] GET https://cloudbilling.googleapis.com/v1/projects/gametwo-89299/billingInfo [none]
+[debug] [2026-01-01T15:02:13.522Z] <<< [apiv2][status] POST https://www.googleapis.com/oauth2/v3/token 200
+[debug] [2026-01-01T15:02:13.522Z] <<< [apiv2][body] POST https://www.googleapis.com/oauth2/v3/token [omitted]
+[debug] [2026-01-01T15:02:13.533Z] >>> [apiv2][query] GET https://cloudbilling.googleapis.com/v1/projects/gametwo-89299/billingInfo [none]
+[debug] [2026-01-01T15:02:13.534Z] <<< [apiv2][status] POST https://www.googleapis.com/oauth2/v3/token 200
+[debug] [2026-01-01T15:02:13.534Z] <<< [apiv2][body] POST https://www.googleapis.com/oauth2/v3/token [omitted]
+[debug] [2026-01-01T15:02:13.544Z] >>> [apiv2][query] GET https://cloudbilling.googleapis.com/v1/projects/gametwo-89299/billingInfo [none]
+[debug] [2026-01-01T15:02:14.415Z] <<< [apiv2][status] GET https://cloudbilling.googleapis.com/v1/projects/gametwo-89299/billingInfo 200
+[debug] [2026-01-01T15:02:14.415Z] <<< [apiv2][body] GET https://cloudbilling.googleapis.com/v1/projects/gametwo-89299/billingInfo {"name":"projects/gametwo-89299/billingInfo","projectId":"gametwo-89299","billingAccountName":"","billingEnabled":false}
+[debug] [2026-01-01T15:02:14.421Z] Checked if tokens are valid: true, expires at: 1767283332534
+[debug] [2026-01-01T15:02:14.421Z] Checked if tokens are valid: true, expires at: 1767283332534
+[debug] [2026-01-01T15:02:14.421Z] Checked if tokens are valid: true, expires at: 1767283332534
+[debug] [2026-01-01T15:02:14.421Z] Checked if tokens are valid: true, expires at: 1767283332534
+[debug] [2026-01-01T15:02:14.421Z] Checked if tokens are valid: true, expires at: 1767283332534
+[debug] [2026-01-01T15:02:14.421Z] Checked if tokens are valid: true, expires at: 1767283332534
+[debug] [2026-01-01T15:02:14.427Z] Checked if tokens are valid: true, expires at: 1767283332534
+[debug] [2026-01-01T15:02:14.427Z] Checked if tokens are valid: true, expires at: 1767283332534
+[debug] [2026-01-01T15:02:14.427Z] Checked if tokens are valid: true, expires at: 1767283332534
+[debug] [2026-01-01T15:02:14.427Z] Checked if tokens are valid: true, expires at: 1767283332534
+[debug] [2026-01-01T15:02:14.428Z] >>> [apiv2][query] GET https://serviceusage.googleapis.com/v1/projects/gametwo-89299/services/firestore.googleapis.com [none]
+[debug] [2026-01-01T15:02:14.428Z] >>> [apiv2][(partial)header] GET https://serviceusage.googleapis.com/v1/projects/gametwo-89299/services/firestore.googleapis.com x-goog-quota-user=projects/gametwo-89299
+[debug] [2026-01-01T15:02:14.428Z] >>> [apiv2][query] GET https://serviceusage.googleapis.com/v1/projects/gametwo-89299/services/firebasedataconnect.googleapis.com [none]
+[debug] [2026-01-01T15:02:14.428Z] >>> [apiv2][(partial)header] GET https://serviceusage.googleapis.com/v1/projects/gametwo-89299/services/firebasedataconnect.googleapis.com x-goog-quota-user=projects/gametwo-89299
+[debug] [2026-01-01T15:02:14.429Z] >>> [apiv2][query] GET https://serviceusage.googleapis.com/v1/projects/gametwo-89299/services/cloudfunctions.googleapis.com [none]
+[debug] [2026-01-01T15:02:14.429Z] >>> [apiv2][(partial)header] GET https://serviceusage.googleapis.com/v1/projects/gametwo-89299/services/cloudfunctions.googleapis.com x-goog-quota-user=projects/gametwo-89299
+[debug] [2026-01-01T15:02:14.429Z] >>> [apiv2][query] GET https://serviceusage.googleapis.com/v1/projects/gametwo-89299/services/firebaseapphosting.googleapis.com [none]
+[debug] [2026-01-01T15:02:14.429Z] >>> [apiv2][(partial)header] GET https://serviceusage.googleapis.com/v1/projects/gametwo-89299/services/firebaseapphosting.googleapis.com x-goog-quota-user=projects/gametwo-89299
+[debug] [2026-01-01T15:02:14.429Z] >>> [apiv2][query] GET https://serviceusage.googleapis.com/v1/projects/gametwo-89299/services/firebaseio.com [none]
+[debug] [2026-01-01T15:02:14.429Z] >>> [apiv2][(partial)header] GET https://serviceusage.googleapis.com/v1/projects/gametwo-89299/services/firebaseio.com x-goog-quota-user=projects/gametwo-89299
+[debug] [2026-01-01T15:02:15.207Z] <<< [apiv2][status] GET https://cloudbilling.googleapis.com/v1/projects/gametwo-89299/billingInfo 200
+[debug] [2026-01-01T15:02:15.207Z] <<< [apiv2][body] GET https://cloudbilling.googleapis.com/v1/projects/gametwo-89299/billingInfo {"name":"projects/gametwo-89299/billingInfo","projectId":"gametwo-89299","billingAccountName":"","billingEnabled":false}
+[debug] [2026-01-01T15:02:15.207Z] Checked if tokens are valid: true, expires at: 1767283332534
+[debug] [2026-01-01T15:02:15.207Z] Checked if tokens are valid: true, expires at: 1767283332534
+[debug] [2026-01-01T15:02:15.207Z] Checked if tokens are valid: true, expires at: 1767283332534
+[debug] [2026-01-01T15:02:15.207Z] Checked if tokens are valid: true, expires at: 1767283332534
+[debug] [2026-01-01T15:02:15.208Z] Checked if tokens are valid: true, expires at: 1767283332534
+[debug] [2026-01-01T15:02:15.208Z] Checked if tokens are valid: true, expires at: 1767283332534
+[debug] [2026-01-01T15:02:15.209Z] Checked if tokens are valid: true, expires at: 1767283332534
+[debug] [2026-01-01T15:02:15.209Z] Checked if tokens are valid: true, expires at: 1767283332534
+[debug] [2026-01-01T15:02:15.209Z] Checked if tokens are valid: true, expires at: 1767283332534
+[debug] [2026-01-01T15:02:15.209Z] Checked if tokens are valid: true, expires at: 1767283332534
+[debug] [2026-01-01T15:02:15.209Z] >>> [apiv2][query] GET https://serviceusage.googleapis.com/v1/projects/gametwo-89299/services/firestore.googleapis.com [none]
+[debug] [2026-01-01T15:02:15.209Z] >>> [apiv2][(partial)header] GET https://serviceusage.googleapis.com/v1/projects/gametwo-89299/services/firestore.googleapis.com x-goog-quota-user=projects/gametwo-89299
+[debug] [2026-01-01T15:02:15.210Z] >>> [apiv2][query] GET https://serviceusage.googleapis.com/v1/projects/gametwo-89299/services/firebasedataconnect.googleapis.com [none]
+[debug] [2026-01-01T15:02:15.210Z] >>> [apiv2][(partial)header] GET https://serviceusage.googleapis.com/v1/projects/gametwo-89299/services/firebasedataconnect.googleapis.com x-goog-quota-user=projects/gametwo-89299
+[debug] [2026-01-01T15:02:15.211Z] >>> [apiv2][query] GET https://serviceusage.googleapis.com/v1/projects/gametwo-89299/services/cloudfunctions.googleapis.com [none]
+[debug] [2026-01-01T15:02:15.211Z] >>> [apiv2][(partial)header] GET https://serviceusage.googleapis.com/v1/projects/gametwo-89299/services/cloudfunctions.googleapis.com x-goog-quota-user=projects/gametwo-89299
+[debug] [2026-01-01T15:02:15.211Z] >>> [apiv2][query] GET https://serviceusage.googleapis.com/v1/projects/gametwo-89299/services/firebaseapphosting.googleapis.com [none]
+[debug] [2026-01-01T15:02:15.211Z] >>> [apiv2][(partial)header] GET https://serviceusage.googleapis.com/v1/projects/gametwo-89299/services/firebaseapphosting.googleapis.com x-goog-quota-user=projects/gametwo-89299
+[debug] [2026-01-01T15:02:15.211Z] >>> [apiv2][query] GET https://serviceusage.googleapis.com/v1/projects/gametwo-89299/services/firebaseio.com [none]
+[debug] [2026-01-01T15:02:15.212Z] >>> [apiv2][(partial)header] GET https://serviceusage.googleapis.com/v1/projects/gametwo-89299/services/firebaseio.com x-goog-quota-user=projects/gametwo-89299
+[debug] [2026-01-01T15:02:15.552Z] <<< [apiv2][status] GET https://serviceusage.googleapis.com/v1/projects/gametwo-89299/services/firebaseio.com 403
+[debug] [2026-01-01T15:02:15.552Z] <<< [apiv2][body] GET https://serviceusage.googleapis.com/v1/projects/gametwo-89299/services/firebaseio.com [omitted]
+[debug] [2026-01-01T15:02:15.616Z] <<< [apiv2][status] GET https://cloudbilling.googleapis.com/v1/projects/gametwo-89299/billingInfo 200
+[debug] [2026-01-01T15:02:15.616Z] <<< [apiv2][body] GET https://cloudbilling.googleapis.com/v1/projects/gametwo-89299/billingInfo {"name":"projects/gametwo-89299/billingInfo","projectId":"gametwo-89299","billingAccountName":"","billingEnabled":false}
+[debug] [2026-01-01T15:02:15.616Z] Checked if tokens are valid: true, expires at: 1767283332534
+[debug] [2026-01-01T15:02:15.616Z] Checked if tokens are valid: true, expires at: 1767283332534
+[debug] [2026-01-01T15:02:15.616Z] Checked if tokens are valid: true, expires at: 1767283332534
+[debug] [2026-01-01T15:02:15.616Z] Checked if tokens are valid: true, expires at: 1767283332534
+[debug] [2026-01-01T15:02:15.616Z] Checked if tokens are valid: true, expires at: 1767283332534
+[debug] [2026-01-01T15:02:15.616Z] Checked if tokens are valid: true, expires at: 1767283332534
+[debug] [2026-01-01T15:02:15.617Z] Checked if tokens are valid: true, expires at: 1767283332534
+[debug] [2026-01-01T15:02:15.617Z] Checked if tokens are valid: true, expires at: 1767283332534
+[debug] [2026-01-01T15:02:15.617Z] >>> [apiv2][query] GET https://serviceusage.googleapis.com/v1/projects/gametwo-89299/services/firestore.googleapis.com [none]
+[debug] [2026-01-01T15:02:15.617Z] >>> [apiv2][(partial)header] GET https://serviceusage.googleapis.com/v1/projects/gametwo-89299/services/firestore.googleapis.com x-goog-quota-user=projects/gametwo-89299
+[debug] [2026-01-01T15:02:15.618Z] >>> [apiv2][query] GET https://serviceusage.googleapis.com/v1/projects/gametwo-89299/services/firebasedataconnect.googleapis.com [none]
+[debug] [2026-01-01T15:02:15.618Z] >>> [apiv2][(partial)header] GET https://serviceusage.googleapis.com/v1/projects/gametwo-89299/services/firebasedataconnect.googleapis.com x-goog-quota-user=projects/gametwo-89299
+[debug] [2026-01-01T15:02:15.619Z] >>> [apiv2][query] GET https://serviceusage.googleapis.com/v1/projects/gametwo-89299/services/cloudfunctions.googleapis.com [none]
+[debug] [2026-01-01T15:02:15.619Z] >>> [apiv2][(partial)header] GET https://serviceusage.googleapis.com/v1/projects/gametwo-89299/services/cloudfunctions.googleapis.com x-goog-quota-user=projects/gametwo-89299
+[debug] [2026-01-01T15:02:15.619Z] >>> [apiv2][query] GET https://serviceusage.googleapis.com/v1/projects/gametwo-89299/services/firebaseapphosting.googleapis.com [none]
+[debug] [2026-01-01T15:02:15.619Z] >>> [apiv2][(partial)header] GET https://serviceusage.googleapis.com/v1/projects/gametwo-89299/services/firebaseapphosting.googleapis.com x-goog-quota-user=projects/gametwo-89299
+[debug] [2026-01-01T15:02:16.044Z] <<< [apiv2][status] GET https://serviceusage.googleapis.com/v1/projects/gametwo-89299/services/cloudfunctions.googleapis.com 200
+[debug] [2026-01-01T15:02:16.044Z] <<< [apiv2][body] GET https://serviceusage.googleapis.com/v1/projects/gametwo-89299/services/cloudfunctions.googleapis.com [omitted]
+[debug] [2026-01-01T15:02:16.044Z] <<< [apiv2][status] GET https://serviceusage.googleapis.com/v1/projects/gametwo-89299/services/firebaseapphosting.googleapis.com 200
+[debug] [2026-01-01T15:02:16.044Z] <<< [apiv2][body] GET https://serviceusage.googleapis.com/v1/projects/gametwo-89299/services/firebaseapphosting.googleapis.com [omitted]
+[debug] [2026-01-01T15:02:16.045Z] <<< [apiv2][status] GET https://serviceusage.googleapis.com/v1/projects/gametwo-89299/services/firebasedataconnect.googleapis.com 200
+[debug] [2026-01-01T15:02:16.045Z] <<< [apiv2][body] GET https://serviceusage.googleapis.com/v1/projects/gametwo-89299/services/firebasedataconnect.googleapis.com [omitted]
+[debug] [2026-01-01T15:02:16.045Z] <<< [apiv2][status] GET https://serviceusage.googleapis.com/v1/projects/gametwo-89299/services/firestore.googleapis.com 200
+[debug] [2026-01-01T15:02:16.045Z] <<< [apiv2][body] GET https://serviceusage.googleapis.com/v1/projects/gametwo-89299/services/firestore.googleapis.com [omitted]
+[debug] [2026-01-01T15:02:16.045Z] <<< [apiv2][status] GET https://serviceusage.googleapis.com/v1/projects/gametwo-89299/services/firestore.googleapis.com 200
+[debug] [2026-01-01T15:02:16.045Z] <<< [apiv2][body] GET https://serviceusage.googleapis.com/v1/projects/gametwo-89299/services/firestore.googleapis.com [omitted]
+[debug] [2026-01-01T15:02:16.232Z] <<< [apiv2][status] GET https://serviceusage.googleapis.com/v1/projects/gametwo-89299/services/firebaseio.com 403
+[debug] [2026-01-01T15:02:16.233Z] <<< [apiv2][body] GET https://serviceusage.googleapis.com/v1/projects/gametwo-89299/services/firebaseio.com [omitted]
+[debug] [2026-01-01T15:02:16.233Z] <<< [apiv2][status] GET https://serviceusage.googleapis.com/v1/projects/gametwo-89299/services/firebasedataconnect.googleapis.com 200
+[debug] [2026-01-01T15:02:16.233Z] <<< [apiv2][body] GET https://serviceusage.googleapis.com/v1/projects/gametwo-89299/services/firebasedataconnect.googleapis.com [omitted]
+[debug] [2026-01-01T15:02:16.255Z] <<< [apiv2][status] GET https://serviceusage.googleapis.com/v1/projects/gametwo-89299/services/firestore.googleapis.com 200
+[debug] [2026-01-01T15:02:16.255Z] <<< [apiv2][body] GET https://serviceusage.googleapis.com/v1/projects/gametwo-89299/services/firestore.googleapis.com [omitted]
+[debug] [2026-01-01T15:02:16.311Z] <<< [apiv2][status] GET https://serviceusage.googleapis.com/v1/projects/gametwo-89299/services/firebaseapphosting.googleapis.com 200
+[debug] [2026-01-01T15:02:16.311Z] <<< [apiv2][body] GET https://serviceusage.googleapis.com/v1/projects/gametwo-89299/services/firebaseapphosting.googleapis.com [omitted]
+[debug] [2026-01-01T15:02:16.333Z] <<< [apiv2][status] GET https://serviceusage.googleapis.com/v1/projects/gametwo-89299/services/cloudfunctions.googleapis.com 200
+[debug] [2026-01-01T15:02:16.333Z] <<< [apiv2][body] GET https://serviceusage.googleapis.com/v1/projects/gametwo-89299/services/cloudfunctions.googleapis.com [omitted]
+[debug] [2026-01-01T15:02:16.335Z] > command requires scopes: ["email","openid","https://www.googleapis.com/auth/cloudplatformprojects.readonly","https://www.googleapis.com/auth/firebase","https://www.googleapis.com/auth/cloud-platform"]
+[debug] [2026-01-01T15:02:16.335Z] > authorizing via signed-in user (mattias.myhrman@gmail.com)
+[debug] [2026-01-01T15:02:16.335Z] Checked if tokens are valid: true, expires at: 1767283332534
+[debug] [2026-01-01T15:02:16.335Z] Checked if tokens are valid: true, expires at: 1767283332534
+[debug] [2026-01-01T15:02:16.335Z] >>> [apiv2][query] GET https://cloudbilling.googleapis.com/v1/projects/gametwo-89299/billingInfo [none]
+[debug] [2026-01-01T15:02:16.728Z] <<< [apiv2][status] GET https://serviceusage.googleapis.com/v1/projects/gametwo-89299/services/cloudfunctions.googleapis.com 200
+[debug] [2026-01-01T15:02:16.728Z] <<< [apiv2][body] GET https://serviceusage.googleapis.com/v1/projects/gametwo-89299/services/cloudfunctions.googleapis.com [omitted]
+[debug] [2026-01-01T15:02:16.733Z] <<< [apiv2][status] GET https://serviceusage.googleapis.com/v1/projects/gametwo-89299/services/firebaseapphosting.googleapis.com 200
+[debug] [2026-01-01T15:02:16.733Z] <<< [apiv2][body] GET https://serviceusage.googleapis.com/v1/projects/gametwo-89299/services/firebaseapphosting.googleapis.com [omitted]
+[debug] [2026-01-01T15:02:16.740Z] <<< [apiv2][status] GET https://serviceusage.googleapis.com/v1/projects/gametwo-89299/services/firebasedataconnect.googleapis.com 200
+[debug] [2026-01-01T15:02:16.740Z] <<< [apiv2][body] GET https://serviceusage.googleapis.com/v1/projects/gametwo-89299/services/firebasedataconnect.googleapis.com [omitted]
+[debug] [2026-01-01T15:02:16.741Z] > command requires scopes: ["email","openid","https://www.googleapis.com/auth/cloudplatformprojects.readonly","https://www.googleapis.com/auth/firebase","https://www.googleapis.com/auth/cloud-platform"]
+[debug] [2026-01-01T15:02:16.741Z] > authorizing via signed-in user (mattias.myhrman@gmail.com)
+[debug] [2026-01-01T15:02:16.742Z] Checked if tokens are valid: true, expires at: 1767283332534
+[debug] [2026-01-01T15:02:16.742Z] Checked if tokens are valid: true, expires at: 1767283332534
+[debug] [2026-01-01T15:02:16.742Z] >>> [apiv2][query] GET https://cloudbilling.googleapis.com/v1/projects/gametwo-89299/billingInfo [none]
+[debug] [2026-01-01T15:02:17.126Z] <<< [apiv2][status] GET https://cloudbilling.googleapis.com/v1/projects/gametwo-89299/billingInfo 200
+[debug] [2026-01-01T15:02:17.126Z] <<< [apiv2][body] GET https://cloudbilling.googleapis.com/v1/projects/gametwo-89299/billingInfo {"name":"projects/gametwo-89299/billingInfo","projectId":"gametwo-89299","billingAccountName":"","billingEnabled":false}
+[debug] [2026-01-01T15:02:19.824Z] <<< [apiv2][status] GET https://cloudbilling.googleapis.com/v1/projects/gametwo-89299/billingInfo 200
+[debug] [2026-01-01T15:02:19.824Z] <<< [apiv2][body] GET https://cloudbilling.googleapis.com/v1/projects/gametwo-89299/billingInfo {"name":"projects/gametwo-89299/billingInfo","projectId":"gametwo-89299","billingAccountName":"","billingEnabled":false}
+[debug] [2026-01-01T15:02:20.956Z] > command requires scopes: ["email","openid","https://www.googleapis.com/auth/cloudplatformprojects.readonly","https://www.googleapis.com/auth/firebase","https://www.googleapis.com/auth/cloud-platform"]
+[debug] [2026-01-01T15:02:20.956Z] > authorizing via signed-in user (mattias.myhrman@gmail.com)
+[debug] [2026-01-01T15:02:21.036Z] > command requires scopes: ["email","openid","https://www.googleapis.com/auth/cloudplatformprojects.readonly","https://www.googleapis.com/auth/firebase","https://www.googleapis.com/auth/cloud-platform"]
+[debug] [2026-01-01T15:02:21.036Z] > authorizing via signed-in user (mattias.myhrman@gmail.com)
+[debug] [2026-01-01T15:02:23.050Z] > command requires scopes: ["email","openid","https://www.googleapis.com/auth/cloudplatformprojects.readonly","https://www.googleapis.com/auth/firebase","https://www.googleapis.com/auth/cloud-platform"]
+[debug] [2026-01-01T15:02:23.052Z] > authorizing via signed-in user (mattias.myhrman@gmail.com)
+[debug] [2026-01-01T15:02:23.053Z] > command requires scopes: ["email","openid","https://www.googleapis.com/auth/cloudplatformprojects.readonly","https://www.googleapis.com/auth/firebase","https://www.googleapis.com/auth/cloud-platform"]
+[debug] [2026-01-01T15:02:23.053Z] > authorizing via signed-in user (mattias.myhrman@gmail.com)
+[debug] [2026-01-01T15:02:23.053Z] Checked if tokens are valid: true, expires at: 1767283332534
+[debug] [2026-01-01T15:02:23.053Z] Checked if tokens are valid: true, expires at: 1767283332534
+[debug] [2026-01-01T15:02:23.053Z] Checked if tokens are valid: true, expires at: 1767283332534
+[debug] [2026-01-01T15:02:23.053Z] Checked if tokens are valid: true, expires at: 1767283332534
+[debug] [2026-01-01T15:02:23.053Z] > command requires scopes: ["email","openid","https://www.googleapis.com/auth/cloudplatformprojects.readonly","https://www.googleapis.com/auth/firebase","https://www.googleapis.com/auth/cloud-platform"]
+[debug] [2026-01-01T15:02:23.054Z] > authorizing via signed-in user (mattias.myhrman@gmail.com)
+[debug] [2026-01-01T15:02:23.054Z] >>> [apiv2][query] GET https://cloudbilling.googleapis.com/v1/projects/gametwo-89299/billingInfo [none]
+[debug] [2026-01-01T15:02:23.077Z] >>> [apiv2][query] GET https://cloudbilling.googleapis.com/v1/projects/gametwo-89299/billingInfo [none]
+[debug] [2026-01-01T15:02:23.077Z] Checked if tokens are valid: true, expires at: 1767283332534
+[debug] [2026-01-01T15:02:23.078Z] Checked if tokens are valid: true, expires at: 1767283332534
+[debug] [2026-01-01T15:02:23.078Z] >>> [apiv2][query] GET https://cloudbilling.googleapis.com/v1/projects/gametwo-89299/billingInfo [none]
+[debug] [2026-01-01T15:02:23.349Z] <<< [apiv2][status] GET https://cloudbilling.googleapis.com/v1/projects/gametwo-89299/billingInfo 200
+[debug] [2026-01-01T15:02:23.349Z] <<< [apiv2][body] GET https://cloudbilling.googleapis.com/v1/projects/gametwo-89299/billingInfo {"name":"projects/gametwo-89299/billingInfo","projectId":"gametwo-89299","billingAccountName":"","billingEnabled":false}
+[debug] [2026-01-01T15:02:23.354Z] Checked if tokens are valid: true, expires at: 1767283332534
+[debug] [2026-01-01T15:02:23.354Z] Checked if tokens are valid: true, expires at: 1767283332534
+[debug] [2026-01-01T15:02:23.354Z] Checked if tokens are valid: true, expires at: 1767283332534
+[debug] [2026-01-01T15:02:23.354Z] Checked if tokens are valid: true, expires at: 1767283332534
+[debug] [2026-01-01T15:02:23.354Z] Checked if tokens are valid: true, expires at: 1767283332534
+[debug] [2026-01-01T15:02:23.355Z] Checked if tokens are valid: true, expires at: 1767283332534
+[debug] [2026-01-01T15:02:23.360Z] Checked if tokens are valid: true, expires at: 1767283332534
+[debug] [2026-01-01T15:02:23.360Z] Checked if tokens are valid: true, expires at: 1767283332534
+[debug] [2026-01-01T15:02:23.360Z] Checked if tokens are valid: true, expires at: 1767283332534
+[debug] [2026-01-01T15:02:23.360Z] Checked if tokens are valid: true, expires at: 1767283332534
+[debug] [2026-01-01T15:02:23.360Z] >>> [apiv2][query] GET https://serviceusage.googleapis.com/v1/projects/gametwo-89299/services/firestore.googleapis.com [none]
+[debug] [2026-01-01T15:02:23.360Z] >>> [apiv2][(partial)header] GET https://serviceusage.googleapis.com/v1/projects/gametwo-89299/services/firestore.googleapis.com x-goog-quota-user=projects/gametwo-89299
+[debug] [2026-01-01T15:02:23.361Z] >>> [apiv2][query] GET https://serviceusage.googleapis.com/v1/projects/gametwo-89299/services/firebasedataconnect.googleapis.com [none]
+[debug] [2026-01-01T15:02:23.361Z] >>> [apiv2][(partial)header] GET https://serviceusage.googleapis.com/v1/projects/gametwo-89299/services/firebasedataconnect.googleapis.com x-goog-quota-user=projects/gametwo-89299
+[debug] [2026-01-01T15:02:23.361Z] >>> [apiv2][query] GET https://serviceusage.googleapis.com/v1/projects/gametwo-89299/services/cloudfunctions.googleapis.com [none]
+[debug] [2026-01-01T15:02:23.361Z] >>> [apiv2][(partial)header] GET https://serviceusage.googleapis.com/v1/projects/gametwo-89299/services/cloudfunctions.googleapis.com x-goog-quota-user=projects/gametwo-89299
+[debug] [2026-01-01T15:02:23.362Z] >>> [apiv2][query] GET https://serviceusage.googleapis.com/v1/projects/gametwo-89299/services/firebaseapphosting.googleapis.com [none]
+[debug] [2026-01-01T15:02:23.362Z] >>> [apiv2][(partial)header] GET https://serviceusage.googleapis.com/v1/projects/gametwo-89299/services/firebaseapphosting.googleapis.com x-goog-quota-user=projects/gametwo-89299
+[debug] [2026-01-01T15:02:23.362Z] >>> [apiv2][query] GET https://serviceusage.googleapis.com/v1/projects/gametwo-89299/services/firebaseio.com [none]
+[debug] [2026-01-01T15:02:23.362Z] >>> [apiv2][(partial)header] GET https://serviceusage.googleapis.com/v1/projects/gametwo-89299/services/firebaseio.com x-goog-quota-user=projects/gametwo-89299
+[debug] [2026-01-01T15:02:23.923Z] <<< [apiv2][status] GET https://cloudbilling.googleapis.com/v1/projects/gametwo-89299/billingInfo 200
+[debug] [2026-01-01T15:02:23.923Z] <<< [apiv2][body] GET https://cloudbilling.googleapis.com/v1/projects/gametwo-89299/billingInfo {"name":"projects/gametwo-89299/billingInfo","projectId":"gametwo-89299","billingAccountName":"","billingEnabled":false}
+[debug] [2026-01-01T15:02:23.923Z] Checked if tokens are valid: true, expires at: 1767283332534
+[debug] [2026-01-01T15:02:23.923Z] Checked if tokens are valid: true, expires at: 1767283332534
+[debug] [2026-01-01T15:02:23.923Z] Checked if tokens are valid: true, expires at: 1767283332534
+[debug] [2026-01-01T15:02:23.923Z] Checked if tokens are valid: true, expires at: 1767283332534
+[debug] [2026-01-01T15:02:23.923Z] Checked if tokens are valid: true, expires at: 1767283332534
+[debug] [2026-01-01T15:02:23.923Z] Checked if tokens are valid: true, expires at: 1767283332534
+[debug] [2026-01-01T15:02:23.924Z] Checked if tokens are valid: true, expires at: 1767283332534
+[debug] [2026-01-01T15:02:23.924Z] Checked if tokens are valid: true, expires at: 1767283332534
+[debug] [2026-01-01T15:02:23.924Z] Checked if tokens are valid: true, expires at: 1767283332534
+[debug] [2026-01-01T15:02:23.924Z] Checked if tokens are valid: true, expires at: 1767283332534
+[debug] [2026-01-01T15:02:23.925Z] >>> [apiv2][query] GET https://serviceusage.googleapis.com/v1/projects/gametwo-89299/services/firestore.googleapis.com [none]
+[debug] [2026-01-01T15:02:23.925Z] >>> [apiv2][(partial)header] GET https://serviceusage.googleapis.com/v1/projects/gametwo-89299/services/firestore.googleapis.com x-goog-quota-user=projects/gametwo-89299
+[debug] [2026-01-01T15:02:23.925Z] >>> [apiv2][query] GET https://serviceusage.googleapis.com/v1/projects/gametwo-89299/services/firebasedataconnect.googleapis.com [none]
+[debug] [2026-01-01T15:02:23.925Z] >>> [apiv2][(partial)header] GET https://serviceusage.googleapis.com/v1/projects/gametwo-89299/services/firebasedataconnect.googleapis.com x-goog-quota-user=projects/gametwo-89299
+[debug] [2026-01-01T15:02:23.926Z] >>> [apiv2][query] GET https://serviceusage.googleapis.com/v1/projects/gametwo-89299/services/cloudfunctions.googleapis.com [none]
+[debug] [2026-01-01T15:02:23.926Z] >>> [apiv2][(partial)header] GET https://serviceusage.googleapis.com/v1/projects/gametwo-89299/services/cloudfunctions.googleapis.com x-goog-quota-user=projects/gametwo-89299
+[debug] [2026-01-01T15:02:23.926Z] >>> [apiv2][query] GET https://serviceusage.googleapis.com/v1/projects/gametwo-89299/services/firebaseapphosting.googleapis.com [none]
+[debug] [2026-01-01T15:02:23.926Z] >>> [apiv2][(partial)header] GET https://serviceusage.googleapis.com/v1/projects/gametwo-89299/services/firebaseapphosting.googleapis.com x-goog-quota-user=projects/gametwo-89299
+[debug] [2026-01-01T15:02:23.927Z] >>> [apiv2][query] GET https://serviceusage.googleapis.com/v1/projects/gametwo-89299/services/firebaseio.com [none]
+[debug] [2026-01-01T15:02:23.927Z] >>> [apiv2][(partial)header] GET https://serviceusage.googleapis.com/v1/projects/gametwo-89299/services/firebaseio.com x-goog-quota-user=projects/gametwo-89299
+[debug] [2026-01-01T15:02:24.274Z] <<< [apiv2][status] GET https://cloudbilling.googleapis.com/v1/projects/gametwo-89299/billingInfo 200
+[debug] [2026-01-01T15:02:24.274Z] <<< [apiv2][body] GET https://cloudbilling.googleapis.com/v1/projects/gametwo-89299/billingInfo {"name":"projects/gametwo-89299/billingInfo","projectId":"gametwo-89299","billingAccountName":"","billingEnabled":false}
+[debug] [2026-01-01T15:02:24.274Z] Checked if tokens are valid: true, expires at: 1767283332534
+[debug] [2026-01-01T15:02:24.274Z] Checked if tokens are valid: true, expires at: 1767283332534
+[debug] [2026-01-01T15:02:24.274Z] Checked if tokens are valid: true, expires at: 1767283332534
+[debug] [2026-01-01T15:02:24.274Z] Checked if tokens are valid: true, expires at: 1767283332534
+[debug] [2026-01-01T15:02:24.274Z] Checked if tokens are valid: true, expires at: 1767283332534
+[debug] [2026-01-01T15:02:24.274Z] Checked if tokens are valid: true, expires at: 1767283332534
+[debug] [2026-01-01T15:02:24.275Z] Checked if tokens are valid: true, expires at: 1767283332534
+[debug] [2026-01-01T15:02:24.275Z] Checked if tokens are valid: true, expires at: 1767283332534
+[debug] [2026-01-01T15:02:24.275Z] Checked if tokens are valid: true, expires at: 1767283332534
+[debug] [2026-01-01T15:02:24.275Z] Checked if tokens are valid: true, expires at: 1767283332534
+[debug] [2026-01-01T15:02:24.275Z] >>> [apiv2][query] GET https://serviceusage.googleapis.com/v1/projects/gametwo-89299/services/firestore.googleapis.com [none]
+[debug] [2026-01-01T15:02:24.275Z] >>> [apiv2][(partial)header] GET https://serviceusage.googleapis.com/v1/projects/gametwo-89299/services/firestore.googleapis.com x-goog-quota-user=projects/gametwo-89299
+[debug] [2026-01-01T15:02:24.276Z] >>> [apiv2][query] GET https://serviceusage.googleapis.com/v1/projects/gametwo-89299/services/firebasedataconnect.googleapis.com [none]
+[debug] [2026-01-01T15:02:24.276Z] >>> [apiv2][(partial)header] GET https://serviceusage.googleapis.com/v1/projects/gametwo-89299/services/firebasedataconnect.googleapis.com x-goog-quota-user=projects/gametwo-89299
+[debug] [2026-01-01T15:02:24.277Z] >>> [apiv2][query] GET https://serviceusage.googleapis.com/v1/projects/gametwo-89299/services/cloudfunctions.googleapis.com [none]
+[debug] [2026-01-01T15:02:24.277Z] >>> [apiv2][(partial)header] GET https://serviceusage.googleapis.com/v1/projects/gametwo-89299/services/cloudfunctions.googleapis.com x-goog-quota-user=projects/gametwo-89299
+[debug] [2026-01-01T15:02:24.277Z] >>> [apiv2][query] GET https://serviceusage.googleapis.com/v1/projects/gametwo-89299/services/firebaseapphosting.googleapis.com [none]
+[debug] [2026-01-01T15:02:24.277Z] >>> [apiv2][(partial)header] GET https://serviceusage.googleapis.com/v1/projects/gametwo-89299/services/firebaseapphosting.googleapis.com x-goog-quota-user=projects/gametwo-89299
+[debug] [2026-01-01T15:02:24.278Z] >>> [apiv2][query] GET https://serviceusage.googleapis.com/v1/projects/gametwo-89299/services/firebaseio.com [none]
+[debug] [2026-01-01T15:02:24.278Z] >>> [apiv2][(partial)header] GET https://serviceusage.googleapis.com/v1/projects/gametwo-89299/services/firebaseio.com x-goog-quota-user=projects/gametwo-89299
+[debug] [2026-01-01T15:02:24.683Z] <<< [apiv2][status] GET https://serviceusage.googleapis.com/v1/projects/gametwo-89299/services/firebasedataconnect.googleapis.com 200
+[debug] [2026-01-01T15:02:24.683Z] <<< [apiv2][body] GET https://serviceusage.googleapis.com/v1/projects/gametwo-89299/services/firebasedataconnect.googleapis.com [omitted]
+[debug] [2026-01-01T15:02:24.689Z] <<< [apiv2][status] GET https://serviceusage.googleapis.com/v1/projects/gametwo-89299/services/firebaseio.com 403
+[debug] [2026-01-01T15:02:24.689Z] <<< [apiv2][body] GET https://serviceusage.googleapis.com/v1/projects/gametwo-89299/services/firebaseio.com [omitted]
+[debug] [2026-01-01T15:02:24.751Z] <<< [apiv2][status] GET https://serviceusage.googleapis.com/v1/projects/gametwo-89299/services/firestore.googleapis.com 200
+[debug] [2026-01-01T15:02:24.751Z] <<< [apiv2][body] GET https://serviceusage.googleapis.com/v1/projects/gametwo-89299/services/firestore.googleapis.com [omitted]
+[debug] [2026-01-01T15:02:24.752Z] <<< [apiv2][status] GET https://serviceusage.googleapis.com/v1/projects/gametwo-89299/services/firebaseapphosting.googleapis.com 200
+[debug] [2026-01-01T15:02:24.752Z] <<< [apiv2][body] GET https://serviceusage.googleapis.com/v1/projects/gametwo-89299/services/firebaseapphosting.googleapis.com [omitted]
+[debug] [2026-01-01T15:02:24.752Z] <<< [apiv2][status] GET https://serviceusage.googleapis.com/v1/projects/gametwo-89299/services/cloudfunctions.googleapis.com 200
+[debug] [2026-01-01T15:02:24.752Z] <<< [apiv2][body] GET https://serviceusage.googleapis.com/v1/projects/gametwo-89299/services/cloudfunctions.googleapis.com [omitted]
+[debug] [2026-01-01T15:02:24.953Z] <<< [apiv2][status] GET https://serviceusage.googleapis.com/v1/projects/gametwo-89299/services/firebasedataconnect.googleapis.com 200
+[debug] [2026-01-01T15:02:24.953Z] <<< [apiv2][body] GET https://serviceusage.googleapis.com/v1/projects/gametwo-89299/services/firebasedataconnect.googleapis.com [omitted]
+[debug] [2026-01-01T15:02:24.975Z] <<< [apiv2][status] GET https://serviceusage.googleapis.com/v1/projects/gametwo-89299/services/firebaseio.com 403
+[debug] [2026-01-01T15:02:24.975Z] <<< [apiv2][body] GET https://serviceusage.googleapis.com/v1/projects/gametwo-89299/services/firebaseio.com [omitted]
+[debug] [2026-01-01T15:02:24.981Z] <<< [apiv2][status] GET https://serviceusage.googleapis.com/v1/projects/gametwo-89299/services/firestore.googleapis.com 200
+[debug] [2026-01-01T15:02:24.981Z] <<< [apiv2][body] GET https://serviceusage.googleapis.com/v1/projects/gametwo-89299/services/firestore.googleapis.com [omitted]
+[debug] [2026-01-01T15:02:25.066Z] <<< [apiv2][status] GET https://serviceusage.googleapis.com/v1/projects/gametwo-89299/services/firebaseapphosting.googleapis.com 200
+[debug] [2026-01-01T15:02:25.066Z] <<< [apiv2][body] GET https://serviceusage.googleapis.com/v1/projects/gametwo-89299/services/firebaseapphosting.googleapis.com [omitted]
+[debug] [2026-01-01T15:02:25.075Z] <<< [apiv2][status] GET https://serviceusage.googleapis.com/v1/projects/gametwo-89299/services/cloudfunctions.googleapis.com 200
+[debug] [2026-01-01T15:02:25.075Z] <<< [apiv2][body] GET https://serviceusage.googleapis.com/v1/projects/gametwo-89299/services/cloudfunctions.googleapis.com [omitted]
+[debug] [2026-01-01T15:02:25.077Z] > command requires scopes: ["email","openid","https://www.googleapis.com/auth/cloudplatformprojects.readonly","https://www.googleapis.com/auth/firebase","https://www.googleapis.com/auth/cloud-platform"]
+[debug] [2026-01-01T15:02:25.077Z] > authorizing via signed-in user (mattias.myhrman@gmail.com)
+[debug] [2026-01-01T15:02:25.077Z] Checked if tokens are valid: true, expires at: 1767283332534
+[debug] [2026-01-01T15:02:25.077Z] Checked if tokens are valid: true, expires at: 1767283332534
+[debug] [2026-01-01T15:02:25.077Z] >>> [apiv2][query] GET https://cloudbilling.googleapis.com/v1/projects/gametwo-89299/billingInfo [none]
+[debug] [2026-01-01T15:02:25.250Z] <<< [apiv2][status] GET https://serviceusage.googleapis.com/v1/projects/gametwo-89299/services/firebaseio.com 403
+[debug] [2026-01-01T15:02:25.250Z] <<< [apiv2][body] GET https://serviceusage.googleapis.com/v1/projects/gametwo-89299/services/firebaseio.com [omitted]
+[debug] [2026-01-01T15:02:25.338Z] <<< [apiv2][status] GET https://serviceusage.googleapis.com/v1/projects/gametwo-89299/services/firebaseapphosting.googleapis.com 200
+[debug] [2026-01-01T15:02:25.338Z] <<< [apiv2][body] GET https://serviceusage.googleapis.com/v1/projects/gametwo-89299/services/firebaseapphosting.googleapis.com [omitted]
+[debug] [2026-01-01T15:02:25.345Z] <<< [apiv2][status] GET https://serviceusage.googleapis.com/v1/projects/gametwo-89299/services/cloudfunctions.googleapis.com 200
+[debug] [2026-01-01T15:02:25.345Z] <<< [apiv2][body] GET https://serviceusage.googleapis.com/v1/projects/gametwo-89299/services/cloudfunctions.googleapis.com [omitted]
+[debug] [2026-01-01T15:02:25.350Z] <<< [apiv2][status] GET https://serviceusage.googleapis.com/v1/projects/gametwo-89299/services/firebasedataconnect.googleapis.com 200
+[debug] [2026-01-01T15:02:25.350Z] <<< [apiv2][body] GET https://serviceusage.googleapis.com/v1/projects/gametwo-89299/services/firebasedataconnect.googleapis.com [omitted]
+[debug] [2026-01-01T15:02:25.359Z] <<< [apiv2][status] GET https://serviceusage.googleapis.com/v1/projects/gametwo-89299/services/firestore.googleapis.com 200
+[debug] [2026-01-01T15:02:25.359Z] <<< [apiv2][body] GET https://serviceusage.googleapis.com/v1/projects/gametwo-89299/services/firestore.googleapis.com [omitted]
+[debug] [2026-01-01T15:02:25.360Z] > command requires scopes: ["email","openid","https://www.googleapis.com/auth/cloudplatformprojects.readonly","https://www.googleapis.com/auth/firebase","https://www.googleapis.com/auth/cloud-platform"]
+[debug] [2026-01-01T15:02:25.360Z] > authorizing via signed-in user (mattias.myhrman@gmail.com)
+[debug] [2026-01-01T15:02:25.360Z] Checked if tokens are valid: true, expires at: 1767283332534
+[debug] [2026-01-01T15:02:25.360Z] Checked if tokens are valid: true, expires at: 1767283332534
+[debug] [2026-01-01T15:02:25.360Z] >>> [apiv2][query] GET https://cloudbilling.googleapis.com/v1/projects/gametwo-89299/billingInfo [none]
+[debug] [2026-01-01T15:02:25.391Z] <<< [apiv2][status] GET https://cloudbilling.googleapis.com/v1/projects/gametwo-89299/billingInfo 200
+[debug] [2026-01-01T15:02:25.391Z] <<< [apiv2][body] GET https://cloudbilling.googleapis.com/v1/projects/gametwo-89299/billingInfo {"name":"projects/gametwo-89299/billingInfo","projectId":"gametwo-89299","billingAccountName":"","billingEnabled":false}
+[debug] [2026-01-01T15:02:25.638Z] > command requires scopes: ["email","openid","https://www.googleapis.com/auth/cloudplatformprojects.readonly","https://www.googleapis.com/auth/firebase","https://www.googleapis.com/auth/cloud-platform"]
+[debug] [2026-01-01T15:02:25.638Z] > authorizing via signed-in user (mattias.myhrman@gmail.com)
+[debug] [2026-01-01T15:02:26.173Z] <<< [apiv2][status] GET https://cloudbilling.googleapis.com/v1/projects/gametwo-89299/billingInfo 200
+[debug] [2026-01-01T15:02:26.173Z] <<< [apiv2][body] GET https://cloudbilling.googleapis.com/v1/projects/gametwo-89299/billingInfo {"name":"projects/gametwo-89299/billingInfo","projectId":"gametwo-89299","billingAccountName":"","billingEnabled":false}
+[debug] [2026-01-01T15:02:30.013Z] > command requires scopes: ["email","openid","https://www.googleapis.com/auth/cloudplatformprojects.readonly","https://www.googleapis.com/auth/firebase","https://www.googleapis.com/auth/cloud-platform"]
+[debug] [2026-01-01T15:02:30.013Z] > authorizing via signed-in user (mattias.myhrman@gmail.com)
+[debug] [2026-01-01T17:29:20.877Z] > command requires scopes: ["email","openid","https://www.googleapis.com/auth/cloudplatformprojects.readonly","https://www.googleapis.com/auth/firebase","https://www.googleapis.com/auth/cloud-platform"]
+[debug] [2026-01-01T17:29:20.887Z] > authorizing via signed-in user (mattias.myhrman@gmail.com)
+[debug] [2026-01-01T17:29:20.890Z] > command requires scopes: ["email","openid","https://www.googleapis.com/auth/cloudplatformprojects.readonly","https://www.googleapis.com/auth/firebase","https://www.googleapis.com/auth/cloud-platform"]
+[debug] [2026-01-01T17:29:20.890Z] > authorizing via signed-in user (mattias.myhrman@gmail.com)
+[debug] [2026-01-01T17:29:20.892Z] Checked if tokens are valid: false, expires at: 1767283332534
+[debug] [2026-01-01T17:29:20.892Z] Checked if tokens are valid: false, expires at: 1767283332534
+[debug] [2026-01-01T17:29:20.892Z] > refreshing access token with scopes: []
+[debug] [2026-01-01T17:29:20.896Z] >>> [apiv2][query] POST https://www.googleapis.com/oauth2/v3/token [none]
+[debug] [2026-01-01T17:29:20.896Z] >>> [apiv2][body] POST https://www.googleapis.com/oauth2/v3/token [omitted]
+[debug] [2026-01-01T17:29:20.934Z] Checked if tokens are valid: false, expires at: 1767283332534
+[debug] [2026-01-01T17:29:20.935Z] Checked if tokens are valid: false, expires at: 1767283332534
+[debug] [2026-01-01T17:29:20.935Z] > refreshing access token with scopes: []
+[debug] [2026-01-01T17:29:20.935Z] >>> [apiv2][query] POST https://www.googleapis.com/oauth2/v3/token [none]
+[debug] [2026-01-01T17:29:20.935Z] >>> [apiv2][body] POST https://www.googleapis.com/oauth2/v3/token [omitted]
+[debug] [2026-01-01T17:29:20.936Z] > command requires scopes: ["email","openid","https://www.googleapis.com/auth/cloudplatformprojects.readonly","https://www.googleapis.com/auth/firebase","https://www.googleapis.com/auth/cloud-platform"]
+[debug] [2026-01-01T17:29:20.936Z] > authorizing via signed-in user (mattias.myhrman@gmail.com)
+[debug] [2026-01-01T17:29:20.936Z] Checked if tokens are valid: false, expires at: 1767283332534
+[debug] [2026-01-01T17:29:20.936Z] Checked if tokens are valid: false, expires at: 1767283332534
+[debug] [2026-01-01T17:29:20.936Z] > refreshing access token with scopes: []
+[debug] [2026-01-01T17:29:20.937Z] >>> [apiv2][query] POST https://www.googleapis.com/oauth2/v3/token [none]
+[debug] [2026-01-01T17:29:20.937Z] >>> [apiv2][body] POST https://www.googleapis.com/oauth2/v3/token [omitted]
+[debug] [2026-01-01T17:29:21.051Z] <<< [apiv2][status] POST https://www.googleapis.com/oauth2/v3/token 200
+[debug] [2026-01-01T17:29:21.051Z] <<< [apiv2][body] POST https://www.googleapis.com/oauth2/v3/token [omitted]
+[debug] [2026-01-01T17:29:21.072Z] >>> [apiv2][query] GET https://cloudbilling.googleapis.com/v1/projects/gametwo-89299/billingInfo [none]
+[debug] [2026-01-01T17:29:21.074Z] <<< [apiv2][status] POST https://www.googleapis.com/oauth2/v3/token 200
+[debug] [2026-01-01T17:29:21.074Z] <<< [apiv2][body] POST https://www.googleapis.com/oauth2/v3/token [omitted]
+[debug] [2026-01-01T17:29:21.085Z] >>> [apiv2][query] GET https://cloudbilling.googleapis.com/v1/projects/gametwo-89299/billingInfo [none]
+[debug] [2026-01-01T17:29:21.087Z] <<< [apiv2][status] POST https://www.googleapis.com/oauth2/v3/token 200
+[debug] [2026-01-01T17:29:21.087Z] <<< [apiv2][body] POST https://www.googleapis.com/oauth2/v3/token [omitted]
+[debug] [2026-01-01T17:29:21.098Z] >>> [apiv2][query] GET https://cloudbilling.googleapis.com/v1/projects/gametwo-89299/billingInfo [none]
+[debug] [2026-01-01T17:29:21.686Z] <<< [apiv2][status] GET https://cloudbilling.googleapis.com/v1/projects/gametwo-89299/billingInfo 200
+[debug] [2026-01-01T17:29:21.686Z] <<< [apiv2][body] GET https://cloudbilling.googleapis.com/v1/projects/gametwo-89299/billingInfo {"name":"projects/gametwo-89299/billingInfo","projectId":"gametwo-89299","billingAccountName":"","billingEnabled":false}
+[debug] [2026-01-01T17:29:21.693Z] Checked if tokens are valid: true, expires at: 1767292160087
+[debug] [2026-01-01T17:29:21.693Z] Checked if tokens are valid: true, expires at: 1767292160087
+[debug] [2026-01-01T17:29:21.693Z] Checked if tokens are valid: true, expires at: 1767292160087
+[debug] [2026-01-01T17:29:21.693Z] Checked if tokens are valid: true, expires at: 1767292160087
+[debug] [2026-01-01T17:29:21.693Z] Checked if tokens are valid: true, expires at: 1767292160087
+[debug] [2026-01-01T17:29:21.693Z] Checked if tokens are valid: true, expires at: 1767292160087
+[debug] [2026-01-01T17:29:21.699Z] Checked if tokens are valid: true, expires at: 1767292160087
+[debug] [2026-01-01T17:29:21.699Z] Checked if tokens are valid: true, expires at: 1767292160087
+[debug] [2026-01-01T17:29:21.699Z] Checked if tokens are valid: true, expires at: 1767292160087
+[debug] [2026-01-01T17:29:21.699Z] Checked if tokens are valid: true, expires at: 1767292160087
+[debug] [2026-01-01T17:29:21.700Z] >>> [apiv2][query] GET https://serviceusage.googleapis.com/v1/projects/gametwo-89299/services/firestore.googleapis.com [none]
+[debug] [2026-01-01T17:29:21.700Z] >>> [apiv2][(partial)header] GET https://serviceusage.googleapis.com/v1/projects/gametwo-89299/services/firestore.googleapis.com x-goog-quota-user=projects/gametwo-89299
+[debug] [2026-01-01T17:29:21.700Z] >>> [apiv2][query] GET https://serviceusage.googleapis.com/v1/projects/gametwo-89299/services/firebasedataconnect.googleapis.com [none]
+[debug] [2026-01-01T17:29:21.700Z] >>> [apiv2][(partial)header] GET https://serviceusage.googleapis.com/v1/projects/gametwo-89299/services/firebasedataconnect.googleapis.com x-goog-quota-user=projects/gametwo-89299
+[debug] [2026-01-01T17:29:21.701Z] >>> [apiv2][query] GET https://serviceusage.googleapis.com/v1/projects/gametwo-89299/services/cloudfunctions.googleapis.com [none]
+[debug] [2026-01-01T17:29:21.701Z] >>> [apiv2][(partial)header] GET https://serviceusage.googleapis.com/v1/projects/gametwo-89299/services/cloudfunctions.googleapis.com x-goog-quota-user=projects/gametwo-89299
+[debug] [2026-01-01T17:29:21.701Z] >>> [apiv2][query] GET https://serviceusage.googleapis.com/v1/projects/gametwo-89299/services/firebaseapphosting.googleapis.com [none]
+[debug] [2026-01-01T17:29:21.701Z] >>> [apiv2][(partial)header] GET https://serviceusage.googleapis.com/v1/projects/gametwo-89299/services/firebaseapphosting.googleapis.com x-goog-quota-user=projects/gametwo-89299
+[debug] [2026-01-01T17:29:21.702Z] >>> [apiv2][query] GET https://serviceusage.googleapis.com/v1/projects/gametwo-89299/services/firebaseio.com [none]
+[debug] [2026-01-01T17:29:21.702Z] >>> [apiv2][(partial)header] GET https://serviceusage.googleapis.com/v1/projects/gametwo-89299/services/firebaseio.com x-goog-quota-user=projects/gametwo-89299
+[debug] [2026-01-01T17:29:22.366Z] <<< [apiv2][status] GET https://cloudbilling.googleapis.com/v1/projects/gametwo-89299/billingInfo 200
+[debug] [2026-01-01T17:29:22.366Z] <<< [apiv2][body] GET https://cloudbilling.googleapis.com/v1/projects/gametwo-89299/billingInfo {"name":"projects/gametwo-89299/billingInfo","projectId":"gametwo-89299","billingAccountName":"","billingEnabled":false}
+[debug] [2026-01-01T17:29:22.366Z] Checked if tokens are valid: true, expires at: 1767292160087
+[debug] [2026-01-01T17:29:22.366Z] Checked if tokens are valid: true, expires at: 1767292160087
+[debug] [2026-01-01T17:29:22.367Z] Checked if tokens are valid: true, expires at: 1767292160087
+[debug] [2026-01-01T17:29:22.367Z] Checked if tokens are valid: true, expires at: 1767292160087
+[debug] [2026-01-01T17:29:22.367Z] Checked if tokens are valid: true, expires at: 1767292160087
+[debug] [2026-01-01T17:29:22.367Z] Checked if tokens are valid: true, expires at: 1767292160087
+[debug] [2026-01-01T17:29:22.368Z] Checked if tokens are valid: true, expires at: 1767292160087
+[debug] [2026-01-01T17:29:22.368Z] Checked if tokens are valid: true, expires at: 1767292160087
+[debug] [2026-01-01T17:29:22.368Z] Checked if tokens are valid: true, expires at: 1767292160087
+[debug] [2026-01-01T17:29:22.368Z] Checked if tokens are valid: true, expires at: 1767292160087
+[debug] [2026-01-01T17:29:22.368Z] >>> [apiv2][query] GET https://serviceusage.googleapis.com/v1/projects/gametwo-89299/services/firestore.googleapis.com [none]
+[debug] [2026-01-01T17:29:22.368Z] >>> [apiv2][(partial)header] GET https://serviceusage.googleapis.com/v1/projects/gametwo-89299/services/firestore.googleapis.com x-goog-quota-user=projects/gametwo-89299
+[debug] [2026-01-01T17:29:22.369Z] >>> [apiv2][query] GET https://serviceusage.googleapis.com/v1/projects/gametwo-89299/services/firebasedataconnect.googleapis.com [none]
+[debug] [2026-01-01T17:29:22.369Z] >>> [apiv2][(partial)header] GET https://serviceusage.googleapis.com/v1/projects/gametwo-89299/services/firebasedataconnect.googleapis.com x-goog-quota-user=projects/gametwo-89299
+[debug] [2026-01-01T17:29:22.370Z] >>> [apiv2][query] GET https://serviceusage.googleapis.com/v1/projects/gametwo-89299/services/cloudfunctions.googleapis.com [none]
+[debug] [2026-01-01T17:29:22.370Z] >>> [apiv2][(partial)header] GET https://serviceusage.googleapis.com/v1/projects/gametwo-89299/services/cloudfunctions.googleapis.com x-goog-quota-user=projects/gametwo-89299
+[debug] [2026-01-01T17:29:22.371Z] >>> [apiv2][query] GET https://serviceusage.googleapis.com/v1/projects/gametwo-89299/services/firebaseapphosting.googleapis.com [none]
+[debug] [2026-01-01T17:29:22.371Z] >>> [apiv2][(partial)header] GET https://serviceusage.googleapis.com/v1/projects/gametwo-89299/services/firebaseapphosting.googleapis.com x-goog-quota-user=projects/gametwo-89299
+[debug] [2026-01-01T17:29:22.371Z] >>> [apiv2][query] GET https://serviceusage.googleapis.com/v1/projects/gametwo-89299/services/firebaseio.com [none]
+[debug] [2026-01-01T17:29:22.371Z] >>> [apiv2][(partial)header] GET https://serviceusage.googleapis.com/v1/projects/gametwo-89299/services/firebaseio.com x-goog-quota-user=projects/gametwo-89299
+[debug] [2026-01-01T17:29:22.432Z] <<< [apiv2][status] GET https://cloudbilling.googleapis.com/v1/projects/gametwo-89299/billingInfo 200
+[debug] [2026-01-01T17:29:22.432Z] <<< [apiv2][body] GET https://cloudbilling.googleapis.com/v1/projects/gametwo-89299/billingInfo {"name":"projects/gametwo-89299/billingInfo","projectId":"gametwo-89299","billingAccountName":"","billingEnabled":false}
+[debug] [2026-01-01T17:29:22.433Z] Checked if tokens are valid: true, expires at: 1767292160087
+[debug] [2026-01-01T17:29:22.433Z] Checked if tokens are valid: true, expires at: 1767292160087
+[debug] [2026-01-01T17:29:22.433Z] Checked if tokens are valid: true, expires at: 1767292160087
+[debug] [2026-01-01T17:29:22.433Z] Checked if tokens are valid: true, expires at: 1767292160087
+[debug] [2026-01-01T17:29:22.433Z] Checked if tokens are valid: true, expires at: 1767292160087
+[debug] [2026-01-01T17:29:22.433Z] Checked if tokens are valid: true, expires at: 1767292160087
+[debug] [2026-01-01T17:29:22.435Z] Checked if tokens are valid: true, expires at: 1767292160087
+[debug] [2026-01-01T17:29:22.435Z] Checked if tokens are valid: true, expires at: 1767292160087
+[debug] [2026-01-01T17:29:22.435Z] Checked if tokens are valid: true, expires at: 1767292160087
+[debug] [2026-01-01T17:29:22.435Z] Checked if tokens are valid: true, expires at: 1767292160087
+[debug] [2026-01-01T17:29:22.435Z] >>> [apiv2][query] GET https://serviceusage.googleapis.com/v1/projects/gametwo-89299/services/firestore.googleapis.com [none]
+[debug] [2026-01-01T17:29:22.435Z] >>> [apiv2][(partial)header] GET https://serviceusage.googleapis.com/v1/projects/gametwo-89299/services/firestore.googleapis.com x-goog-quota-user=projects/gametwo-89299
+[debug] [2026-01-01T17:29:22.436Z] >>> [apiv2][query] GET https://serviceusage.googleapis.com/v1/projects/gametwo-89299/services/firebasedataconnect.googleapis.com [none]
+[debug] [2026-01-01T17:29:22.436Z] >>> [apiv2][(partial)header] GET https://serviceusage.googleapis.com/v1/projects/gametwo-89299/services/firebasedataconnect.googleapis.com x-goog-quota-user=projects/gametwo-89299
+[debug] [2026-01-01T17:29:22.438Z] >>> [apiv2][query] GET https://serviceusage.googleapis.com/v1/projects/gametwo-89299/services/cloudfunctions.googleapis.com [none]
+[debug] [2026-01-01T17:29:22.438Z] >>> [apiv2][(partial)header] GET https://serviceusage.googleapis.com/v1/projects/gametwo-89299/services/cloudfunctions.googleapis.com x-goog-quota-user=projects/gametwo-89299
+[debug] [2026-01-01T17:29:22.439Z] >>> [apiv2][query] GET https://serviceusage.googleapis.com/v1/projects/gametwo-89299/services/firebaseapphosting.googleapis.com [none]
+[debug] [2026-01-01T17:29:22.439Z] >>> [apiv2][(partial)header] GET https://serviceusage.googleapis.com/v1/projects/gametwo-89299/services/firebaseapphosting.googleapis.com x-goog-quota-user=projects/gametwo-89299
+[debug] [2026-01-01T17:29:22.439Z] >>> [apiv2][query] GET https://serviceusage.googleapis.com/v1/projects/gametwo-89299/services/firebaseio.com [none]
+[debug] [2026-01-01T17:29:22.439Z] >>> [apiv2][(partial)header] GET https://serviceusage.googleapis.com/v1/projects/gametwo-89299/services/firebaseio.com x-goog-quota-user=projects/gametwo-89299
+[debug] [2026-01-01T17:29:23.577Z] <<< [apiv2][status] GET https://serviceusage.googleapis.com/v1/projects/gametwo-89299/services/firebasedataconnect.googleapis.com 200
+[debug] [2026-01-01T17:29:23.577Z] <<< [apiv2][body] GET https://serviceusage.googleapis.com/v1/projects/gametwo-89299/services/firebasedataconnect.googleapis.com [omitted]
+[debug] [2026-01-01T17:29:23.577Z] <<< [apiv2][status] GET https://serviceusage.googleapis.com/v1/projects/gametwo-89299/services/firebaseapphosting.googleapis.com 200
+[debug] [2026-01-01T17:29:23.577Z] <<< [apiv2][body] GET https://serviceusage.googleapis.com/v1/projects/gametwo-89299/services/firebaseapphosting.googleapis.com [omitted]
+[debug] [2026-01-01T17:29:23.578Z] <<< [apiv2][status] GET https://serviceusage.googleapis.com/v1/projects/gametwo-89299/services/firebaseio.com 403
+[debug] [2026-01-01T17:29:23.578Z] <<< [apiv2][body] GET https://serviceusage.googleapis.com/v1/projects/gametwo-89299/services/firebaseio.com [omitted]
+[debug] [2026-01-01T17:29:23.579Z] <<< [apiv2][status] GET https://serviceusage.googleapis.com/v1/projects/gametwo-89299/services/cloudfunctions.googleapis.com 200
+[debug] [2026-01-01T17:29:23.579Z] <<< [apiv2][body] GET https://serviceusage.googleapis.com/v1/projects/gametwo-89299/services/cloudfunctions.googleapis.com [omitted]
+[debug] [2026-01-01T17:29:23.579Z] <<< [apiv2][status] GET https://serviceusage.googleapis.com/v1/projects/gametwo-89299/services/firebasedataconnect.googleapis.com 200
+[debug] [2026-01-01T17:29:23.579Z] <<< [apiv2][body] GET https://serviceusage.googleapis.com/v1/projects/gametwo-89299/services/firebasedataconnect.googleapis.com [omitted]
+[debug] [2026-01-01T17:29:23.579Z] <<< [apiv2][status] GET https://serviceusage.googleapis.com/v1/projects/gametwo-89299/services/firestore.googleapis.com 200
+[debug] [2026-01-01T17:29:23.580Z] <<< [apiv2][body] GET https://serviceusage.googleapis.com/v1/projects/gametwo-89299/services/firestore.googleapis.com [omitted]
+[debug] [2026-01-01T17:29:23.580Z] <<< [apiv2][status] GET https://serviceusage.googleapis.com/v1/projects/gametwo-89299/services/firebaseapphosting.googleapis.com 200
+[debug] [2026-01-01T17:29:23.580Z] <<< [apiv2][body] GET https://serviceusage.googleapis.com/v1/projects/gametwo-89299/services/firebaseapphosting.googleapis.com [omitted]
+[debug] [2026-01-01T17:29:23.580Z] <<< [apiv2][status] GET https://serviceusage.googleapis.com/v1/projects/gametwo-89299/services/cloudfunctions.googleapis.com 200
+[debug] [2026-01-01T17:29:23.580Z] <<< [apiv2][body] GET https://serviceusage.googleapis.com/v1/projects/gametwo-89299/services/cloudfunctions.googleapis.com [omitted]
+[debug] [2026-01-01T17:29:23.601Z] <<< [apiv2][status] GET https://serviceusage.googleapis.com/v1/projects/gametwo-89299/services/firestore.googleapis.com 200
+[debug] [2026-01-01T17:29:23.601Z] <<< [apiv2][body] GET https://serviceusage.googleapis.com/v1/projects/gametwo-89299/services/firestore.googleapis.com [omitted]
+[debug] [2026-01-01T17:29:23.643Z] <<< [apiv2][status] GET https://serviceusage.googleapis.com/v1/projects/gametwo-89299/services/firebaseio.com 403
+[debug] [2026-01-01T17:29:23.643Z] <<< [apiv2][body] GET https://serviceusage.googleapis.com/v1/projects/gametwo-89299/services/firebaseio.com [omitted]
+[debug] [2026-01-01T17:29:23.645Z] > command requires scopes: ["email","openid","https://www.googleapis.com/auth/cloudplatformprojects.readonly","https://www.googleapis.com/auth/firebase","https://www.googleapis.com/auth/cloud-platform"]
+[debug] [2026-01-01T17:29:23.646Z] > authorizing via signed-in user (mattias.myhrman@gmail.com)
+[debug] [2026-01-01T17:29:23.646Z] Checked if tokens are valid: true, expires at: 1767292160087
+[debug] [2026-01-01T17:29:23.646Z] Checked if tokens are valid: true, expires at: 1767292160087
+[debug] [2026-01-01T17:29:23.646Z] >>> [apiv2][query] GET https://cloudbilling.googleapis.com/v1/projects/gametwo-89299/billingInfo [none]
+[debug] [2026-01-01T17:29:23.738Z] <<< [apiv2][status] GET https://serviceusage.googleapis.com/v1/projects/gametwo-89299/services/firebasedataconnect.googleapis.com 200
+[debug] [2026-01-01T17:29:23.738Z] <<< [apiv2][body] GET https://serviceusage.googleapis.com/v1/projects/gametwo-89299/services/firebasedataconnect.googleapis.com [omitted]
+[debug] [2026-01-01T17:29:23.792Z] <<< [apiv2][status] GET https://serviceusage.googleapis.com/v1/projects/gametwo-89299/services/firebaseio.com 403
+[debug] [2026-01-01T17:29:23.792Z] <<< [apiv2][body] GET https://serviceusage.googleapis.com/v1/projects/gametwo-89299/services/firebaseio.com [omitted]
+[debug] [2026-01-01T17:29:23.855Z] <<< [apiv2][status] GET https://serviceusage.googleapis.com/v1/projects/gametwo-89299/services/firestore.googleapis.com 200
+[debug] [2026-01-01T17:29:23.855Z] <<< [apiv2][body] GET https://serviceusage.googleapis.com/v1/projects/gametwo-89299/services/firestore.googleapis.com [omitted]
+[debug] [2026-01-01T17:29:23.883Z] <<< [apiv2][status] GET https://serviceusage.googleapis.com/v1/projects/gametwo-89299/services/cloudfunctions.googleapis.com 200
+[debug] [2026-01-01T17:29:23.883Z] <<< [apiv2][body] GET https://serviceusage.googleapis.com/v1/projects/gametwo-89299/services/cloudfunctions.googleapis.com [omitted]
+[debug] [2026-01-01T17:29:23.958Z] <<< [apiv2][status] GET https://serviceusage.googleapis.com/v1/projects/gametwo-89299/services/firebaseapphosting.googleapis.com 200
+[debug] [2026-01-01T17:29:23.959Z] <<< [apiv2][body] GET https://serviceusage.googleapis.com/v1/projects/gametwo-89299/services/firebaseapphosting.googleapis.com [omitted]
+[debug] [2026-01-01T17:29:23.959Z] > command requires scopes: ["email","openid","https://www.googleapis.com/auth/cloudplatformprojects.readonly","https://www.googleapis.com/auth/firebase","https://www.googleapis.com/auth/cloud-platform"]
+[debug] [2026-01-01T17:29:23.960Z] > authorizing via signed-in user (mattias.myhrman@gmail.com)
+[debug] [2026-01-01T17:29:23.960Z] Checked if tokens are valid: true, expires at: 1767292160087
+[debug] [2026-01-01T17:29:23.960Z] Checked if tokens are valid: true, expires at: 1767292160087
+[debug] [2026-01-01T17:29:23.960Z] >>> [apiv2][query] GET https://cloudbilling.googleapis.com/v1/projects/gametwo-89299/billingInfo [none]
+[debug] [2026-01-01T17:29:24.434Z] <<< [apiv2][status] GET https://cloudbilling.googleapis.com/v1/projects/gametwo-89299/billingInfo 200
+[debug] [2026-01-01T17:29:24.434Z] <<< [apiv2][body] GET https://cloudbilling.googleapis.com/v1/projects/gametwo-89299/billingInfo {"name":"projects/gametwo-89299/billingInfo","projectId":"gametwo-89299","billingAccountName":"","billingEnabled":false}
+[debug] [2026-01-01T17:29:24.854Z] > command requires scopes: ["email","openid","https://www.googleapis.com/auth/cloudplatformprojects.readonly","https://www.googleapis.com/auth/firebase","https://www.googleapis.com/auth/cloud-platform"]
+[debug] [2026-01-01T17:29:24.854Z] > authorizing via signed-in user (mattias.myhrman@gmail.com)
+[debug] [2026-01-01T17:29:24.884Z] <<< [apiv2][status] GET https://cloudbilling.googleapis.com/v1/projects/gametwo-89299/billingInfo 200
+[debug] [2026-01-01T17:29:24.884Z] <<< [apiv2][body] GET https://cloudbilling.googleapis.com/v1/projects/gametwo-89299/billingInfo {"name":"projects/gametwo-89299/billingInfo","projectId":"gametwo-89299","billingAccountName":"","billingEnabled":false}
+[debug] [2026-01-01T17:29:29.115Z] > command requires scopes: ["email","openid","https://www.googleapis.com/auth/cloudplatformprojects.readonly","https://www.googleapis.com/auth/firebase","https://www.googleapis.com/auth/cloud-platform"]
+[debug] [2026-01-01T17:29:29.115Z] > authorizing via signed-in user (mattias.myhrman@gmail.com)
+[debug] [2026-01-01T17:29:31.488Z] > command requires scopes: ["email","openid","https://www.googleapis.com/auth/cloudplatformprojects.readonly","https://www.googleapis.com/auth/firebase","https://www.googleapis.com/auth/cloud-platform"]
+[debug] [2026-01-01T17:29:31.491Z] > authorizing via signed-in user (mattias.myhrman@gmail.com)
+[debug] [2026-01-01T17:29:31.491Z] > command requires scopes: ["email","openid","https://www.googleapis.com/auth/cloudplatformprojects.readonly","https://www.googleapis.com/auth/firebase","https://www.googleapis.com/auth/cloud-platform"]
+[debug] [2026-01-01T17:29:31.491Z] > authorizing via signed-in user (mattias.myhrman@gmail.com)
+[debug] [2026-01-01T17:29:31.491Z] Checked if tokens are valid: true, expires at: 1767292160087
+[debug] [2026-01-01T17:29:31.491Z] Checked if tokens are valid: true, expires at: 1767292160087
+[debug] [2026-01-01T17:29:31.492Z] Checked if tokens are valid: true, expires at: 1767292160087
+[debug] [2026-01-01T17:29:31.492Z] Checked if tokens are valid: true, expires at: 1767292160087
+[debug] [2026-01-01T17:29:31.492Z] > command requires scopes: ["email","openid","https://www.googleapis.com/auth/cloudplatformprojects.readonly","https://www.googleapis.com/auth/firebase","https://www.googleapis.com/auth/cloud-platform"]
+[debug] [2026-01-01T17:29:31.492Z] > authorizing via signed-in user (mattias.myhrman@gmail.com)
+[debug] [2026-01-01T17:29:31.492Z] >>> [apiv2][query] GET https://cloudbilling.googleapis.com/v1/projects/gametwo-89299/billingInfo [none]
+[debug] [2026-01-01T17:29:31.516Z] >>> [apiv2][query] GET https://cloudbilling.googleapis.com/v1/projects/gametwo-89299/billingInfo [none]
+[debug] [2026-01-01T17:29:31.517Z] Checked if tokens are valid: true, expires at: 1767292160087
+[debug] [2026-01-01T17:29:31.517Z] Checked if tokens are valid: true, expires at: 1767292160087
+[debug] [2026-01-01T17:29:31.517Z] >>> [apiv2][query] GET https://cloudbilling.googleapis.com/v1/projects/gametwo-89299/billingInfo [none]
+[debug] [2026-01-01T17:29:32.365Z] <<< [apiv2][status] GET https://cloudbilling.googleapis.com/v1/projects/gametwo-89299/billingInfo 200
+[debug] [2026-01-01T17:29:32.366Z] <<< [apiv2][body] GET https://cloudbilling.googleapis.com/v1/projects/gametwo-89299/billingInfo {"name":"projects/gametwo-89299/billingInfo","projectId":"gametwo-89299","billingAccountName":"","billingEnabled":false}
+[debug] [2026-01-01T17:29:32.371Z] Checked if tokens are valid: true, expires at: 1767292160087
+[debug] [2026-01-01T17:29:32.371Z] Checked if tokens are valid: true, expires at: 1767292160087
+[debug] [2026-01-01T17:29:32.371Z] Checked if tokens are valid: true, expires at: 1767292160087
+[debug] [2026-01-01T17:29:32.371Z] Checked if tokens are valid: true, expires at: 1767292160087
+[debug] [2026-01-01T17:29:32.371Z] Checked if tokens are valid: true, expires at: 1767292160087
+[debug] [2026-01-01T17:29:32.371Z] Checked if tokens are valid: true, expires at: 1767292160087
+[debug] [2026-01-01T17:29:32.377Z] Checked if tokens are valid: true, expires at: 1767292160087
+[debug] [2026-01-01T17:29:32.377Z] Checked if tokens are valid: true, expires at: 1767292160087
+[debug] [2026-01-01T17:29:32.377Z] Checked if tokens are valid: true, expires at: 1767292160087
+[debug] [2026-01-01T17:29:32.377Z] Checked if tokens are valid: true, expires at: 1767292160087
+[debug] [2026-01-01T17:29:32.377Z] >>> [apiv2][query] GET https://serviceusage.googleapis.com/v1/projects/gametwo-89299/services/firestore.googleapis.com [none]
+[debug] [2026-01-01T17:29:32.377Z] >>> [apiv2][(partial)header] GET https://serviceusage.googleapis.com/v1/projects/gametwo-89299/services/firestore.googleapis.com x-goog-quota-user=projects/gametwo-89299
+[debug] [2026-01-01T17:29:32.378Z] >>> [apiv2][query] GET https://serviceusage.googleapis.com/v1/projects/gametwo-89299/services/firebasedataconnect.googleapis.com [none]
+[debug] [2026-01-01T17:29:32.378Z] >>> [apiv2][(partial)header] GET https://serviceusage.googleapis.com/v1/projects/gametwo-89299/services/firebasedataconnect.googleapis.com x-goog-quota-user=projects/gametwo-89299
+[debug] [2026-01-01T17:29:32.378Z] >>> [apiv2][query] GET https://serviceusage.googleapis.com/v1/projects/gametwo-89299/services/cloudfunctions.googleapis.com [none]
+[debug] [2026-01-01T17:29:32.378Z] >>> [apiv2][(partial)header] GET https://serviceusage.googleapis.com/v1/projects/gametwo-89299/services/cloudfunctions.googleapis.com x-goog-quota-user=projects/gametwo-89299
+[debug] [2026-01-01T17:29:32.379Z] >>> [apiv2][query] GET https://serviceusage.googleapis.com/v1/projects/gametwo-89299/services/firebaseapphosting.googleapis.com [none]
+[debug] [2026-01-01T17:29:32.379Z] >>> [apiv2][(partial)header] GET https://serviceusage.googleapis.com/v1/projects/gametwo-89299/services/firebaseapphosting.googleapis.com x-goog-quota-user=projects/gametwo-89299
+[debug] [2026-01-01T17:29:32.379Z] >>> [apiv2][query] GET https://serviceusage.googleapis.com/v1/projects/gametwo-89299/services/firebaseio.com [none]
+[debug] [2026-01-01T17:29:32.379Z] >>> [apiv2][(partial)header] GET https://serviceusage.googleapis.com/v1/projects/gametwo-89299/services/firebaseio.com x-goog-quota-user=projects/gametwo-89299
+[debug] [2026-01-01T17:29:32.816Z] <<< [apiv2][status] GET https://cloudbilling.googleapis.com/v1/projects/gametwo-89299/billingInfo 200
+[debug] [2026-01-01T17:29:32.816Z] <<< [apiv2][body] GET https://cloudbilling.googleapis.com/v1/projects/gametwo-89299/billingInfo {"name":"projects/gametwo-89299/billingInfo","projectId":"gametwo-89299","billingAccountName":"","billingEnabled":false}
+[debug] [2026-01-01T17:29:32.817Z] Checked if tokens are valid: true, expires at: 1767292160087
+[debug] [2026-01-01T17:29:32.817Z] Checked if tokens are valid: true, expires at: 1767292160087
+[debug] [2026-01-01T17:29:32.817Z] Checked if tokens are valid: true, expires at: 1767292160087
+[debug] [2026-01-01T17:29:32.817Z] Checked if tokens are valid: true, expires at: 1767292160087
+[debug] [2026-01-01T17:29:32.817Z] Checked if tokens are valid: true, expires at: 1767292160087
+[debug] [2026-01-01T17:29:32.817Z] Checked if tokens are valid: true, expires at: 1767292160087
+[debug] [2026-01-01T17:29:32.820Z] Checked if tokens are valid: true, expires at: 1767292160087
+[debug] [2026-01-01T17:29:32.820Z] Checked if tokens are valid: true, expires at: 1767292160087
+[debug] [2026-01-01T17:29:32.820Z] Checked if tokens are valid: true, expires at: 1767292160087
+[debug] [2026-01-01T17:29:32.820Z] Checked if tokens are valid: true, expires at: 1767292160087
+[debug] [2026-01-01T17:29:32.821Z] >>> [apiv2][query] GET https://serviceusage.googleapis.com/v1/projects/gametwo-89299/services/firestore.googleapis.com [none]
+[debug] [2026-01-01T17:29:32.821Z] >>> [apiv2][(partial)header] GET https://serviceusage.googleapis.com/v1/projects/gametwo-89299/services/firestore.googleapis.com x-goog-quota-user=projects/gametwo-89299
+[debug] [2026-01-01T17:29:32.821Z] >>> [apiv2][query] GET https://serviceusage.googleapis.com/v1/projects/gametwo-89299/services/firebasedataconnect.googleapis.com [none]
+[debug] [2026-01-01T17:29:32.821Z] >>> [apiv2][(partial)header] GET https://serviceusage.googleapis.com/v1/projects/gametwo-89299/services/firebasedataconnect.googleapis.com x-goog-quota-user=projects/gametwo-89299
+[debug] [2026-01-01T17:29:32.822Z] >>> [apiv2][query] GET https://serviceusage.googleapis.com/v1/projects/gametwo-89299/services/cloudfunctions.googleapis.com [none]
+[debug] [2026-01-01T17:29:32.822Z] >>> [apiv2][(partial)header] GET https://serviceusage.googleapis.com/v1/projects/gametwo-89299/services/cloudfunctions.googleapis.com x-goog-quota-user=projects/gametwo-89299
+[debug] [2026-01-01T17:29:32.822Z] >>> [apiv2][query] GET https://serviceusage.googleapis.com/v1/projects/gametwo-89299/services/firebaseapphosting.googleapis.com [none]
+[debug] [2026-01-01T17:29:32.822Z] >>> [apiv2][(partial)header] GET https://serviceusage.googleapis.com/v1/projects/gametwo-89299/services/firebaseapphosting.googleapis.com x-goog-quota-user=projects/gametwo-89299
+[debug] [2026-01-01T17:29:32.823Z] >>> [apiv2][query] GET https://serviceusage.googleapis.com/v1/projects/gametwo-89299/services/firebaseio.com [none]
+[debug] [2026-01-01T17:29:32.823Z] >>> [apiv2][(partial)header] GET https://serviceusage.googleapis.com/v1/projects/gametwo-89299/services/firebaseio.com x-goog-quota-user=projects/gametwo-89299
+[debug] [2026-01-01T17:29:32.837Z] <<< [apiv2][status] GET https://cloudbilling.googleapis.com/v1/projects/gametwo-89299/billingInfo 200
+[debug] [2026-01-01T17:29:32.837Z] <<< [apiv2][body] GET https://cloudbilling.googleapis.com/v1/projects/gametwo-89299/billingInfo {"name":"projects/gametwo-89299/billingInfo","projectId":"gametwo-89299","billingAccountName":"","billingEnabled":false}
+[debug] [2026-01-01T17:29:32.837Z] Checked if tokens are valid: true, expires at: 1767292160087
+[debug] [2026-01-01T17:29:32.837Z] Checked if tokens are valid: true, expires at: 1767292160087
+[debug] [2026-01-01T17:29:32.837Z] Checked if tokens are valid: true, expires at: 1767292160087
+[debug] [2026-01-01T17:29:32.837Z] Checked if tokens are valid: true, expires at: 1767292160087
+[debug] [2026-01-01T17:29:32.837Z] Checked if tokens are valid: true, expires at: 1767292160087
+[debug] [2026-01-01T17:29:32.838Z] Checked if tokens are valid: true, expires at: 1767292160087
+[debug] [2026-01-01T17:29:32.840Z] Checked if tokens are valid: true, expires at: 1767292160087
+[debug] [2026-01-01T17:29:32.840Z] Checked if tokens are valid: true, expires at: 1767292160087
+[debug] [2026-01-01T17:29:32.840Z] Checked if tokens are valid: true, expires at: 1767292160087
+[debug] [2026-01-01T17:29:32.840Z] Checked if tokens are valid: true, expires at: 1767292160087
+[debug] [2026-01-01T17:29:32.840Z] >>> [apiv2][query] GET https://serviceusage.googleapis.com/v1/projects/gametwo-89299/services/firestore.googleapis.com [none]
+[debug] [2026-01-01T17:29:32.840Z] >>> [apiv2][(partial)header] GET https://serviceusage.googleapis.com/v1/projects/gametwo-89299/services/firestore.googleapis.com x-goog-quota-user=projects/gametwo-89299
+[debug] [2026-01-01T17:29:32.841Z] >>> [apiv2][query] GET https://serviceusage.googleapis.com/v1/projects/gametwo-89299/services/firebasedataconnect.googleapis.com [none]
+[debug] [2026-01-01T17:29:32.841Z] >>> [apiv2][(partial)header] GET https://serviceusage.googleapis.com/v1/projects/gametwo-89299/services/firebasedataconnect.googleapis.com x-goog-quota-user=projects/gametwo-89299
+[debug] [2026-01-01T17:29:32.841Z] >>> [apiv2][query] GET https://serviceusage.googleapis.com/v1/projects/gametwo-89299/services/cloudfunctions.googleapis.com [none]
+[debug] [2026-01-01T17:29:32.841Z] >>> [apiv2][(partial)header] GET https://serviceusage.googleapis.com/v1/projects/gametwo-89299/services/cloudfunctions.googleapis.com x-goog-quota-user=projects/gametwo-89299
+[debug] [2026-01-01T17:29:32.841Z] >>> [apiv2][query] GET https://serviceusage.googleapis.com/v1/projects/gametwo-89299/services/firebaseapphosting.googleapis.com [none]
+[debug] [2026-01-01T17:29:32.842Z] >>> [apiv2][(partial)header] GET https://serviceusage.googleapis.com/v1/projects/gametwo-89299/services/firebaseapphosting.googleapis.com x-goog-quota-user=projects/gametwo-89299
+[debug] [2026-01-01T17:29:32.842Z] >>> [apiv2][query] GET https://serviceusage.googleapis.com/v1/projects/gametwo-89299/services/firebaseio.com [none]
+[debug] [2026-01-01T17:29:32.842Z] >>> [apiv2][(partial)header] GET https://serviceusage.googleapis.com/v1/projects/gametwo-89299/services/firebaseio.com x-goog-quota-user=projects/gametwo-89299
+[debug] [2026-01-01T17:29:33.805Z] <<< [apiv2][status] GET https://serviceusage.googleapis.com/v1/projects/gametwo-89299/services/firestore.googleapis.com 200
+[debug] [2026-01-01T17:29:33.806Z] <<< [apiv2][body] GET https://serviceusage.googleapis.com/v1/projects/gametwo-89299/services/firestore.googleapis.com [omitted]
+[debug] [2026-01-01T17:29:33.955Z] <<< [apiv2][status] GET https://serviceusage.googleapis.com/v1/projects/gametwo-89299/services/firebaseio.com 403
+[debug] [2026-01-01T17:29:33.955Z] <<< [apiv2][body] GET https://serviceusage.googleapis.com/v1/projects/gametwo-89299/services/firebaseio.com [omitted]
+[debug] [2026-01-01T17:29:33.957Z] <<< [apiv2][status] GET https://serviceusage.googleapis.com/v1/projects/gametwo-89299/services/firebasedataconnect.googleapis.com 200
+[debug] [2026-01-01T17:29:33.957Z] <<< [apiv2][body] GET https://serviceusage.googleapis.com/v1/projects/gametwo-89299/services/firebasedataconnect.googleapis.com [omitted]
+[debug] [2026-01-01T17:29:33.964Z] <<< [apiv2][status] GET https://serviceusage.googleapis.com/v1/projects/gametwo-89299/services/firebaseio.com 403
+[debug] [2026-01-01T17:29:33.964Z] <<< [apiv2][body] GET https://serviceusage.googleapis.com/v1/projects/gametwo-89299/services/firebaseio.com [omitted]
+[debug] [2026-01-01T17:29:33.967Z] <<< [apiv2][status] GET https://serviceusage.googleapis.com/v1/projects/gametwo-89299/services/cloudfunctions.googleapis.com 200
+[debug] [2026-01-01T17:29:33.968Z] <<< [apiv2][body] GET https://serviceusage.googleapis.com/v1/projects/gametwo-89299/services/cloudfunctions.googleapis.com [omitted]
+[debug] [2026-01-01T17:29:33.968Z] <<< [apiv2][status] GET https://serviceusage.googleapis.com/v1/projects/gametwo-89299/services/firebasedataconnect.googleapis.com 200
+[debug] [2026-01-01T17:29:33.968Z] <<< [apiv2][body] GET https://serviceusage.googleapis.com/v1/projects/gametwo-89299/services/firebasedataconnect.googleapis.com [omitted]
+[debug] [2026-01-01T17:29:33.969Z] <<< [apiv2][status] GET https://serviceusage.googleapis.com/v1/projects/gametwo-89299/services/firebaseapphosting.googleapis.com 200
+[debug] [2026-01-01T17:29:33.969Z] <<< [apiv2][body] GET https://serviceusage.googleapis.com/v1/projects/gametwo-89299/services/firebaseapphosting.googleapis.com [omitted]
+[debug] [2026-01-01T17:29:33.970Z] > command requires scopes: ["email","openid","https://www.googleapis.com/auth/cloudplatformprojects.readonly","https://www.googleapis.com/auth/firebase","https://www.googleapis.com/auth/cloud-platform"]
+[debug] [2026-01-01T17:29:33.970Z] > authorizing via signed-in user (mattias.myhrman@gmail.com)
+[debug] [2026-01-01T17:29:33.970Z] Checked if tokens are valid: true, expires at: 1767292160087
+[debug] [2026-01-01T17:29:33.970Z] Checked if tokens are valid: true, expires at: 1767292160087
+[debug] [2026-01-01T17:29:33.970Z] >>> [apiv2][query] GET https://cloudbilling.googleapis.com/v1/projects/gametwo-89299/billingInfo [none]
+[debug] [2026-01-01T17:29:33.972Z] <<< [apiv2][status] GET https://serviceusage.googleapis.com/v1/projects/gametwo-89299/services/cloudfunctions.googleapis.com 200
+[debug] [2026-01-01T17:29:33.973Z] <<< [apiv2][body] GET https://serviceusage.googleapis.com/v1/projects/gametwo-89299/services/cloudfunctions.googleapis.com [omitted]
+[debug] [2026-01-01T17:29:33.973Z] <<< [apiv2][status] GET https://serviceusage.googleapis.com/v1/projects/gametwo-89299/services/firebasedataconnect.googleapis.com 200
+[debug] [2026-01-01T17:29:33.973Z] <<< [apiv2][body] GET https://serviceusage.googleapis.com/v1/projects/gametwo-89299/services/firebasedataconnect.googleapis.com [omitted]
+[debug] [2026-01-01T17:29:33.996Z] <<< [apiv2][status] GET https://serviceusage.googleapis.com/v1/projects/gametwo-89299/services/firebaseio.com 403
+[debug] [2026-01-01T17:29:33.996Z] <<< [apiv2][body] GET https://serviceusage.googleapis.com/v1/projects/gametwo-89299/services/firebaseio.com [omitted]
+[debug] [2026-01-01T17:29:33.997Z] <<< [apiv2][status] GET https://serviceusage.googleapis.com/v1/projects/gametwo-89299/services/firebaseapphosting.googleapis.com 200
+[debug] [2026-01-01T17:29:33.997Z] <<< [apiv2][body] GET https://serviceusage.googleapis.com/v1/projects/gametwo-89299/services/firebaseapphosting.googleapis.com [omitted]
+[debug] [2026-01-01T17:29:34.022Z] <<< [apiv2][status] GET https://serviceusage.googleapis.com/v1/projects/gametwo-89299/services/firestore.googleapis.com 200
+[debug] [2026-01-01T17:29:34.022Z] <<< [apiv2][body] GET https://serviceusage.googleapis.com/v1/projects/gametwo-89299/services/firestore.googleapis.com [omitted]
+[debug] [2026-01-01T17:29:34.023Z] > command requires scopes: ["email","openid","https://www.googleapis.com/auth/cloudplatformprojects.readonly","https://www.googleapis.com/auth/firebase","https://www.googleapis.com/auth/cloud-platform"]
+[debug] [2026-01-01T17:29:34.023Z] > authorizing via signed-in user (mattias.myhrman@gmail.com)
+[debug] [2026-01-01T17:29:34.023Z] Checked if tokens are valid: true, expires at: 1767292160087
+[debug] [2026-01-01T17:29:34.023Z] Checked if tokens are valid: true, expires at: 1767292160087
+[debug] [2026-01-01T17:29:34.023Z] >>> [apiv2][query] GET https://cloudbilling.googleapis.com/v1/projects/gametwo-89299/billingInfo [none]
+[debug] [2026-01-01T17:29:34.029Z] <<< [apiv2][status] GET https://serviceusage.googleapis.com/v1/projects/gametwo-89299/services/firestore.googleapis.com 200
+[debug] [2026-01-01T17:29:34.029Z] <<< [apiv2][body] GET https://serviceusage.googleapis.com/v1/projects/gametwo-89299/services/firestore.googleapis.com [omitted]
+[debug] [2026-01-01T17:29:34.099Z] <<< [apiv2][status] GET https://serviceusage.googleapis.com/v1/projects/gametwo-89299/services/cloudfunctions.googleapis.com 200
+[debug] [2026-01-01T17:29:34.099Z] <<< [apiv2][body] GET https://serviceusage.googleapis.com/v1/projects/gametwo-89299/services/cloudfunctions.googleapis.com [omitted]
+[debug] [2026-01-01T17:29:34.103Z] <<< [apiv2][status] GET https://serviceusage.googleapis.com/v1/projects/gametwo-89299/services/firebaseapphosting.googleapis.com 200
+[debug] [2026-01-01T17:29:34.103Z] <<< [apiv2][body] GET https://serviceusage.googleapis.com/v1/projects/gametwo-89299/services/firebaseapphosting.googleapis.com [omitted]
+[debug] [2026-01-01T17:29:34.749Z] <<< [apiv2][status] GET https://cloudbilling.googleapis.com/v1/projects/gametwo-89299/billingInfo 200
+[debug] [2026-01-01T17:29:34.749Z] <<< [apiv2][body] GET https://cloudbilling.googleapis.com/v1/projects/gametwo-89299/billingInfo {"name":"projects/gametwo-89299/billingInfo","projectId":"gametwo-89299","billingAccountName":"","billingEnabled":false}
+[debug] [2026-01-01T17:29:35.037Z] <<< [apiv2][status] GET https://cloudbilling.googleapis.com/v1/projects/gametwo-89299/billingInfo 200
+[debug] [2026-01-01T17:29:35.037Z] <<< [apiv2][body] GET https://cloudbilling.googleapis.com/v1/projects/gametwo-89299/billingInfo {"name":"projects/gametwo-89299/billingInfo","projectId":"gametwo-89299","billingAccountName":"","billingEnabled":false}
+[debug] [2026-01-01T17:29:36.094Z] > command requires scopes: ["email","openid","https://www.googleapis.com/auth/cloudplatformprojects.readonly","https://www.googleapis.com/auth/firebase","https://www.googleapis.com/auth/cloud-platform"]
+[debug] [2026-01-01T17:29:36.094Z] > authorizing via signed-in user (mattias.myhrman@gmail.com)
+[debug] [2026-01-01T17:29:38.772Z] > command requires scopes: ["email","openid","https://www.googleapis.com/auth/cloudplatformprojects.readonly","https://www.googleapis.com/auth/firebase","https://www.googleapis.com/auth/cloud-platform"]
+[debug] [2026-01-01T17:29:38.772Z] > authorizing via signed-in user (mattias.myhrman@gmail.com)
+[debug] [2026-01-01T19:00:05.094Z] > command requires scopes: ["email","openid","https://www.googleapis.com/auth/cloudplatformprojects.readonly","https://www.googleapis.com/auth/firebase","https://www.googleapis.com/auth/cloud-platform"]
+[debug] [2026-01-01T19:00:05.099Z] > authorizing via signed-in user (mattias.myhrman@gmail.com)
+[debug] [2026-01-01T19:00:05.099Z] > command requires scopes: ["email","openid","https://www.googleapis.com/auth/cloudplatformprojects.readonly","https://www.googleapis.com/auth/firebase","https://www.googleapis.com/auth/cloud-platform"]
+[debug] [2026-01-01T19:00:05.099Z] > authorizing via signed-in user (mattias.myhrman@gmail.com)
+[debug] [2026-01-01T19:00:05.100Z] Checked if tokens are valid: false, expires at: 1767292160087
+[debug] [2026-01-01T19:00:05.100Z] Checked if tokens are valid: false, expires at: 1767292160087
+[debug] [2026-01-01T19:00:05.101Z] > refreshing access token with scopes: []
+[debug] [2026-01-01T19:00:05.102Z] >>> [apiv2][query] POST https://www.googleapis.com/oauth2/v3/token [none]
+[debug] [2026-01-01T19:00:05.102Z] >>> [apiv2][body] POST https://www.googleapis.com/oauth2/v3/token [omitted]
+[debug] [2026-01-01T19:00:05.126Z] Checked if tokens are valid: false, expires at: 1767292160087
+[debug] [2026-01-01T19:00:05.126Z] Checked if tokens are valid: false, expires at: 1767292160087
+[debug] [2026-01-01T19:00:05.126Z] > refreshing access token with scopes: []
+[debug] [2026-01-01T19:00:05.126Z] >>> [apiv2][query] POST https://www.googleapis.com/oauth2/v3/token [none]
+[debug] [2026-01-01T19:00:05.127Z] >>> [apiv2][body] POST https://www.googleapis.com/oauth2/v3/token [omitted]
+[debug] [2026-01-01T19:00:05.128Z] > command requires scopes: ["email","openid","https://www.googleapis.com/auth/cloudplatformprojects.readonly","https://www.googleapis.com/auth/firebase","https://www.googleapis.com/auth/cloud-platform"]
+[debug] [2026-01-01T19:00:05.128Z] > authorizing via signed-in user (mattias.myhrman@gmail.com)
+[debug] [2026-01-01T19:00:05.128Z] Checked if tokens are valid: false, expires at: 1767292160087
+[debug] [2026-01-01T19:00:05.128Z] Checked if tokens are valid: false, expires at: 1767292160087
+[debug] [2026-01-01T19:00:05.128Z] > refreshing access token with scopes: []
+[debug] [2026-01-01T19:00:05.128Z] >>> [apiv2][query] POST https://www.googleapis.com/oauth2/v3/token [none]
+[debug] [2026-01-01T19:00:05.128Z] >>> [apiv2][body] POST https://www.googleapis.com/oauth2/v3/token [omitted]
+[debug] [2026-01-01T19:00:05.226Z] <<< [apiv2][status] POST https://www.googleapis.com/oauth2/v3/token 200
+[debug] [2026-01-01T19:00:05.226Z] <<< [apiv2][body] POST https://www.googleapis.com/oauth2/v3/token [omitted]
+[debug] [2026-01-01T19:00:05.242Z] >>> [apiv2][query] GET https://cloudbilling.googleapis.com/v1/projects/gametwo-89299/billingInfo [none]
+[debug] [2026-01-01T19:00:05.247Z] <<< [apiv2][status] POST https://www.googleapis.com/oauth2/v3/token 200
+[debug] [2026-01-01T19:00:05.247Z] <<< [apiv2][body] POST https://www.googleapis.com/oauth2/v3/token [omitted]
+[debug] [2026-01-01T19:00:05.257Z] >>> [apiv2][query] GET https://cloudbilling.googleapis.com/v1/projects/gametwo-89299/billingInfo [none]
+[debug] [2026-01-01T19:00:05.258Z] <<< [apiv2][status] POST https://www.googleapis.com/oauth2/v3/token 200
+[debug] [2026-01-01T19:00:05.258Z] <<< [apiv2][body] POST https://www.googleapis.com/oauth2/v3/token [omitted]
+[debug] [2026-01-01T19:00:05.269Z] >>> [apiv2][query] GET https://cloudbilling.googleapis.com/v1/projects/gametwo-89299/billingInfo [none]
+[debug] [2026-01-01T19:00:06.335Z] <<< [apiv2][status] GET https://cloudbilling.googleapis.com/v1/projects/gametwo-89299/billingInfo 200
+[debug] [2026-01-01T19:00:06.335Z] <<< [apiv2][body] GET https://cloudbilling.googleapis.com/v1/projects/gametwo-89299/billingInfo {"name":"projects/gametwo-89299/billingInfo","projectId":"gametwo-89299","billingAccountName":"","billingEnabled":false}
+[debug] [2026-01-01T19:00:06.342Z] Checked if tokens are valid: true, expires at: 1767297604258
+[debug] [2026-01-01T19:00:06.342Z] Checked if tokens are valid: true, expires at: 1767297604258
+[debug] [2026-01-01T19:00:06.342Z] Checked if tokens are valid: true, expires at: 1767297604258
+[debug] [2026-01-01T19:00:06.342Z] Checked if tokens are valid: true, expires at: 1767297604258
+[debug] [2026-01-01T19:00:06.342Z] Checked if tokens are valid: true, expires at: 1767297604258
+[debug] [2026-01-01T19:00:06.343Z] Checked if tokens are valid: true, expires at: 1767297604258
+[debug] [2026-01-01T19:00:06.349Z] Checked if tokens are valid: true, expires at: 1767297604258
+[debug] [2026-01-01T19:00:06.349Z] Checked if tokens are valid: true, expires at: 1767297604258
+[debug] [2026-01-01T19:00:06.349Z] Checked if tokens are valid: true, expires at: 1767297604258
+[debug] [2026-01-01T19:00:06.349Z] Checked if tokens are valid: true, expires at: 1767297604258
+[debug] [2026-01-01T19:00:06.349Z] >>> [apiv2][query] GET https://serviceusage.googleapis.com/v1/projects/gametwo-89299/services/firestore.googleapis.com [none]
+[debug] [2026-01-01T19:00:06.349Z] >>> [apiv2][(partial)header] GET https://serviceusage.googleapis.com/v1/projects/gametwo-89299/services/firestore.googleapis.com x-goog-quota-user=projects/gametwo-89299
+[debug] [2026-01-01T19:00:06.350Z] >>> [apiv2][query] GET https://serviceusage.googleapis.com/v1/projects/gametwo-89299/services/firebasedataconnect.googleapis.com [none]
+[debug] [2026-01-01T19:00:06.350Z] >>> [apiv2][(partial)header] GET https://serviceusage.googleapis.com/v1/projects/gametwo-89299/services/firebasedataconnect.googleapis.com x-goog-quota-user=projects/gametwo-89299
+[debug] [2026-01-01T19:00:06.350Z] >>> [apiv2][query] GET https://serviceusage.googleapis.com/v1/projects/gametwo-89299/services/cloudfunctions.googleapis.com [none]
+[debug] [2026-01-01T19:00:06.350Z] >>> [apiv2][(partial)header] GET https://serviceusage.googleapis.com/v1/projects/gametwo-89299/services/cloudfunctions.googleapis.com x-goog-quota-user=projects/gametwo-89299
+[debug] [2026-01-01T19:00:06.350Z] >>> [apiv2][query] GET https://serviceusage.googleapis.com/v1/projects/gametwo-89299/services/firebaseapphosting.googleapis.com [none]
+[debug] [2026-01-01T19:00:06.350Z] >>> [apiv2][(partial)header] GET https://serviceusage.googleapis.com/v1/projects/gametwo-89299/services/firebaseapphosting.googleapis.com x-goog-quota-user=projects/gametwo-89299
+[debug] [2026-01-01T19:00:06.351Z] >>> [apiv2][query] GET https://serviceusage.googleapis.com/v1/projects/gametwo-89299/services/firebaseio.com [none]
+[debug] [2026-01-01T19:00:06.351Z] >>> [apiv2][(partial)header] GET https://serviceusage.googleapis.com/v1/projects/gametwo-89299/services/firebaseio.com x-goog-quota-user=projects/gametwo-89299
+[debug] [2026-01-01T19:00:06.578Z] <<< [apiv2][status] GET https://cloudbilling.googleapis.com/v1/projects/gametwo-89299/billingInfo 200
+[debug] [2026-01-01T19:00:06.579Z] <<< [apiv2][body] GET https://cloudbilling.googleapis.com/v1/projects/gametwo-89299/billingInfo {"name":"projects/gametwo-89299/billingInfo","projectId":"gametwo-89299","billingAccountName":"","billingEnabled":false}
+[debug] [2026-01-01T19:00:06.579Z] Checked if tokens are valid: true, expires at: 1767297604258
+[debug] [2026-01-01T19:00:06.579Z] Checked if tokens are valid: true, expires at: 1767297604258
+[debug] [2026-01-01T19:00:06.579Z] Checked if tokens are valid: true, expires at: 1767297604258
+[debug] [2026-01-01T19:00:06.579Z] Checked if tokens are valid: true, expires at: 1767297604258
+[debug] [2026-01-01T19:00:06.579Z] Checked if tokens are valid: true, expires at: 1767297604258
+[debug] [2026-01-01T19:00:06.579Z] Checked if tokens are valid: true, expires at: 1767297604258
+[debug] [2026-01-01T19:00:06.580Z] Checked if tokens are valid: true, expires at: 1767297604258
+[debug] [2026-01-01T19:00:06.580Z] Checked if tokens are valid: true, expires at: 1767297604258
+[debug] [2026-01-01T19:00:06.580Z] Checked if tokens are valid: true, expires at: 1767297604258
+[debug] [2026-01-01T19:00:06.580Z] Checked if tokens are valid: true, expires at: 1767297604258
+[debug] [2026-01-01T19:00:06.580Z] >>> [apiv2][query] GET https://serviceusage.googleapis.com/v1/projects/gametwo-89299/services/firestore.googleapis.com [none]
+[debug] [2026-01-01T19:00:06.580Z] >>> [apiv2][(partial)header] GET https://serviceusage.googleapis.com/v1/projects/gametwo-89299/services/firestore.googleapis.com x-goog-quota-user=projects/gametwo-89299
+[debug] [2026-01-01T19:00:06.581Z] >>> [apiv2][query] GET https://serviceusage.googleapis.com/v1/projects/gametwo-89299/services/firebasedataconnect.googleapis.com [none]
+[debug] [2026-01-01T19:00:06.581Z] >>> [apiv2][(partial)header] GET https://serviceusage.googleapis.com/v1/projects/gametwo-89299/services/firebasedataconnect.googleapis.com x-goog-quota-user=projects/gametwo-89299
+[debug] [2026-01-01T19:00:06.582Z] >>> [apiv2][query] GET https://serviceusage.googleapis.com/v1/projects/gametwo-89299/services/cloudfunctions.googleapis.com [none]
+[debug] [2026-01-01T19:00:06.582Z] >>> [apiv2][(partial)header] GET https://serviceusage.googleapis.com/v1/projects/gametwo-89299/services/cloudfunctions.googleapis.com x-goog-quota-user=projects/gametwo-89299
+[debug] [2026-01-01T19:00:06.582Z] >>> [apiv2][query] GET https://serviceusage.googleapis.com/v1/projects/gametwo-89299/services/firebaseapphosting.googleapis.com [none]
+[debug] [2026-01-01T19:00:06.583Z] >>> [apiv2][(partial)header] GET https://serviceusage.googleapis.com/v1/projects/gametwo-89299/services/firebaseapphosting.googleapis.com x-goog-quota-user=projects/gametwo-89299
+[debug] [2026-01-01T19:00:06.583Z] >>> [apiv2][query] GET https://serviceusage.googleapis.com/v1/projects/gametwo-89299/services/firebaseio.com [none]
+[debug] [2026-01-01T19:00:06.583Z] >>> [apiv2][(partial)header] GET https://serviceusage.googleapis.com/v1/projects/gametwo-89299/services/firebaseio.com x-goog-quota-user=projects/gametwo-89299
+[debug] [2026-01-01T19:00:07.108Z] <<< [apiv2][status] GET https://cloudbilling.googleapis.com/v1/projects/gametwo-89299/billingInfo 200
+[debug] [2026-01-01T19:00:07.108Z] <<< [apiv2][body] GET https://cloudbilling.googleapis.com/v1/projects/gametwo-89299/billingInfo {"name":"projects/gametwo-89299/billingInfo","projectId":"gametwo-89299","billingAccountName":"","billingEnabled":false}
+[debug] [2026-01-01T19:00:07.108Z] Checked if tokens are valid: true, expires at: 1767297604258
+[debug] [2026-01-01T19:00:07.108Z] Checked if tokens are valid: true, expires at: 1767297604258
+[debug] [2026-01-01T19:00:07.108Z] Checked if tokens are valid: true, expires at: 1767297604258
+[debug] [2026-01-01T19:00:07.108Z] Checked if tokens are valid: true, expires at: 1767297604258
+[debug] [2026-01-01T19:00:07.108Z] Checked if tokens are valid: true, expires at: 1767297604258
+[debug] [2026-01-01T19:00:07.108Z] Checked if tokens are valid: true, expires at: 1767297604258
+[debug] [2026-01-01T19:00:07.111Z] Checked if tokens are valid: true, expires at: 1767297604258
+[debug] [2026-01-01T19:00:07.111Z] Checked if tokens are valid: true, expires at: 1767297604258
+[debug] [2026-01-01T19:00:07.111Z] Checked if tokens are valid: true, expires at: 1767297604258
+[debug] [2026-01-01T19:00:07.111Z] Checked if tokens are valid: true, expires at: 1767297604258
+[debug] [2026-01-01T19:00:07.112Z] >>> [apiv2][query] GET https://serviceusage.googleapis.com/v1/projects/gametwo-89299/services/firestore.googleapis.com [none]
+[debug] [2026-01-01T19:00:07.112Z] >>> [apiv2][(partial)header] GET https://serviceusage.googleapis.com/v1/projects/gametwo-89299/services/firestore.googleapis.com x-goog-quota-user=projects/gametwo-89299
+[debug] [2026-01-01T19:00:07.113Z] >>> [apiv2][query] GET https://serviceusage.googleapis.com/v1/projects/gametwo-89299/services/firebasedataconnect.googleapis.com [none]
+[debug] [2026-01-01T19:00:07.113Z] >>> [apiv2][(partial)header] GET https://serviceusage.googleapis.com/v1/projects/gametwo-89299/services/firebasedataconnect.googleapis.com x-goog-quota-user=projects/gametwo-89299
+[debug] [2026-01-01T19:00:07.114Z] >>> [apiv2][query] GET https://serviceusage.googleapis.com/v1/projects/gametwo-89299/services/cloudfunctions.googleapis.com [none]
+[debug] [2026-01-01T19:00:07.114Z] >>> [apiv2][(partial)header] GET https://serviceusage.googleapis.com/v1/projects/gametwo-89299/services/cloudfunctions.googleapis.com x-goog-quota-user=projects/gametwo-89299
+[debug] [2026-01-01T19:00:07.115Z] >>> [apiv2][query] GET https://serviceusage.googleapis.com/v1/projects/gametwo-89299/services/firebaseapphosting.googleapis.com [none]
+[debug] [2026-01-01T19:00:07.115Z] >>> [apiv2][(partial)header] GET https://serviceusage.googleapis.com/v1/projects/gametwo-89299/services/firebaseapphosting.googleapis.com x-goog-quota-user=projects/gametwo-89299
+[debug] [2026-01-01T19:00:07.115Z] >>> [apiv2][query] GET https://serviceusage.googleapis.com/v1/projects/gametwo-89299/services/firebaseio.com [none]
+[debug] [2026-01-01T19:00:07.115Z] >>> [apiv2][(partial)header] GET https://serviceusage.googleapis.com/v1/projects/gametwo-89299/services/firebaseio.com x-goog-quota-user=projects/gametwo-89299
+[debug] [2026-01-01T19:00:08.155Z] <<< [apiv2][status] GET https://serviceusage.googleapis.com/v1/projects/gametwo-89299/services/firebasedataconnect.googleapis.com 200
+[debug] [2026-01-01T19:00:08.155Z] <<< [apiv2][body] GET https://serviceusage.googleapis.com/v1/projects/gametwo-89299/services/firebasedataconnect.googleapis.com [omitted]
+[debug] [2026-01-01T19:00:08.156Z] <<< [apiv2][status] GET https://serviceusage.googleapis.com/v1/projects/gametwo-89299/services/firestore.googleapis.com 200
+[debug] [2026-01-01T19:00:08.156Z] <<< [apiv2][body] GET https://serviceusage.googleapis.com/v1/projects/gametwo-89299/services/firestore.googleapis.com [omitted]
+[debug] [2026-01-01T19:00:08.157Z] <<< [apiv2][status] GET https://serviceusage.googleapis.com/v1/projects/gametwo-89299/services/firebasedataconnect.googleapis.com 200
+[debug] [2026-01-01T19:00:08.157Z] <<< [apiv2][body] GET https://serviceusage.googleapis.com/v1/projects/gametwo-89299/services/firebasedataconnect.googleapis.com [omitted]
+[debug] [2026-01-01T19:00:08.157Z] <<< [apiv2][status] GET https://serviceusage.googleapis.com/v1/projects/gametwo-89299/services/firebaseio.com 403
+[debug] [2026-01-01T19:00:08.157Z] <<< [apiv2][body] GET https://serviceusage.googleapis.com/v1/projects/gametwo-89299/services/firebaseio.com [omitted]
+[debug] [2026-01-01T19:00:08.158Z] <<< [apiv2][status] GET https://serviceusage.googleapis.com/v1/projects/gametwo-89299/services/cloudfunctions.googleapis.com 200
+[debug] [2026-01-01T19:00:08.158Z] <<< [apiv2][body] GET https://serviceusage.googleapis.com/v1/projects/gametwo-89299/services/cloudfunctions.googleapis.com [omitted]
+[debug] [2026-01-01T19:00:08.158Z] <<< [apiv2][status] GET https://serviceusage.googleapis.com/v1/projects/gametwo-89299/services/firebaseio.com 403
+[debug] [2026-01-01T19:00:08.158Z] <<< [apiv2][body] GET https://serviceusage.googleapis.com/v1/projects/gametwo-89299/services/firebaseio.com [omitted]
+[debug] [2026-01-01T19:00:08.194Z] <<< [apiv2][status] GET https://serviceusage.googleapis.com/v1/projects/gametwo-89299/services/firebaseapphosting.googleapis.com 200
+[debug] [2026-01-01T19:00:08.194Z] <<< [apiv2][body] GET https://serviceusage.googleapis.com/v1/projects/gametwo-89299/services/firebaseapphosting.googleapis.com [omitted]
+[debug] [2026-01-01T19:00:08.196Z] <<< [apiv2][status] GET https://serviceusage.googleapis.com/v1/projects/gametwo-89299/services/cloudfunctions.googleapis.com 200
+[debug] [2026-01-01T19:00:08.197Z] <<< [apiv2][body] GET https://serviceusage.googleapis.com/v1/projects/gametwo-89299/services/cloudfunctions.googleapis.com [omitted]
+[debug] [2026-01-01T19:00:08.210Z] <<< [apiv2][status] GET https://serviceusage.googleapis.com/v1/projects/gametwo-89299/services/firestore.googleapis.com 200
+[debug] [2026-01-01T19:00:08.210Z] <<< [apiv2][body] GET https://serviceusage.googleapis.com/v1/projects/gametwo-89299/services/firestore.googleapis.com [omitted]
+[debug] [2026-01-01T19:00:08.212Z] > command requires scopes: ["email","openid","https://www.googleapis.com/auth/cloudplatformprojects.readonly","https://www.googleapis.com/auth/firebase","https://www.googleapis.com/auth/cloud-platform"]
+[debug] [2026-01-01T19:00:08.212Z] > authorizing via signed-in user (mattias.myhrman@gmail.com)
+[debug] [2026-01-01T19:00:08.212Z] Checked if tokens are valid: true, expires at: 1767297604258
+[debug] [2026-01-01T19:00:08.212Z] Checked if tokens are valid: true, expires at: 1767297604258
+[debug] [2026-01-01T19:00:08.212Z] >>> [apiv2][query] GET https://cloudbilling.googleapis.com/v1/projects/gametwo-89299/billingInfo [none]
+[debug] [2026-01-01T19:00:08.219Z] <<< [apiv2][status] GET https://serviceusage.googleapis.com/v1/projects/gametwo-89299/services/firebaseapphosting.googleapis.com 200
+[debug] [2026-01-01T19:00:08.219Z] <<< [apiv2][body] GET https://serviceusage.googleapis.com/v1/projects/gametwo-89299/services/firebaseapphosting.googleapis.com [omitted]
+[debug] [2026-01-01T19:00:08.495Z] <<< [apiv2][status] GET https://serviceusage.googleapis.com/v1/projects/gametwo-89299/services/firebaseio.com 403
+[debug] [2026-01-01T19:00:08.495Z] <<< [apiv2][body] GET https://serviceusage.googleapis.com/v1/projects/gametwo-89299/services/firebaseio.com [omitted]
+[debug] [2026-01-01T19:00:08.530Z] <<< [apiv2][status] GET https://serviceusage.googleapis.com/v1/projects/gametwo-89299/services/firebasedataconnect.googleapis.com 200
+[debug] [2026-01-01T19:00:08.530Z] <<< [apiv2][body] GET https://serviceusage.googleapis.com/v1/projects/gametwo-89299/services/firebasedataconnect.googleapis.com [omitted]
+[debug] [2026-01-01T19:00:08.537Z] <<< [apiv2][status] GET https://serviceusage.googleapis.com/v1/projects/gametwo-89299/services/firestore.googleapis.com 200
+[debug] [2026-01-01T19:00:08.537Z] <<< [apiv2][body] GET https://serviceusage.googleapis.com/v1/projects/gametwo-89299/services/firestore.googleapis.com [omitted]
+[debug] [2026-01-01T19:00:08.546Z] <<< [apiv2][status] GET https://serviceusage.googleapis.com/v1/projects/gametwo-89299/services/firebaseapphosting.googleapis.com 200
+[debug] [2026-01-01T19:00:08.546Z] <<< [apiv2][body] GET https://serviceusage.googleapis.com/v1/projects/gametwo-89299/services/firebaseapphosting.googleapis.com [omitted]
+[debug] [2026-01-01T19:00:08.551Z] <<< [apiv2][status] GET https://serviceusage.googleapis.com/v1/projects/gametwo-89299/services/cloudfunctions.googleapis.com 200
+[debug] [2026-01-01T19:00:08.551Z] <<< [apiv2][body] GET https://serviceusage.googleapis.com/v1/projects/gametwo-89299/services/cloudfunctions.googleapis.com [omitted]
+[debug] [2026-01-01T19:00:08.552Z] > command requires scopes: ["email","openid","https://www.googleapis.com/auth/cloudplatformprojects.readonly","https://www.googleapis.com/auth/firebase","https://www.googleapis.com/auth/cloud-platform"]
+[debug] [2026-01-01T19:00:08.552Z] > authorizing via signed-in user (mattias.myhrman@gmail.com)
+[debug] [2026-01-01T19:00:08.553Z] Checked if tokens are valid: true, expires at: 1767297604258
+[debug] [2026-01-01T19:00:08.553Z] Checked if tokens are valid: true, expires at: 1767297604258
+[debug] [2026-01-01T19:00:08.553Z] >>> [apiv2][query] GET https://cloudbilling.googleapis.com/v1/projects/gametwo-89299/billingInfo [none]
+[debug] [2026-01-01T19:00:08.991Z] <<< [apiv2][status] GET https://cloudbilling.googleapis.com/v1/projects/gametwo-89299/billingInfo 200
+[debug] [2026-01-01T19:00:08.991Z] <<< [apiv2][body] GET https://cloudbilling.googleapis.com/v1/projects/gametwo-89299/billingInfo {"name":"projects/gametwo-89299/billingInfo","projectId":"gametwo-89299","billingAccountName":"","billingEnabled":false}
+[debug] [2026-01-01T19:00:12.563Z] <<< [apiv2][status] GET https://cloudbilling.googleapis.com/v1/projects/gametwo-89299/billingInfo 200
+[debug] [2026-01-01T19:00:12.563Z] <<< [apiv2][body] GET https://cloudbilling.googleapis.com/v1/projects/gametwo-89299/billingInfo {"name":"projects/gametwo-89299/billingInfo","projectId":"gametwo-89299","billingAccountName":"","billingEnabled":false}
+[debug] [2026-01-01T19:00:12.655Z] > command requires scopes: ["email","openid","https://www.googleapis.com/auth/cloudplatformprojects.readonly","https://www.googleapis.com/auth/firebase","https://www.googleapis.com/auth/cloud-platform"]
+[debug] [2026-01-01T19:00:12.655Z] > authorizing via signed-in user (mattias.myhrman@gmail.com)
+[debug] [2026-01-01T19:00:12.874Z] > command requires scopes: ["email","openid","https://www.googleapis.com/auth/cloudplatformprojects.readonly","https://www.googleapis.com/auth/firebase","https://www.googleapis.com/auth/cloud-platform"]
+[debug] [2026-01-01T19:00:12.874Z] > authorizing via signed-in user (mattias.myhrman@gmail.com)
+[debug] [2026-01-01T19:00:15.046Z] > command requires scopes: ["email","openid","https://www.googleapis.com/auth/cloudplatformprojects.readonly","https://www.googleapis.com/auth/firebase","https://www.googleapis.com/auth/cloud-platform"]
+[debug] [2026-01-01T19:00:15.048Z] > authorizing via signed-in user (mattias.myhrman@gmail.com)
+[debug] [2026-01-01T19:00:15.048Z] > command requires scopes: ["email","openid","https://www.googleapis.com/auth/cloudplatformprojects.readonly","https://www.googleapis.com/auth/firebase","https://www.googleapis.com/auth/cloud-platform"]
+[debug] [2026-01-01T19:00:15.049Z] > authorizing via signed-in user (mattias.myhrman@gmail.com)
+[debug] [2026-01-01T19:00:15.050Z] Checked if tokens are valid: true, expires at: 1767297604258
+[debug] [2026-01-01T19:00:15.050Z] Checked if tokens are valid: true, expires at: 1767297604258
+[debug] [2026-01-01T19:00:15.050Z] Checked if tokens are valid: true, expires at: 1767297604258
+[debug] [2026-01-01T19:00:15.050Z] Checked if tokens are valid: true, expires at: 1767297604258
+[debug] [2026-01-01T19:00:15.050Z] > command requires scopes: ["email","openid","https://www.googleapis.com/auth/cloudplatformprojects.readonly","https://www.googleapis.com/auth/firebase","https://www.googleapis.com/auth/cloud-platform"]
+[debug] [2026-01-01T19:00:15.050Z] > authorizing via signed-in user (mattias.myhrman@gmail.com)
+[debug] [2026-01-01T19:00:15.051Z] >>> [apiv2][query] GET https://cloudbilling.googleapis.com/v1/projects/gametwo-89299/billingInfo [none]
+[debug] [2026-01-01T19:00:15.075Z] >>> [apiv2][query] GET https://cloudbilling.googleapis.com/v1/projects/gametwo-89299/billingInfo [none]
+[debug] [2026-01-01T19:00:15.076Z] Checked if tokens are valid: true, expires at: 1767297604258
+[debug] [2026-01-01T19:00:15.076Z] Checked if tokens are valid: true, expires at: 1767297604258
+[debug] [2026-01-01T19:00:15.076Z] >>> [apiv2][query] GET https://cloudbilling.googleapis.com/v1/projects/gametwo-89299/billingInfo [none]
+[debug] [2026-01-01T19:00:15.907Z] <<< [apiv2][status] GET https://cloudbilling.googleapis.com/v1/projects/gametwo-89299/billingInfo 200
+[debug] [2026-01-01T19:00:15.907Z] <<< [apiv2][body] GET https://cloudbilling.googleapis.com/v1/projects/gametwo-89299/billingInfo {"name":"projects/gametwo-89299/billingInfo","projectId":"gametwo-89299","billingAccountName":"","billingEnabled":false}
+[debug] [2026-01-01T19:00:15.913Z] Checked if tokens are valid: true, expires at: 1767297604258
+[debug] [2026-01-01T19:00:15.913Z] Checked if tokens are valid: true, expires at: 1767297604258
+[debug] [2026-01-01T19:00:15.914Z] Checked if tokens are valid: true, expires at: 1767297604258
+[debug] [2026-01-01T19:00:15.914Z] Checked if tokens are valid: true, expires at: 1767297604258
+[debug] [2026-01-01T19:00:15.914Z] Checked if tokens are valid: true, expires at: 1767297604258
+[debug] [2026-01-01T19:00:15.914Z] Checked if tokens are valid: true, expires at: 1767297604258
+[debug] [2026-01-01T19:00:15.920Z] Checked if tokens are valid: true, expires at: 1767297604258
+[debug] [2026-01-01T19:00:15.920Z] Checked if tokens are valid: true, expires at: 1767297604258
+[debug] [2026-01-01T19:00:15.920Z] Checked if tokens are valid: true, expires at: 1767297604258
+[debug] [2026-01-01T19:00:15.920Z] Checked if tokens are valid: true, expires at: 1767297604258
+[debug] [2026-01-01T19:00:15.920Z] >>> [apiv2][query] GET https://serviceusage.googleapis.com/v1/projects/gametwo-89299/services/firestore.googleapis.com [none]
+[debug] [2026-01-01T19:00:15.920Z] >>> [apiv2][(partial)header] GET https://serviceusage.googleapis.com/v1/projects/gametwo-89299/services/firestore.googleapis.com x-goog-quota-user=projects/gametwo-89299
+[debug] [2026-01-01T19:00:15.920Z] >>> [apiv2][query] GET https://serviceusage.googleapis.com/v1/projects/gametwo-89299/services/firebasedataconnect.googleapis.com [none]
+[debug] [2026-01-01T19:00:15.920Z] >>> [apiv2][(partial)header] GET https://serviceusage.googleapis.com/v1/projects/gametwo-89299/services/firebasedataconnect.googleapis.com x-goog-quota-user=projects/gametwo-89299
+[debug] [2026-01-01T19:00:15.921Z] >>> [apiv2][query] GET https://serviceusage.googleapis.com/v1/projects/gametwo-89299/services/cloudfunctions.googleapis.com [none]
+[debug] [2026-01-01T19:00:15.921Z] >>> [apiv2][(partial)header] GET https://serviceusage.googleapis.com/v1/projects/gametwo-89299/services/cloudfunctions.googleapis.com x-goog-quota-user=projects/gametwo-89299
+[debug] [2026-01-01T19:00:15.921Z] >>> [apiv2][query] GET https://serviceusage.googleapis.com/v1/projects/gametwo-89299/services/firebaseapphosting.googleapis.com [none]
+[debug] [2026-01-01T19:00:15.921Z] >>> [apiv2][(partial)header] GET https://serviceusage.googleapis.com/v1/projects/gametwo-89299/services/firebaseapphosting.googleapis.com x-goog-quota-user=projects/gametwo-89299
+[debug] [2026-01-01T19:00:15.922Z] >>> [apiv2][query] GET https://serviceusage.googleapis.com/v1/projects/gametwo-89299/services/firebaseio.com [none]
+[debug] [2026-01-01T19:00:15.922Z] >>> [apiv2][(partial)header] GET https://serviceusage.googleapis.com/v1/projects/gametwo-89299/services/firebaseio.com x-goog-quota-user=projects/gametwo-89299
+[debug] [2026-01-01T19:00:16.298Z] <<< [apiv2][status] GET https://cloudbilling.googleapis.com/v1/projects/gametwo-89299/billingInfo 200
+[debug] [2026-01-01T19:00:16.298Z] <<< [apiv2][body] GET https://cloudbilling.googleapis.com/v1/projects/gametwo-89299/billingInfo {"name":"projects/gametwo-89299/billingInfo","projectId":"gametwo-89299","billingAccountName":"","billingEnabled":false}
+[debug] [2026-01-01T19:00:16.298Z] Checked if tokens are valid: true, expires at: 1767297604258
+[debug] [2026-01-01T19:00:16.298Z] Checked if tokens are valid: true, expires at: 1767297604258
+[debug] [2026-01-01T19:00:16.299Z] Checked if tokens are valid: true, expires at: 1767297604258
+[debug] [2026-01-01T19:00:16.299Z] Checked if tokens are valid: true, expires at: 1767297604258
+[debug] [2026-01-01T19:00:16.299Z] Checked if tokens are valid: true, expires at: 1767297604258
+[debug] [2026-01-01T19:00:16.299Z] Checked if tokens are valid: true, expires at: 1767297604258
+[debug] [2026-01-01T19:00:16.300Z] Checked if tokens are valid: true, expires at: 1767297604258
+[debug] [2026-01-01T19:00:16.300Z] Checked if tokens are valid: true, expires at: 1767297604258
+[debug] [2026-01-01T19:00:16.300Z] Checked if tokens are valid: true, expires at: 1767297604258
+[debug] [2026-01-01T19:00:16.300Z] Checked if tokens are valid: true, expires at: 1767297604258
+[debug] [2026-01-01T19:00:16.300Z] >>> [apiv2][query] GET https://serviceusage.googleapis.com/v1/projects/gametwo-89299/services/firestore.googleapis.com [none]
+[debug] [2026-01-01T19:00:16.300Z] >>> [apiv2][(partial)header] GET https://serviceusage.googleapis.com/v1/projects/gametwo-89299/services/firestore.googleapis.com x-goog-quota-user=projects/gametwo-89299
+[debug] [2026-01-01T19:00:16.301Z] >>> [apiv2][query] GET https://serviceusage.googleapis.com/v1/projects/gametwo-89299/services/firebasedataconnect.googleapis.com [none]
+[debug] [2026-01-01T19:00:16.301Z] >>> [apiv2][(partial)header] GET https://serviceusage.googleapis.com/v1/projects/gametwo-89299/services/firebasedataconnect.googleapis.com x-goog-quota-user=projects/gametwo-89299
+[debug] [2026-01-01T19:00:16.302Z] >>> [apiv2][query] GET https://serviceusage.googleapis.com/v1/projects/gametwo-89299/services/cloudfunctions.googleapis.com [none]
+[debug] [2026-01-01T19:00:16.302Z] >>> [apiv2][(partial)header] GET https://serviceusage.googleapis.com/v1/projects/gametwo-89299/services/cloudfunctions.googleapis.com x-goog-quota-user=projects/gametwo-89299
+[debug] [2026-01-01T19:00:16.303Z] >>> [apiv2][query] GET https://serviceusage.googleapis.com/v1/projects/gametwo-89299/services/firebaseapphosting.googleapis.com [none]
+[debug] [2026-01-01T19:00:16.303Z] >>> [apiv2][(partial)header] GET https://serviceusage.googleapis.com/v1/projects/gametwo-89299/services/firebaseapphosting.googleapis.com x-goog-quota-user=projects/gametwo-89299
+[debug] [2026-01-01T19:00:16.303Z] >>> [apiv2][query] GET https://serviceusage.googleapis.com/v1/projects/gametwo-89299/services/firebaseio.com [none]
+[debug] [2026-01-01T19:00:16.303Z] >>> [apiv2][(partial)header] GET https://serviceusage.googleapis.com/v1/projects/gametwo-89299/services/firebaseio.com x-goog-quota-user=projects/gametwo-89299
+[debug] [2026-01-01T19:00:16.847Z] <<< [apiv2][status] GET https://cloudbilling.googleapis.com/v1/projects/gametwo-89299/billingInfo 200
+[debug] [2026-01-01T19:00:16.847Z] <<< [apiv2][body] GET https://cloudbilling.googleapis.com/v1/projects/gametwo-89299/billingInfo {"name":"projects/gametwo-89299/billingInfo","projectId":"gametwo-89299","billingAccountName":"","billingEnabled":false}
+[debug] [2026-01-01T19:00:16.848Z] Checked if tokens are valid: true, expires at: 1767297604258
+[debug] [2026-01-01T19:00:16.848Z] Checked if tokens are valid: true, expires at: 1767297604258
+[debug] [2026-01-01T19:00:16.848Z] Checked if tokens are valid: true, expires at: 1767297604258
+[debug] [2026-01-01T19:00:16.848Z] Checked if tokens are valid: true, expires at: 1767297604258
+[debug] [2026-01-01T19:00:16.848Z] Checked if tokens are valid: true, expires at: 1767297604258
+[debug] [2026-01-01T19:00:16.848Z] Checked if tokens are valid: true, expires at: 1767297604258
+[debug] [2026-01-01T19:00:16.849Z] Checked if tokens are valid: true, expires at: 1767297604258
+[debug] [2026-01-01T19:00:16.849Z] Checked if tokens are valid: true, expires at: 1767297604258
+[debug] [2026-01-01T19:00:16.849Z] Checked if tokens are valid: true, expires at: 1767297604258
+[debug] [2026-01-01T19:00:16.849Z] Checked if tokens are valid: true, expires at: 1767297604258
+[debug] [2026-01-01T19:00:16.849Z] >>> [apiv2][query] GET https://serviceusage.googleapis.com/v1/projects/gametwo-89299/services/firestore.googleapis.com [none]
+[debug] [2026-01-01T19:00:16.849Z] >>> [apiv2][(partial)header] GET https://serviceusage.googleapis.com/v1/projects/gametwo-89299/services/firestore.googleapis.com x-goog-quota-user=projects/gametwo-89299
+[debug] [2026-01-01T19:00:16.850Z] >>> [apiv2][query] GET https://serviceusage.googleapis.com/v1/projects/gametwo-89299/services/firebasedataconnect.googleapis.com [none]
+[debug] [2026-01-01T19:00:16.850Z] >>> [apiv2][(partial)header] GET https://serviceusage.googleapis.com/v1/projects/gametwo-89299/services/firebasedataconnect.googleapis.com x-goog-quota-user=projects/gametwo-89299
+[debug] [2026-01-01T19:00:16.851Z] >>> [apiv2][query] GET https://serviceusage.googleapis.com/v1/projects/gametwo-89299/services/cloudfunctions.googleapis.com [none]
+[debug] [2026-01-01T19:00:16.851Z] >>> [apiv2][(partial)header] GET https://serviceusage.googleapis.com/v1/projects/gametwo-89299/services/cloudfunctions.googleapis.com x-goog-quota-user=projects/gametwo-89299
+[debug] [2026-01-01T19:00:16.851Z] >>> [apiv2][query] GET https://serviceusage.googleapis.com/v1/projects/gametwo-89299/services/firebaseapphosting.googleapis.com [none]
+[debug] [2026-01-01T19:00:16.851Z] >>> [apiv2][(partial)header] GET https://serviceusage.googleapis.com/v1/projects/gametwo-89299/services/firebaseapphosting.googleapis.com x-goog-quota-user=projects/gametwo-89299
+[debug] [2026-01-01T19:00:16.851Z] >>> [apiv2][query] GET https://serviceusage.googleapis.com/v1/projects/gametwo-89299/services/firebaseio.com [none]
+[debug] [2026-01-01T19:00:16.851Z] >>> [apiv2][(partial)header] GET https://serviceusage.googleapis.com/v1/projects/gametwo-89299/services/firebaseio.com x-goog-quota-user=projects/gametwo-89299
+[debug] [2026-01-01T19:00:17.423Z] <<< [apiv2][status] GET https://serviceusage.googleapis.com/v1/projects/gametwo-89299/services/firebaseio.com 403
+[debug] [2026-01-01T19:00:17.424Z] <<< [apiv2][body] GET https://serviceusage.googleapis.com/v1/projects/gametwo-89299/services/firebaseio.com [omitted]
+[debug] [2026-01-01T19:00:17.467Z] <<< [apiv2][status] GET https://serviceusage.googleapis.com/v1/projects/gametwo-89299/services/firebaseapphosting.googleapis.com 200
+[debug] [2026-01-01T19:00:17.467Z] <<< [apiv2][body] GET https://serviceusage.googleapis.com/v1/projects/gametwo-89299/services/firebaseapphosting.googleapis.com [omitted]
+[debug] [2026-01-01T19:00:17.507Z] <<< [apiv2][status] GET https://serviceusage.googleapis.com/v1/projects/gametwo-89299/services/firebasedataconnect.googleapis.com 200
+[debug] [2026-01-01T19:00:17.507Z] <<< [apiv2][body] GET https://serviceusage.googleapis.com/v1/projects/gametwo-89299/services/firebasedataconnect.googleapis.com [omitted]
+[debug] [2026-01-01T19:00:17.507Z] <<< [apiv2][status] GET https://serviceusage.googleapis.com/v1/projects/gametwo-89299/services/firebasedataconnect.googleapis.com 200
+[debug] [2026-01-01T19:00:17.507Z] <<< [apiv2][body] GET https://serviceusage.googleapis.com/v1/projects/gametwo-89299/services/firebasedataconnect.googleapis.com [omitted]
+[debug] [2026-01-01T19:00:17.507Z] <<< [apiv2][status] GET https://serviceusage.googleapis.com/v1/projects/gametwo-89299/services/cloudfunctions.googleapis.com 200
+[debug] [2026-01-01T19:00:17.508Z] <<< [apiv2][body] GET https://serviceusage.googleapis.com/v1/projects/gametwo-89299/services/cloudfunctions.googleapis.com [omitted]
+[debug] [2026-01-01T19:00:17.508Z] <<< [apiv2][status] GET https://serviceusage.googleapis.com/v1/projects/gametwo-89299/services/firestore.googleapis.com 200
+[debug] [2026-01-01T19:00:17.508Z] <<< [apiv2][body] GET https://serviceusage.googleapis.com/v1/projects/gametwo-89299/services/firestore.googleapis.com [omitted]
+[debug] [2026-01-01T19:00:17.509Z] > command requires scopes: ["email","openid","https://www.googleapis.com/auth/cloudplatformprojects.readonly","https://www.googleapis.com/auth/firebase","https://www.googleapis.com/auth/cloud-platform"]
+[debug] [2026-01-01T19:00:17.509Z] > authorizing via signed-in user (mattias.myhrman@gmail.com)
+[debug] [2026-01-01T19:00:17.509Z] Checked if tokens are valid: true, expires at: 1767297604258
+[debug] [2026-01-01T19:00:17.509Z] Checked if tokens are valid: true, expires at: 1767297604258
+[debug] [2026-01-01T19:00:17.509Z] >>> [apiv2][query] GET https://cloudbilling.googleapis.com/v1/projects/gametwo-89299/billingInfo [none]
+[debug] [2026-01-01T19:00:17.510Z] <<< [apiv2][status] GET https://serviceusage.googleapis.com/v1/projects/gametwo-89299/services/firebaseio.com 403
+[debug] [2026-01-01T19:00:17.510Z] <<< [apiv2][body] GET https://serviceusage.googleapis.com/v1/projects/gametwo-89299/services/firebaseio.com [omitted]
+[debug] [2026-01-01T19:00:17.510Z] <<< [apiv2][status] GET https://serviceusage.googleapis.com/v1/projects/gametwo-89299/services/firebaseapphosting.googleapis.com 200
+[debug] [2026-01-01T19:00:17.510Z] <<< [apiv2][body] GET https://serviceusage.googleapis.com/v1/projects/gametwo-89299/services/firebaseapphosting.googleapis.com [omitted]
+[debug] [2026-01-01T19:00:17.511Z] <<< [apiv2][status] GET https://serviceusage.googleapis.com/v1/projects/gametwo-89299/services/cloudfunctions.googleapis.com 200
+[debug] [2026-01-01T19:00:17.511Z] <<< [apiv2][body] GET https://serviceusage.googleapis.com/v1/projects/gametwo-89299/services/cloudfunctions.googleapis.com [omitted]
+[debug] [2026-01-01T19:00:17.511Z] <<< [apiv2][status] GET https://serviceusage.googleapis.com/v1/projects/gametwo-89299/services/firestore.googleapis.com 200
+[debug] [2026-01-01T19:00:17.511Z] <<< [apiv2][body] GET https://serviceusage.googleapis.com/v1/projects/gametwo-89299/services/firestore.googleapis.com [omitted]
+[debug] [2026-01-01T19:00:17.819Z] <<< [apiv2][status] GET https://serviceusage.googleapis.com/v1/projects/gametwo-89299/services/firebaseio.com 403
+[debug] [2026-01-01T19:00:17.819Z] <<< [apiv2][body] GET https://serviceusage.googleapis.com/v1/projects/gametwo-89299/services/firebaseio.com [omitted]
+[debug] [2026-01-01T19:00:17.921Z] <<< [apiv2][status] GET https://serviceusage.googleapis.com/v1/projects/gametwo-89299/services/firebaseapphosting.googleapis.com 200
+[debug] [2026-01-01T19:00:17.921Z] <<< [apiv2][body] GET https://serviceusage.googleapis.com/v1/projects/gametwo-89299/services/firebaseapphosting.googleapis.com [omitted]
+[debug] [2026-01-01T19:00:17.924Z] <<< [apiv2][status] GET https://serviceusage.googleapis.com/v1/projects/gametwo-89299/services/cloudfunctions.googleapis.com 200
+[debug] [2026-01-01T19:00:17.924Z] <<< [apiv2][body] GET https://serviceusage.googleapis.com/v1/projects/gametwo-89299/services/cloudfunctions.googleapis.com [omitted]
+[debug] [2026-01-01T19:00:17.936Z] <<< [apiv2][status] GET https://serviceusage.googleapis.com/v1/projects/gametwo-89299/services/firebasedataconnect.googleapis.com 200
+[debug] [2026-01-01T19:00:17.936Z] <<< [apiv2][body] GET https://serviceusage.googleapis.com/v1/projects/gametwo-89299/services/firebasedataconnect.googleapis.com [omitted]
+[debug] [2026-01-01T19:00:17.940Z] <<< [apiv2][status] GET https://serviceusage.googleapis.com/v1/projects/gametwo-89299/services/firestore.googleapis.com 200
+[debug] [2026-01-01T19:00:17.940Z] <<< [apiv2][body] GET https://serviceusage.googleapis.com/v1/projects/gametwo-89299/services/firestore.googleapis.com [omitted]
+[debug] [2026-01-01T19:00:17.941Z] > command requires scopes: ["email","openid","https://www.googleapis.com/auth/cloudplatformprojects.readonly","https://www.googleapis.com/auth/firebase","https://www.googleapis.com/auth/cloud-platform"]
+[debug] [2026-01-01T19:00:17.941Z] > authorizing via signed-in user (mattias.myhrman@gmail.com)
+[debug] [2026-01-01T19:00:17.941Z] Checked if tokens are valid: true, expires at: 1767297604258
+[debug] [2026-01-01T19:00:17.941Z] Checked if tokens are valid: true, expires at: 1767297604258
+[debug] [2026-01-01T19:00:17.941Z] >>> [apiv2][query] GET https://cloudbilling.googleapis.com/v1/projects/gametwo-89299/billingInfo [none]
+[debug] [2026-01-01T19:00:18.329Z] <<< [apiv2][status] GET https://cloudbilling.googleapis.com/v1/projects/gametwo-89299/billingInfo 200
+[debug] [2026-01-01T19:00:18.329Z] <<< [apiv2][body] GET https://cloudbilling.googleapis.com/v1/projects/gametwo-89299/billingInfo {"name":"projects/gametwo-89299/billingInfo","projectId":"gametwo-89299","billingAccountName":"","billingEnabled":false}
+[debug] [2026-01-01T19:00:22.052Z] <<< [apiv2][status] GET https://cloudbilling.googleapis.com/v1/projects/gametwo-89299/billingInfo 200
+[debug] [2026-01-01T19:00:22.053Z] <<< [apiv2][body] GET https://cloudbilling.googleapis.com/v1/projects/gametwo-89299/billingInfo {"name":"projects/gametwo-89299/billingInfo","projectId":"gametwo-89299","billingAccountName":"","billingEnabled":false}
+[debug] [2026-01-01T19:00:22.054Z] > command requires scopes: ["email","openid","https://www.googleapis.com/auth/cloudplatformprojects.readonly","https://www.googleapis.com/auth/firebase","https://www.googleapis.com/auth/cloud-platform"]
+[debug] [2026-01-01T19:00:22.054Z] > authorizing via signed-in user (mattias.myhrman@gmail.com)
+[debug] [2026-01-01T19:00:22.371Z] > command requires scopes: ["email","openid","https://www.googleapis.com/auth/cloudplatformprojects.readonly","https://www.googleapis.com/auth/firebase","https://www.googleapis.com/auth/cloud-platform"]
+[debug] [2026-01-01T19:00:22.371Z] > authorizing via signed-in user (mattias.myhrman@gmail.com)

@@ -4,6 +4,7 @@
   "configs": [
     "firebase-analytics-tests",
     "firebase-cpp-layer",
+    "firebase-remote-config-layer",
     "firebase-backend-layer",
     "firebase-rtdb-layer",
     "firebase-rate-limiter-validation",

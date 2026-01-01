@@ -3,10 +3,10 @@ id: task-400
 title: >-
   Upgrade Firebase Remote Config C++ to match database.h patterns and add
   GDScript service layer
-status: To Do
+status: Done
 assignee: []
 created_date: '2025-12-30 21:26'
-updated_date: '2026-01-01 14:09'
+updated_date: '2026-01-01 17:36'
 labels:
   - firebase
   - remote-config
@@ -14,9 +14,8 @@ labels:
   - testing
 dependencies:
   - task-403
-  - task-399
   - task-406
-priority: medium
+priority: high
 ---
 
 ## Description

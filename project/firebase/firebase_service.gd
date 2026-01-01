@@ -10,6 +10,7 @@ var _next_request_id: int = 1
 var _pending_requests: Dictionary = {}
 var _rate_limiter: RefCounted
 var analytics: AnalyticsService  # Analytics service instance
+var remote_config: RemoteConfigService  # Remote Config service instance
 
 
 func _ready() -> void:
@@ -171,6 +172,36 @@ func get_analytics() -> AnalyticsService:
 		)
 
 	return analytics
+
+
+func get_remote_config() -> RemoteConfigService:
+	# Lazy initialization of Remote Config service
+	if remote_config == null:
+		if not ClassDB.class_exists("FirebaseRemoteConfig"):
+			Log.error(
+				"FirebaseRemoteConfig C++ module not available",
+				{"platform": OS.get_name()},
+				[Log.TAG_FIREBASE, Log.TAG_ERROR]
+			)
+			return null
+
+		var cpp_remote_config: Object = ClassDB.instantiate("FirebaseRemoteConfig")
+		if not is_instance_valid(cpp_remote_config):
+			Log.error(
+				"Failed to instantiate FirebaseRemoteConfig C++ module",
+				{},
+				[Log.TAG_FIREBASE, Log.TAG_ERROR]
+			)
+			return null
+
+		remote_config = RemoteConfigService.new(cpp_remote_config)
+		Log.info(
+			"RemoteConfigService created",
+			{},
+			[Log.TAG_FIREBASE, Log.TAG_INITIALIZATION]
+		)
+
+	return remote_config
 
 
 func get_value(path: Array[Variant], key: String = "") -> FirebaseRequest:

@@ -1,0 +1,7 @@
+{
+  "description": "Firebase Remote Config C++ layer - All remote configuration tests including fetch, activation, value retrieval, and JSON parsing",
+  "actions": [
+    "cpp.firebase.remote_config.*"
+  ],
+  "platforms": ["android", "ios", "macos", "windows", "windows-physical"]
+}
