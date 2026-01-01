@@ -1,6 +1,6 @@
 # Justfile Architecture Guide
 
-**CRITICAL BUSINESS INFRASTRUCTURE** - 22,000+ lines across 40 modules powering GameTwo development.
+**CRITICAL BUSINESS INFRASTRUCTURE** - 22,000+ lines across 41 modules powering GameTwo development.
 
 This document ensures correct recipe selection during development, testing, and deployment workflows.
 
@@ -148,6 +148,25 @@ This document ensures correct recipe selection during development, testing, and 
 - **When to Use**:
   - macOS-specific testing with exported app
   - Cross-platform validation alongside Android/desktop
+
+#### `justfile-build-export-test.justfile`
+- **Purpose**: Unified build-export-test workflows across all platforms
+- **Critical Recipes**:
+  - `build-export-test-android [CONFIG]` - Rebuild → export → deploy → test (Android)
+  - `build-export-test-ios [CONFIG]` - Rebuild → build → deploy → test (iOS)
+  - `build-export-test-macos [CONFIG]` - Rebuild → export → test (macOS)
+  - `build-export-test-windows [CONFIG]` - VM sync → rebuild → package → export → deploy → test (Windows)
+  - `build-export-test-all [CONFIG]` - All platforms with unified summary
+- **Workflow**: Each recipe rebuilds templates, exports app, deploys (if applicable), and runs tests
+- **When to Use**:
+  - Full rebuild + test validation after C++ module changes
+  - Cross-platform Firebase SDK validation
+  - Release preparation (ensure all platforms build and test)
+- **Key Features**:
+  - Reuses existing rebuild recipes (DRY principle)
+  - Bash 3.2 compatible (macOS default shell)
+  - Per-platform logs with unified summary
+  - Optional CONFIG argument for specific tests
 
 ---
 
@@ -527,7 +546,8 @@ justfile (main entry)
     │   ├─→ justfile-platform-android.justfile
     │   ├─→ justfile-platform-ios.justfile
     │   ├─→ justfile-platform-macos.justfile
-    │   └─→ justfile-platform-windows.justfile
+    │   ├─→ justfile-platform-windows.justfile
+    │   └─→ justfile-build-export-test.justfile
     │
     ├─→ TESTING & VALIDATION
     │   ├─→ justfile-testing-core.justfile
@@ -592,6 +612,8 @@ justfile (main entry)
 | Full Android build | `just build-all-android` | 3-25 min | Release builds, first-time setup |
 | iOS build | `just build-install-ios` | 2-5 min | iOS development, deployment |
 | Templates only | `just build-android-templates` | 3-15 min | C++ changes without full build |
+| Full rebuild + test (single platform) | `just build-export-test-{platform}` | 5-30 min | Full validation after C++ changes |
+| Full rebuild + test (all platforms) | `just build-export-test-all` | 20-45 min | Cross-platform Firebase validation |
 
 ### **I need to test...**
 

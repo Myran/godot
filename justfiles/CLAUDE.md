@@ -206,6 +206,8 @@ just log-run-silent test-android-target CONFIG  # Automated testing
 - `just fastbuild-android` - Smart rebuild (15-60 sec, REQUIRED)
 - `just build-all-android` - Android pipeline (3-25 min)
 - `just build` - Complete pipeline (46 min)
+- `just build-export-test-all [CONFIG]` - Full rebuild + test (all platforms, 20-45 min)
+- `just build-export-test-{android,ios,macos,windows} [CONFIG]` - Platform rebuild + test
 
 **Config:**
 - `just config-restart-android ACTION` - Deploy + restart (5 sec)
