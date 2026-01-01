@@ -6,7 +6,7 @@ title: >-
 status: To Do
 assignee: []
 created_date: '2025-12-30 21:26'
-updated_date: '2025-12-31 11:53'
+updated_date: '2026-01-01 14:08'
 labels:
   - firebase
   - auth
@@ -138,6 +138,8 @@ The current auth.cpp works for Facebook and Apple sign-in. Changes must:
 - [ ] #14 #14 Request ID tracking for concurrent auth operations (std::map<int, PendingAuthRequest>)
 - [ ] #15 #15 AuthStateListener properly cleaned up in destructor
 - [ ] #16 #16 Use FirebaseRequest pattern (not raw signal indexing) for type-safe async handling
+
+- [ ] #17 Add firebase-auth-tests to firebase-all.json so tests run with `just test`
 <!-- AC:END -->
 
 ## Implementation Plan

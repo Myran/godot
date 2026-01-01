@@ -1,10 +1,10 @@
 ---
 id: task-406
 title: Implement Firebase SDK Test Suite for TDD Development
-status: To Do
+status: Done
 assignee: []
 created_date: '2025-12-31 11:52'
-updated_date: '2025-12-31 16:30'
+updated_date: '2026-01-01 14:05'
 labels:
   - firebase
   - testing
@@ -260,18 +260,18 @@ None - complete FIRST before implementation tasks.
 
 ## Acceptance Criteria
 <!-- AC:BEGIN -->
-- [ ] #1 Test infrastructure base class (FirebaseTestActionBase) with assertions and platform gating
-- [ ] #2 Analytics feature tests created (6 tests: log_event x2, set_user_id, set_user_property, collection_enabled, reset_data)
-- [ ] #3 Auth feature tests created (8 tests: sign_in_anonymous, custom_token, email, get_id_token, sign_out, get_uid, is_logged_in, state_changed)
-- [ ] #4 Remote Config feature tests created (8 tests: get_boolean/string/int, fetch_and_activate, fetch_async, activate_async, get_keys, set_defaults)
-- [ ] #5 Firestore feature tests created (5 tests: document_get, set, update, delete, query)
-- [ ] #6 Steam feature tests created (4 tests: init, get_ticket, sign_in_flow, no_client_error) with platform gating
-- [ ] #7 Test configurations created (firebase-feature-tests.json + 5 service configs + master list)
-- [ ] #8 Test strategy document (doc-005) defines environment, cleanup, platform rules, when to add tests
-- [ ] #9 All feature tests initially FAIL (verify TDD red phase)
-- [ ] #10 Cross-platform test configs for Android, desktop, macOS, Windows
+- [x] #1 Test infrastructure base class (FirebaseTestActionBase) with assertions and platform gating
+- [x] #2 Analytics feature tests created (6 tests: log_event x2, set_user_id, set_user_property, collection_enabled, reset_data)
+- [x] #3 Auth feature tests created (8 tests: sign_in_anonymous, custom_token, email, get_id_token, sign_out, get_uid, is_logged_in, state_changed)
+- [x] #4 Remote Config feature tests created (8 tests: get_boolean/string/int, fetch_and_activate, fetch_async, activate_async, get_keys, set_defaults)
+- [x] #5 Firestore feature tests created (5 tests: document_get, set, update, delete, query)
+- [x] #6 Steam feature tests created (4 tests: init, get_ticket, sign_in_flow, no_client_error) with platform gating
+- [x] #7 Test configurations created (firebase-feature-tests.json + 5 service configs + master list)
+- [x] #8 Test strategy document (doc-005) defines environment, cleanup, platform rules, when to add tests
+- [x] #9 All feature tests initially FAIL (verify TDD red phase)
+- [x] #10 Cross-platform test configs for Android, desktop, macOS, Windows
 
-- [ ] #11 Total: 31 tests covering all public API methods
+- [x] #11 Total: 31 tests covering all public API methods
 <!-- AC:END -->
 
 ## Implementation Plan

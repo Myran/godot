@@ -2,6 +2,7 @@
   "name": "Firebase All Testing",
   "description": "Complete Firebase validation - all layers, network connectivity, error handling and performance with enhanced granular backend testing",
   "configs": [
+    "firebase-analytics-tests",
     "firebase-cpp-layer",
     "firebase-backend-layer",
     "firebase-rtdb-layer",

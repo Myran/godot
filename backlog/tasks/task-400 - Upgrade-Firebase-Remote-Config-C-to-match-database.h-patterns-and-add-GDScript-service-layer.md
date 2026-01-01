@@ -6,7 +6,7 @@ title: >-
 status: To Do
 assignee: []
 created_date: '2025-12-30 21:26'
-updated_date: '2025-12-31 11:53'
+updated_date: '2026-01-01 14:09'
 labels:
   - firebase
   - remote-config
@@ -141,6 +141,8 @@ The current remote_config.cpp works for basic fetch and value retrieval. Changes
 - [ ] #12 #12 Shutdown safety with is_shutting_down flag preventing callbacks during cleanup
 - [ ] #13 #13 Fetch interval throttling enforced (12-hour minimum in production, configurable for dev)
 - [ ] #14 #14 SDK version verified to support real-time config listener (v11.0.0+ required, or feature removed)
+
+- [ ] #15 Add firebase-remote-config-tests to firebase-all.json so tests run with `just test`
 <!-- AC:END -->
 
 ## Implementation Plan

@@ -6,7 +6,7 @@ title: >-
 status: Done
 assignee: []
 created_date: '2025-12-30 21:26'
-updated_date: '2025-12-31 22:58'
+updated_date: '2026-01-01 14:05'
 labels:
   - firebase
   - analytics
@@ -95,23 +95,23 @@ Analytics is simpler - mostly synchronous fire-and-forget calls:
 
 ## Acceptance Criteria
 <!-- AC:BEGIN -->
-- [ ] #1 C++ FirebaseAnalytics class with thread-safe singleton pattern
-- [ ] #2 Event logging works with custom parameters
-- [ ] #3 User property setting works correctly
-- [ ] #4 User ID tracking for cross-device analytics
-- [ ] #5 Predefined event helpers for common game events
-- [ ] #6 Analytics collection toggle for privacy controls
-- [ ] #7 AnalyticsService GDScript wrapper with validation
-- [ ] #8 AnalyticsBackend provides game-specific event helpers
-- [ ] #9 5+ debug actions covering events, properties, predefined events
-- [ ] #10 Test configurations for all platforms (Android, iOS, macOS, Windows)
-- [ ] #11 Cross-platform testing passes on at least Android and desktop
-- [ ] #12 Parameter validation follows Firebase naming rules
+- [x] #1 C++ FirebaseAnalytics class with thread-safe singleton pattern
+- [x] #2 Event logging works with custom parameters
+- [x] #3 User property setting works correctly
+- [x] #4 User ID tracking for cross-device analytics
+- [x] #5 Predefined event helpers for common game events
+- [x] #6 Analytics collection toggle for privacy controls
+- [x] #7 AnalyticsService GDScript wrapper with validation
+- [x] #8 AnalyticsBackend provides game-specific event helpers
+- [x] #9 5+ debug actions covering events, properties, predefined events
+- [x] #10 Test configurations for all platforms (Android, iOS, macOS, Windows)
+- [x] #11 Cross-platform testing passes on at least Android and desktop
+- [x] #12 Parameter validation follows Firebase naming rules
 
-- [ ] #13 #13 C++ layer contains ONLY generic methods (log_event, set_user_property, set_user_id)
-- [ ] #14 #14 Game-specific event helpers (battle_start, card_played) implemented in GDScript, NOT C++
-- [ ] #15 #15 Debug mode for Firebase DebugView implemented (platform-specific flags)
-- [ ] #16 #16 Thread-safe singleton pattern matching database.h
+- [x] #13 #13 C++ layer contains ONLY generic methods (log_event, set_user_property, set_user_id)
+- [x] #14 #14 Game-specific event helpers (battle_start, card_played) implemented in GDScript, NOT C++
+- [x] #15 #15 Debug mode for Firebase DebugView implemented (platform-specific flags)
+- [x] #16 #16 Thread-safe singleton pattern matching database.h
 <!-- AC:END -->
 
 ## Implementation Plan

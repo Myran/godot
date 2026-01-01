@@ -4,7 +4,7 @@ title: Implement Cloud Firestore C++ module and GDScript integration
 status: To Do
 assignee: []
 created_date: '2025-12-30 21:26'
-updated_date: '2025-12-31 11:53'
+updated_date: '2026-01-01 14:09'
 labels:
   - firebase
   - firestore
@@ -113,6 +113,8 @@ Follow database.h/cpp patterns:
 - [ ] #16 #16 Offline persistence explicitly configured (enabled with size limits OR disabled)
 - [ ] #17 #17 Thread-safe singleton pattern matching database.h
 - [ ] #18 #18 Shutdown safety with is_shutting_down flag
+
+- [ ] #19 Add firebase-firestore-tests to firebase-all.json so tests run with `just test`
 <!-- AC:END -->
 
 ## Implementation Plan
