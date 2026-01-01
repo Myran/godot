@@ -2,7 +2,7 @@
 
 @./ARCHITECTURE.md
 
-<!-- ARCHITECTURE.md provides deep dive into 39 justfile modules, dependency graph, and recipe selection matrix -->
+<!-- ARCHITECTURE.md provides deep dive into 41 justfile modules, dependency graph, and recipe selection matrix -->
 
 Complete reference for GameTwo justfile commands, patterns, and workflows.
 
@@ -239,27 +239,6 @@ just log-run-silent test-android-target CONFIG  # Automated testing
 - Performance issues: `just test-android '*.*.performance'`
 - **Fastbuild validation**: `just logs-android-device "FASTBUILD_VALIDATION_TEST"`
 
-## 📋 Android Device Logs
-
-**Live Monitoring:**
-- `just android-logs-errors 30` - Error monitoring (30s)
-- `just android-logs-tagged "firebase" 30 50` - Tag filtering
-- `just android-logs-status` - Device & app status
-
-## 🔧 Testing Modes
-
-**Automated:**
-- `just test-android-target CONFIG` - Enhanced with validation
-- `just test-desktop-target CONFIG` - Cross-platform testing
-- `just test-macos-target CONFIG` - macOS testing (exported app)
-- `just test-windows-physical-target CONFIG` - Windows physical (GUI mode)
-
-**Manual:**
-- `just test-android-manual CONFIG` - Android inspection
-- `just test-desktop-manual CONFIG` - Desktop inspection
-- `just test-macos-manual CONFIG` - macOS inspection
-- `just test-windows-physical-manual CONFIG` - Windows physical inspection
-
 ## 🎯 Pattern Examples
 
 **Layer patterns:**
@@ -298,12 +277,12 @@ just log-run-silent test-android-target CONFIG  # Automated testing
 
 ## 📱 Android Configuration
 
-**Debug configs (9 active):**
+**Debug configs:**
 - `battle-logic-only` - Battle without effects
 - `firebase-cpp-layer` - C++ Firebase SDK
 - `system-layer-all` - Complete system utilities
 - `production-ready` - Release validation
-- Use `just config-list` for complete list
+- 100+ configs available - Use `just config-list` for complete list
 
 **Logger control:**
 - `just config-android-tags "firebase,battle" "cache"` - Focus/filter
@@ -326,6 +305,7 @@ just log-run-silent test-android-target CONFIG  # Automated testing
 - `just help-logs` - Log analysis
 - `just help-build` - Build system
 - `just help-workflows` - Workflow patterns
+- `just help-build-export-test` - Build-export-test recipes
 
 > 💡 **Claude can read `just help` output directly** - use for detailed explanations.
 
@@ -362,7 +342,7 @@ just log-run-silent test-android-target CONFIG  # Automated testing
 ---
 
 **See Also:**
-- `justfiles/ARCHITECTURE.md` - Deep justfile module architecture (39 modules)
+- `justfiles/ARCHITECTURE.md` - Deep justfile module architecture (41 modules)
 - `project/CLAUDE.md` - GDScript patterns and game code
 - `tests/CLAUDE.md` - Testing infrastructure
 - `godot/modules/firebase/CLAUDE.md` - Firebase C++ module
