@@ -1,6 +1,6 @@
 # Justfile Architecture Guide
 
-**CRITICAL BUSINESS INFRASTRUCTURE** - 22,000+ lines across 41 modules powering GameTwo development.
+**CRITICAL BUSINESS INFRASTRUCTURE** - 22,000+ lines across 44 modules powering GameTwo development.
 
 This document ensures correct recipe selection during development, testing, and deployment workflows.
 
@@ -400,8 +400,15 @@ This document ensures correct recipe selection during development, testing, and 
 #### `justfile-native-ios-sentry.justfile`
 - **Purpose**: iOS native Sentry SDK
 
+#### `justfile-native-macos-sentry.justfile`
+- **Purpose**: macOS native Sentry SDK (built into Godot executable via SCons)
+
 #### `justfile-native-windows-sentry.justfile`
 - **Purpose**: Windows native Sentry SDK
+
+#### `justfile-native-windows-template-sentry.justfile`
+- **Purpose**: Native Windows template Sentry (C++ crashes in Godot template, distinct from GDExtension)
+- **Key Difference**: Native Sentry captures C++ crashes, GDExtension captures script-level crashes
 
 #### `justfile-sentry-test.justfile`
 - **Purpose**: Sentry integration testing
@@ -423,6 +430,15 @@ This document ensures correct recipe selection during development, testing, and 
 
 #### `justfile-support.justfile`
 - **Purpose**: Support utilities and diagnostics
+
+#### `justfile-backlog.justfile`
+- **Purpose**: Task management via backlog.md CLI
+- **Critical Recipes**:
+  - `backlog-todo` - List all To Do tasks
+  - `backlog-in-progress` - List tasks in progress
+  - `backlog-my-tasks` - Show tasks assigned to @claude
+  - `backlog-high-priority` - Show high priority tasks
+- **Integration**: Wraps `backlog` CLI commands for project health tracking
 
 ---
 
@@ -590,12 +606,15 @@ justfile (main entry)
     │   ├─→ justfile-gdscript-sentry.justfile
     │   ├─→ justfile-native-android-sentry.justfile
     │   ├─→ justfile-native-ios-sentry.justfile
+    │   ├─→ justfile-native-macos-sentry.justfile
     │   ├─→ justfile-native-windows-sentry.justfile
+    │   ├─→ justfile-native-windows-template-sentry.justfile
     │   └─→ justfile-sentry-test.justfile
     │
     └─→ SUPPORT & DOCUMENTATION
         ├─→ justfile-help.justfile
-        └─→ justfile-support.justfile
+        ├─→ justfile-support.justfile
+        └─→ justfile-backlog.justfile
 ```
 
 ---

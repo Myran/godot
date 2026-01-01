@@ -342,7 +342,7 @@ just log-run-silent test-android-target CONFIG  # Automated testing
 ---
 
 **See Also:**
-- `justfiles/ARCHITECTURE.md` - Deep justfile module architecture (41 modules)
+- `justfiles/ARCHITECTURE.md` - Deep justfile module architecture (44 modules)
 - `project/CLAUDE.md` - GDScript patterns and game code
 - `tests/CLAUDE.md` - Testing infrastructure
 - `godot/modules/firebase/CLAUDE.md` - Firebase C++ module
