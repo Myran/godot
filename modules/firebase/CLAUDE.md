@@ -18,6 +18,7 @@ godot/modules/firebase/
 ├── firebase_common.cpp    # Shared Firebase logic (ALL platforms)
 ├── firebase_platform.mm   # Platform-specific init (Android/iOS/macOS)
 ├── firebase_windows.cpp   # Platform-specific init (Windows MSVC)
+├── analytics.h/cpp        # Analytics service (ALL platforms) ✨ NEW
 ├── auth.h                 # Authentication header
 ├── auth.cpp               # Authentication service (ALL platforms)
 ├── database.h/cpp         # Realtime Database service
@@ -400,7 +401,60 @@ void background_thread_func() {
 
 ### **Memory Management**
 
-**Firebase objects lifetime:**
+#### **String UTF-8 Lifetime Pattern (CRITICAL)**
+
+**Root Cause**: `String::utf8().get_data()` creates a **dangling pointer**.
+
+```cpp
+// ❌ CRASHES - Dangling pointer!
+// String::utf8() returns a temporary CharString.
+// get_data() points into that temporary.
+// When temporary is destroyed, pointer becomes invalid.
+const char* cstr = string_name.utf8().get_data();
+firebase::analytics::LogEvent(cstr);  // CRASH: pointer invalid
+
+// ✅ CORRECT - Store CharString to extend lifetime
+CharString cs = string_name.utf8();     // CharString lives in this scope
+firebase::analytics::LogEvent(cs.get_data());  // Pointer valid through call
+```
+
+**Why This Matters**:
+- **Android JNI**: Strict UTF-8 validation (`Modified UTF-8` format). Dangling pointers read garbage bytes that fail JNI validation.
+- **Desktop**: More lenient - may work randomly but will crash eventually.
+- **Firebase SDK**: Reads string data asynchronously - pointer must remain valid.
+
+**Pattern for All Functions**:
+```cpp
+void log_event(const String& event_name, const Dictionary& params) {
+    // Store CharStrings to extend lifetime
+    CharString event_cs = event_name.utf8();
+
+    // Convert params (store each CharString)
+    std::vector<firebase::analytics::Parameter> fb_params;
+    for (const KeyValue& kv : params) {
+        String key_str = kv.key;
+        String value_str = kv.value;
+        CharString key_cs = key_str.utf8();
+        CharString value_cs = value_str.utf8();
+        fb_params.push_back(firebase::analytics::Parameter(
+            key_cs.get_data(),
+            value_cs.get_data()
+        ));
+    }
+
+    // Now safe to call Firebase SDK
+    firebase::analytics::LogEvent(event_cs.get_data(), fb_params.data(), fb_params.size());
+}
+```
+
+**Functions Affected** (must ALL follow this pattern):
+- `log_event()`, `log_event_string()`, `log_event_int()`, `log_event_double()`, `log_event_params()`
+- `set_user_property()`, `set_user_id()`
+- `_convert_dict_to_parameters()` - parameter dictionary conversion
+
+**Reference**: Fixed in `analytics.cpp` (task-402, 2025-12-31)
+
+#### **Firebase Objects Lifetime**
 ```cpp
 // ✅ CORRECT - Keep Firebase objects alive
 class FirebaseService {

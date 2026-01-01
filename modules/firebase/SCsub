@@ -5,6 +5,7 @@ print("Firebase SCsub: platform=" + env['platform'] + ", arch=" + env['arch'])
 
 # Shared C++ source files (all platforms)
 # These contain platform-agnostic logic
+env.add_source_files(env.modules_sources, "analytics.cpp")       # Pure C++ - works on all platforms
 env.add_source_files(env.modules_sources, "auth.cpp")           # Pure C++ - works on all platforms
 env.add_source_files(env.modules_sources, "convertor.cpp")
 env.add_source_files(env.modules_sources, "database.cpp")
