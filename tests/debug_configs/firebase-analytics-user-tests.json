@@ -1,0 +1,9 @@
+{
+  "description": "Firebase Analytics user tests only",
+  "actions": [
+    "test.analytics.set_user_id",
+    "test.analytics.set_user_property"
+  ],
+  "platforms": ["android"],
+  "tags": ["firebase", "analytics", "tdd"]
+}

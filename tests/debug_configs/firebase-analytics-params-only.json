@@ -1,0 +1,8 @@
+{
+  "description": "Firebase Analytics params test",
+  "actions": [
+    "test.analytics.log_event_params"
+  ],
+  "platforms": ["android"],
+  "tags": ["firebase", "analytics", "tdd"]
+}

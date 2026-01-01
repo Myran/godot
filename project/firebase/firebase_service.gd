@@ -9,6 +9,7 @@ var _is_initialized: bool = false
 var _next_request_id: int = 1
 var _pending_requests: Dictionary = {}
 var _rate_limiter: RefCounted
+var analytics: AnalyticsService  # Analytics service instance
 
 
 func _ready() -> void:
@@ -140,6 +141,36 @@ func get_database_wrapper() -> Object:
 	if not is_available():
 		return null
 	return db
+
+
+func get_analytics() -> AnalyticsService:
+	# Lazy initialization of Analytics service
+	if analytics == null:
+		if not ClassDB.class_exists("FirebaseAnalytics"):
+			Log.error(
+				"FirebaseAnalytics C++ module not available",
+				{"platform": OS.get_name()},
+				[Log.TAG_FIREBASE, Log.TAG_ERROR]
+			)
+			return null
+
+		var cpp_analytics: Object = ClassDB.instantiate("FirebaseAnalytics")
+		if not is_instance_valid(cpp_analytics):
+			Log.error(
+				"Failed to instantiate FirebaseAnalytics C++ module",
+				{},
+				[Log.TAG_FIREBASE, Log.TAG_ERROR]
+			)
+			return null
+
+		analytics = AnalyticsService.new(cpp_analytics)
+		Log.info(
+			"AnalyticsService created",
+			{},
+			[Log.TAG_FIREBASE, Log.TAG_INITIALIZATION]
+		)
+
+	return analytics
 
 
 func get_value(path: Array[Variant], key: String = "") -> FirebaseRequest:

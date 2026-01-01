@@ -114,14 +114,24 @@ static func set_user(user_dict: Dictionary) -> bool:
 	if not sentry.has_method("set_user"):
 		return false
 
-	# Create SentryUser object from Dictionary (fixes type conversion error)
-	var user: SentryUser = SentryUser.new()
-	if user_dict.has("id"):
-		user.id = user_dict.get("id", "")
-	if user_dict.has("email"):
-		user.email = user_dict.get("email", "")
-	if user_dict.has("username"):
-		user.username = user_dict.get("username", "")
+	# Create SentryUser object using ClassDB for defensive instantiation
+	# This handles the case where Sentry GDExtension is disabled
+	if not ClassDB.class_exists("SentryUser"):
+		return false
+
+	var user: RefCounted = ClassDB.instantiate("SentryUser") as RefCounted
+	if not user:
+		return false
+
+	# Set properties using property list if available, or direct access
+	if user.has_method("set_data"):
+		user.set_data(user_dict)
+	elif user_dict.has("id"):
+		user.set("id", user_dict.get("id", ""))
+		if user_dict.has("email"):
+			user.set("email", user_dict.get("email", ""))
+		if user_dict.has("username"):
+			user.set("username", user_dict.get("username", ""))
 
 	sentry.set_user(user)
 	return true

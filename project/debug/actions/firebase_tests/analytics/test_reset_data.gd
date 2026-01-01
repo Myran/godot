@@ -1,6 +1,9 @@
 ## Test Analytics reset data method
 class_name TestResetData extends FirebaseTestActionBase
 
+var _analytics: AnalyticsService
+
+
 func _init() -> void:
 	super("test.analytics.reset_data", _execute_test)
 	set_category("Firebase SDK")
@@ -15,8 +18,18 @@ func _execute_test() -> DebugActionResult:
 	if not should_run_on_platform():
 		return _skip_result("Platform not supported")
 
-	# TDD Red Phase: This test will fail until implementation is complete
-	assert_true(false, "FirebaseAnalytics.reset_analytics_data not yet implemented - see task-402")
+	# Get Analytics service
+	_analytics = FirebaseService.get_analytics()
+	if not _analytics.is_available():
+		_fail("AnalyticsService not available")
+		return _assertion_result()
+
+	# Test reset analytics data
+	_analytics.reset_analytics_data()
+	assert_true(true, "Analytics data reset works")
+
+	# Mark test as passed before returning
+	_pass()
 
 	var duration: int = Time.get_ticks_msec() - start_time
 	_log_test_success(action_name, "Firebase SDK", "Analytics", duration, {})

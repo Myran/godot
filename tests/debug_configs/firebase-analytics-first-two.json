@@ -1,0 +1,9 @@
+{
+  "description": "Firebase Analytics first 2 tests only",
+  "actions": [
+    "test.analytics.log_event_basic",
+    "test.analytics.log_event_params"
+  ],
+  "platforms": ["android"],
+  "tags": ["firebase", "analytics", "tdd"]
+}
