@@ -45,6 +45,8 @@ import "justfiles/justfile-log-cross-validation.justfile"
 import "justfiles/justfile-validation-enhanced-testing.justfile"
 import "justfiles/justfile-platform-windows.justfile"
 import "justfiles/justfile-platform-macos.justfile"
+# Build-Export-Test recipes (unified rebuild + export + test workflows)
+import "justfiles/justfile-build-export-test.justfile"
 # Windows native builds (MSVC) - NOT imported here, run directly on Windows VM:
 #   just --justfile justfiles/justfile-windows-native.justfile --working-directory . <recipe>
 # Use win-vm-* recipes from justfile-platform-windows.justfile to invoke from macOS
