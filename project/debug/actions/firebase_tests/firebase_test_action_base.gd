@@ -156,29 +156,49 @@ func _assertion_result() -> DebugActionResult:
 
 
 ## Static logging helpers for TEST_SUCCESS and TEST_FAILURE markers
+## NOTE: Matches DebugAction._log_test_success format for action result collection (Task-407)
 static func _log_test_success(test_name: String, category: String, group: String, duration_ms: int, metadata: Dictionary = {}) -> void:
+	var test_metadata: Dictionary = DebugConfigReader.get_test_metadata()
+	var config_test_id: String = DebugAction.current_test_id if DebugAction.current_test_id != "" else test_metadata.get("test_id", "")
+
+	DebugAction.test_success_count += 1  # Increment global counter for sequence numbering
+
 	Log.info(
 		"DEBUG_TEST_SUCCESS",
 		{
-			"test": test_name,
+			"test_id": config_test_id,
+			"action": test_name,  # Use "action" key for compatibility with _collect-action-results
 			"category": category,
 			"group": group,
 			"duration_ms": duration_ms,
-			"metadata": metadata
+			"params": metadata,  # Use "params" key for compatibility with _collect-action-results
+			"pid": OS.get_process_id(),
+			"sequence": DebugAction.test_success_count,
+			"timestamp": Time.get_datetime_string_from_system()
 		},
 		["debug", "test", "success"]
 	)
 
 
 static func _log_test_failure(test_name: String, category: String, group: String, reason: String, metadata: Dictionary = {}) -> void:
+	var test_metadata: Dictionary = DebugConfigReader.get_test_metadata()
+	var config_test_id: String = DebugAction.current_test_id if DebugAction.current_test_id != "" else test_metadata.get("test_id", "")
+
+	DebugAction.test_failure_count += 1  # Increment global counter for sequence numbering
+
 	Log.error(
 		"DEBUG_TEST_FAILURE",
 		{
-			"test": test_name,
+			"test_id": config_test_id,
+			"action": test_name,  # Use "action" key for compatibility with _collect-action-results
 			"category": category,
 			"group": group,
-			"reason": reason,
-			"metadata": metadata
+			"duration_ms": 0,  # Duration not available in failure path
+			"error_message": reason,
+			"params": metadata,  # Use "params" key for compatibility with _collect-action-results
+			"pid": OS.get_process_id(),
+			"sequence": DebugAction.test_failure_count,
+			"timestamp": Time.get_datetime_string_from_system().replace("T", " ").split(".")[0]
 		},
-		["debug", "test", "failure"]
+		["debug", "test", "failure", "pid", "sequence"]
 	)
