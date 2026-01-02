@@ -6,7 +6,7 @@ title: >-
 status: In Progress
 assignee: []
 created_date: '2026-01-02 19:56'
-updated_date: '2026-01-02 20:06'
+updated_date: '2026-01-02 20:11'
 labels: []
 dependencies: []
 ---
@@ -14,15 +14,21 @@ dependencies: []
 ## Description
 
 <!-- SECTION:DESCRIPTION:BEGIN -->
-iOS Remote Config returns empty/default values because Firebase Console has different parameters for iOS app.
+Root Cause: Firebase Remote Config Console has Platform condition targeting.
 
-**Root Cause:** iOS Firebase Remote Config has:
-- test_string, test_bool, test_number, test_int, test_float
+**Evidence:**
+- iOS gets: ["test_string", "test_bool", "test_number", "test_int", "test_float"]
+- Tests expect: ["max_players", "retry_count", "welcome_message", "app_name"]
+- iOS and Desktop use SAME API Key and App ID but get different values
 
-But tests expect:
-- max_players (100), retry_count (3), welcome_message ('Hello, World!'), app_name ('GameTwo')
+**Official Firebase Docs:**
+Remote Config supports 'Platform' condition rule type with values: iOS, Android, Web
+Source: https://firebase.google.com/docs/remote-config/parameters
 
-**Fix:** Add missing parameters in Firebase Remote Config Console for iOS app (App ID: 1:308611281726:ios:c1b2f39901375e7692f26f)
-
-**Note:** macOS and Android use same project but get correct values, suggesting platform-specific parameter targeting in Firebase Console.
+**Fix Required:**
+1. Go to Firebase Console → Remote Config → Conditions tab
+2. Check for Platform == iOS conditions that override default parameters
+3. Either:
+   - Remove platform-specific targeting for these parameters, OR
+   - Add max_players, retry_count, welcome_message, app_name to iOS platform condition
 <!-- SECTION:DESCRIPTION:END -->
