@@ -1,6 +1,7 @@
 ## Test Auth get_uid method
 class_name TestGetUid extends FirebaseTestActionBase
 
+
 func _init() -> void:
 	super("test.auth.get_uid", _execute_test)
 	set_category("Firebase SDK")

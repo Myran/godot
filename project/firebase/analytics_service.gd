@@ -20,11 +20,7 @@ func _init(native_analytics: FirebaseAnalytics = null) -> void:
 	if is_instance_valid(_native):
 		_native.initialize()
 		_is_initialized = _native.is_initialized()
-		Log.info(
-			"AnalyticsService initialized",
-			{},
-			[Log.TAG_FIREBASE, Log.TAG_INITIALIZATION]
-		)
+		Log.info("AnalyticsService initialized", {}, [Log.TAG_FIREBASE, Log.TAG_INITIALIZATION])
 	else:
 		Log.error(
 			"AnalyticsService: Failed to get FirebaseAnalytics native instance",
@@ -39,6 +35,7 @@ func is_available() -> bool:
 
 ## --- Core Event Logging ---
 
+
 ## Log a simple event without parameters
 func log_event(event_name: String) -> void:
 	if not is_available():
@@ -46,7 +43,9 @@ func log_event(event_name: String) -> void:
 		return
 
 	_native.log_event(event_name)
-	Log.debug("AnalyticsService: log_event - " + event_name, {"event": event_name}, [Log.TAG_FIREBASE])
+	Log.debug(
+		"AnalyticsService: log_event - " + event_name, {"event": event_name}, [Log.TAG_FIREBASE]
+	)
 
 
 ## Log an event with a single string parameter
@@ -56,7 +55,11 @@ func log_event_string(event_name: String, param_name: String, value: String) -> 
 		return
 
 	_native.log_event_string(event_name, param_name, value)
-	Log.debug("AnalyticsService: log_event_string - " + event_name, {"event": event_name, "param": param_name}, [Log.TAG_FIREBASE])
+	Log.debug(
+		"AnalyticsService: log_event_string - " + event_name,
+		{"event": event_name, "param": param_name},
+		[Log.TAG_FIREBASE]
+	)
 
 
 ## Log an event with a single int parameter
@@ -66,7 +69,11 @@ func log_event_int(event_name: String, param_name: String, value: int) -> void:
 		return
 
 	_native.log_event_int(event_name, param_name, value)
-	Log.debug("AnalyticsService: log_event_int - " + event_name, {"event": event_name, "param": param_name}, [Log.TAG_FIREBASE])
+	Log.debug(
+		"AnalyticsService: log_event_int - " + event_name,
+		{"event": event_name, "param": param_name},
+		[Log.TAG_FIREBASE]
+	)
 
 
 ## Log an event with a single float parameter
@@ -76,7 +83,11 @@ func log_event_double(event_name: String, param_name: String, value: float) -> v
 		return
 
 	_native.log_event_double(event_name, param_name, value)
-	Log.debug("AnalyticsService: log_event_double - " + event_name, {"event": event_name, "param": param_name}, [Log.TAG_FIREBASE])
+	Log.debug(
+		"AnalyticsService: log_event_double - " + event_name,
+		{"event": event_name, "param": param_name},
+		[Log.TAG_FIREBASE]
+	)
 
 
 ## Log an event with multiple parameters from Dictionary
@@ -86,10 +97,15 @@ func log_event_params(event_name: String, params: Dictionary) -> void:
 		return
 
 	_native.log_event_params(event_name, params)
-	Log.debug("AnalyticsService: log_event_params - " + event_name, {"event": event_name, "param_count": params.size()}, [Log.TAG_FIREBASE])
+	Log.debug(
+		"AnalyticsService: log_event_params - " + event_name,
+		{"event": event_name, "param_count": params.size()},
+		[Log.TAG_FIREBASE]
+	)
 
 
 ## --- User Properties ---
+
 
 ## Set a user property for segmentation
 func set_user_property(name: String, value: String) -> void:
@@ -98,10 +114,15 @@ func set_user_property(name: String, value: String) -> void:
 		return
 
 	_native.set_user_property(name, value)
-	Log.debug("AnalyticsService: set_user_property - " + name, {"property": name, "value": value}, [Log.TAG_FIREBASE])
+	Log.debug(
+		"AnalyticsService: set_user_property - " + name,
+		{"property": name, "value": value},
+		[Log.TAG_FIREBASE]
+	)
 
 
 ## --- User ID ---
+
 
 ## Set user ID for cross-device tracking
 func set_user_id(user_id: String) -> void:
@@ -115,20 +136,31 @@ func set_user_id(user_id: String) -> void:
 
 ## --- Configuration ---
 
+
 ## Enable or disable analytics collection (for privacy/GDPR)
 func set_analytics_collection_enabled(enabled: bool) -> void:
 	if not is_available():
-		Log.warning("AnalyticsService: Not available for set_analytics_collection_enabled", {}, [Log.TAG_FIREBASE])
+		Log.warning(
+			"AnalyticsService: Not available for set_analytics_collection_enabled",
+			{},
+			[Log.TAG_FIREBASE]
+		)
 		return
 
 	_native.set_analytics_collection_enabled(enabled)
-	Log.info("AnalyticsService: Collection " + ("enabled" if enabled else "disabled"), {"enabled": enabled}, [Log.TAG_FIREBASE])
+	Log.info(
+		"AnalyticsService: Collection " + ("enabled" if enabled else "disabled"),
+		{"enabled": enabled},
+		[Log.TAG_FIREBASE]
+	)
 
 
 ## Reset analytics data (clear cached data)
 func reset_analytics_data() -> void:
 	if not is_available():
-		Log.warning("AnalyticsService: Not available for reset_analytics_data", {}, [Log.TAG_FIREBASE])
+		Log.warning(
+			"AnalyticsService: Not available for reset_analytics_data", {}, [Log.TAG_FIREBASE]
+		)
 		return
 
 	_native.reset_analytics_data()
@@ -138,67 +170,58 @@ func reset_analytics_data() -> void:
 ## Set session timeout duration in milliseconds
 func set_session_timeout_duration(milliseconds: int) -> void:
 	if not is_available():
-		Log.warning("AnalyticsService: Not available for set_session_timeout_duration", {}, [Log.TAG_FIREBASE])
+		Log.warning(
+			"AnalyticsService: Not available for set_session_timeout_duration",
+			{},
+			[Log.TAG_FIREBASE]
+		)
 		return
 
 	_native.set_session_timeout_duration(milliseconds)
-	Log.debug("AnalyticsService: Session timeout set to " + str(milliseconds) + "ms", {"ms": milliseconds}, [Log.TAG_FIREBASE])
+	Log.debug(
+		"AnalyticsService: Session timeout set to " + str(milliseconds) + "ms",
+		{"ms": milliseconds},
+		[Log.TAG_FIREBASE]
+	)
 
 
 ## --- Game-Specific Event Helpers ---
 ## These provide convenient wrappers for common game analytics events
 
+
 ## Track when a player starts a battle
 func track_battle_start(battle_type: String, level: int) -> void:
-	log_event_params("battle_start", {
-		"type": battle_type,
-		"level": level
-	})
+	log_event_params("battle_start", {"type": battle_type, "level": level})
 
 
 ## Track when a player ends a battle (win or lose)
 func track_battle_end(battle_type: String, level: int, victory: bool, score: int) -> void:
-	log_event_params("battle_end", {
-		"type": battle_type,
-		"level": level,
-		"victory": victory,
-		"score": score
-	})
+	log_event_params(
+		"battle_end", {"type": battle_type, "level": level, "victory": victory, "score": score}
+	)
 
 
 ## Track when a card is played
 func track_card_played(card_id: String, card_name: String, level: int) -> void:
-	log_event_params("card_played", {
-		"id": card_id,
-		"name": card_name,
-		"level": level
-	})
+	log_event_params("card_played", {"id": card_id, "name": card_name, "level": level})
 
 
 ## Track when a level is completed
 func track_level_complete(level: int, stars: int) -> void:
-	log_event_params("level_complete", {
-		"level": level,
-		"stars": stars
-	})
+	log_event_params("level_complete", {"level": level, "stars": stars})
 
 
 ## Track when a level is failed
 func track_level_failed(level: int, attempts: int) -> void:
-	log_event_params("level_failed", {
-		"level": level,
-		"attempts": attempts
-	})
+	log_event_params("level_failed", {"level": level, "attempts": attempts})
 
 
 ## Track when a player makes a purchase
 func track_purchase(item_id: String, item_name: String, value: float, currency: String) -> void:
-	log_event_params("purchase", {
-		"item_id": item_id,
-		"item_name": item_name,
-		"value": value,
-		"currency": currency
-	})
+	log_event_params(
+		"purchase",
+		{"item_id": item_id, "item_name": item_name, "value": value, "currency": currency}
+	)
 
 
 ## Track tutorial begin
@@ -213,17 +236,12 @@ func track_tutorial_complete() -> void:
 
 ## Track achievement unlock
 func track_achievement_unlock(achievement_id: String) -> void:
-	log_event_params(EVENT_UNLOCK_ACHIEVEMENT, {
-		PARAM_ACHIEVEMENT_ID: achievement_id
-	})
+	log_event_params(EVENT_UNLOCK_ACHIEVEMENT, {PARAM_ACHIEVEMENT_ID: achievement_id})
 
 
 ## Track score post
 func track_post_score(score: int, level: int) -> void:
-	log_event_params(EVENT_POST_SCORE, {
-		PARAM_SCORE: score,
-		PARAM_LEVEL: level
-	})
+	log_event_params(EVENT_POST_SCORE, {PARAM_SCORE: score, PARAM_LEVEL: level})
 
 
 ## Track level up
@@ -252,9 +270,7 @@ func track_login(method: String = "") -> void:
 
 ## Track sign up
 func track_sign_up(method: String) -> void:
-	log_event_params(EVENT_SIGN_UP, {
-		PARAM_SIGN_UP_METHOD: method
-	})
+	log_event_params(EVENT_SIGN_UP, {PARAM_SIGN_UP_METHOD: method})
 
 
 ## Track share event
@@ -267,9 +283,7 @@ func track_share(content_type: String, item_id: String = "") -> void:
 
 ## Track search
 func track_search(search_term: String) -> void:
-	log_event_params(EVENT_SEARCH, {
-		PARAM_SEARCH_TERM: search_term
-	})
+	log_event_params(EVENT_SEARCH, {PARAM_SEARCH_TERM: search_term})
 
 
 ## --- Predefined Event Constants ---

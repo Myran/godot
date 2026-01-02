@@ -25,10 +25,7 @@ func _execute_action_logic(_params: Dictionary = {}) -> DebugActionResult:
 	# Test JSON value retrieval
 	# Common use case: complex configuration objects
 	var test_keys: Array[String] = [
-		"game_config",
-		"feature_toggles",
-		"ab_test_variants",
-		"ui_settings"
+		"game_config", "feature_toggles", "ab_test_variants", "ui_settings"
 	]
 
 	var results: Dictionary = {}
@@ -69,9 +66,4 @@ func _execute_action_logic(_params: Dictionary = {}) -> DebugActionResult:
 		["debug", "cpp_firebase", "remote_config", "json"]
 	)
 
-	return DebugActionResult.new_success(
-		true,
-		0,
-		action_name,
-		metadata
-	)
+	return DebugActionResult.new_success(true, 0, action_name, metadata)

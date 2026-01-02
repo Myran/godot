@@ -1,6 +1,7 @@
 ## Test Firestore document_set method
 class_name TestDocumentSet extends FirebaseTestActionBase
 
+
 func _init() -> void:
 	super("test.firestore.document_set", _execute_test)
 	set_category("Firebase SDK")

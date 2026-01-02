@@ -1,6 +1,7 @@
 ## Test Firestore document_delete method
 class_name TestDocumentDelete extends FirebaseTestActionBase
 
+
 func _init() -> void:
 	super("test.firestore.document_delete", _execute_test)
 	set_category("Firebase SDK")

@@ -3,12 +3,7 @@
 class_name FirebaseTestActionBase extends DebugAction
 
 ## Test result states
-enum TestResult {
-	PENDING,
-	PASSED,
-	FAILED,
-	SKIPPED
-}
+enum TestResult { PENDING, PASSED, FAILED, SKIPPED }
 
 ## Test tracking
 var _result: TestResult = TestResult.PENDING
@@ -23,6 +18,7 @@ func should_run_on_platform() -> bool:
 
 
 ## Core assertion methods
+
 
 func assert_true(condition: bool, msg: String = "") -> bool:
 	_assertions_run += 1
@@ -84,6 +80,7 @@ func assert_greater(a: Variant, b: Variant, msg: String = "") -> bool:
 
 ## Result helpers
 
+
 func _fail(reason: String) -> void:
 	_result = TestResult.FAILED
 	_failure_reason = reason
@@ -93,7 +90,12 @@ func _fail(reason: String) -> void:
 func _pass() -> void:
 	if _result != TestResult.FAILED:
 		_result = TestResult.PASSED
-		Log.info("[TEST PASSED] %s (%d/%d assertions)" % [action_name, _assertions_passed, _assertions_run])
+		Log.info(
+			(
+				"[TEST PASSED] %s (%d/%d assertions)"
+				% [action_name, _assertions_passed, _assertions_run]
+			)
+		)
 
 
 func _skip(reason: String) -> void:
@@ -148,7 +150,9 @@ func _skip_result(reason: String) -> DebugActionResult:
 func _assertion_result() -> DebugActionResult:
 	if _result == TestResult.PASSED:
 		_pass()
-		return DebugActionResult.new_success({"assertions_run": _assertions_run, "assertions_passed": _assertions_passed})
+		return DebugActionResult.new_success(
+			{"assertions_run": _assertions_run, "assertions_passed": _assertions_passed}
+		)
 	elif _result == TestResult.SKIPPED:
 		return _skip_result(_failure_reason)
 	else:
@@ -157,9 +161,15 @@ func _assertion_result() -> DebugActionResult:
 
 ## Static logging helpers for TEST_SUCCESS and TEST_FAILURE markers
 ## NOTE: Matches DebugAction._log_test_success format for action result collection (Task-407)
-static func _log_test_success(test_name: String, category: String, group: String, duration_ms: int, metadata: Dictionary = {}) -> void:
+static func _log_test_success(
+	test_name: String, category: String, group: String, duration_ms: int, metadata: Dictionary = {}
+) -> void:
 	var test_metadata: Dictionary = DebugConfigReader.get_test_metadata()
-	var config_test_id: String = DebugAction.current_test_id if DebugAction.current_test_id != "" else test_metadata.get("test_id", "")
+	var config_test_id: String = (
+		DebugAction.current_test_id
+		if DebugAction.current_test_id != ""
+		else test_metadata.get("test_id", "")
+	)
 
 	DebugAction.test_success_count += 1  # Increment global counter for sequence numbering
 
@@ -180,9 +190,15 @@ static func _log_test_success(test_name: String, category: String, group: String
 	)
 
 
-static func _log_test_failure(test_name: String, category: String, group: String, reason: String, metadata: Dictionary = {}) -> void:
+static func _log_test_failure(
+	test_name: String, category: String, group: String, reason: String, metadata: Dictionary = {}
+) -> void:
 	var test_metadata: Dictionary = DebugConfigReader.get_test_metadata()
-	var config_test_id: String = DebugAction.current_test_id if DebugAction.current_test_id != "" else test_metadata.get("test_id", "")
+	var config_test_id: String = (
+		DebugAction.current_test_id
+		if DebugAction.current_test_id != ""
+		else test_metadata.get("test_id", "")
+	)
 
 	DebugAction.test_failure_count += 1  # Increment global counter for sequence numbering
 

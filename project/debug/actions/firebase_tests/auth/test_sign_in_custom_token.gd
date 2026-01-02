@@ -1,6 +1,7 @@
 ## Test Auth sign-in with custom token (required for Steam)
 class_name TestSignInCustomToken extends FirebaseTestActionBase
 
+
 func _init() -> void:
 	super("test.auth.sign_in_custom_token", _execute_test)
 	set_category("Firebase SDK")

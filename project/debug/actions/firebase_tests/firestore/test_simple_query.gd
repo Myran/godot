@@ -1,6 +1,7 @@
 ## Test Firestore query_collection method
 class_name TestQuery extends FirebaseTestActionBase
 
+
 func _init() -> void:
 	super("test.firestore.query", _execute_test)
 	set_category("Firebase SDK")

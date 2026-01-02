@@ -1,6 +1,7 @@
 ## Test Auth state_changed signal
 class_name TestStateChanged extends FirebaseTestActionBase
 
+
 func _init() -> void:
 	super("test.auth.state_changed", _execute_test)
 	set_category("Firebase SDK")

@@ -1,6 +1,7 @@
 ## Test Auth is_logged_in method
 class_name TestIsLoggedIn extends FirebaseTestActionBase
 
+
 func _init() -> void:
 	super("test.auth.is_logged_in", _execute_test)
 	set_category("Firebase SDK")

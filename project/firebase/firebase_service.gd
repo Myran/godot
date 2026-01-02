@@ -165,11 +165,7 @@ func get_analytics() -> AnalyticsService:
 			return null
 
 		analytics = AnalyticsService.new(cpp_analytics)
-		Log.info(
-			"AnalyticsService created",
-			{},
-			[Log.TAG_FIREBASE, Log.TAG_INITIALIZATION]
-		)
+		Log.info("AnalyticsService created", {}, [Log.TAG_FIREBASE, Log.TAG_INITIALIZATION])
 
 	return analytics
 
@@ -195,11 +191,7 @@ func get_remote_config() -> RemoteConfigService:
 			return null
 
 		remote_config = RemoteConfigService.new(cpp_remote_config)
-		Log.info(
-			"RemoteConfigService created",
-			{},
-			[Log.TAG_FIREBASE, Log.TAG_INITIALIZATION]
-		)
+		Log.info("RemoteConfigService created", {}, [Log.TAG_FIREBASE, Log.TAG_INITIALIZATION])
 
 	return remote_config
 

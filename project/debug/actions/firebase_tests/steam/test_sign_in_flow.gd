@@ -1,6 +1,7 @@
 ## Test Steam to Firebase sign-in flow
 class_name TestSteamSignInFlow extends FirebaseTestActionBase
 
+
 func _init() -> void:
 	super("test.steam.sign_in_flow", _execute_test)
 	set_category("Firebase SDK")

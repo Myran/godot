@@ -1,6 +1,7 @@
 ## Test Auth get_id_token method
 class_name TestGetIdToken extends FirebaseTestActionBase
 
+
 func _init() -> void:
 	super("test.auth.get_id_token", _execute_test)
 	set_category("Firebase SDK")

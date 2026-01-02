@@ -1,6 +1,7 @@
 ## Test Steam initialization
 class_name TestSteamInit extends FirebaseTestActionBase
 
+
 func _init() -> void:
 	super("test.steam.init", _execute_test)
 	set_category("Firebase SDK")

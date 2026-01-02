@@ -15,18 +15,26 @@ func get_cpp_remote_config() -> Object:
 	if cpp_rc != null and is_instance_valid(cpp_rc):
 		return cpp_rc
 
-	Log.debug("Creating direct C++ FirebaseRemoteConfig instance", {}, ["debug", "cpp_firebase", "remote_config"])
+	Log.debug(
+		"Creating direct C++ FirebaseRemoteConfig instance",
+		{},
+		["debug", "cpp_firebase", "remote_config"]
+	)
 
 	if not ClassDB.class_exists("FirebaseRemoteConfig"):
 		Log.error(
-			"FirebaseRemoteConfig C++ class not available", {}, ["debug", "cpp_firebase", "remote_config", "error"]
+			"FirebaseRemoteConfig C++ class not available",
+			{},
+			["debug", "cpp_firebase", "remote_config", "error"]
 		)
 		return null
 
 	cpp_rc = ClassDB.instantiate("FirebaseRemoteConfig")
 	if not is_instance_valid(cpp_rc):
 		Log.error(
-			"Failed to instantiate C++ FirebaseRemoteConfig", {}, ["debug", "cpp_firebase", "remote_config", "error"]
+			"Failed to instantiate C++ FirebaseRemoteConfig",
+			{},
+			["debug", "cpp_firebase", "remote_config", "error"]
 		)
 		return null
 

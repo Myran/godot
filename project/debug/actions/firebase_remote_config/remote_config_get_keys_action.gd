@@ -46,9 +46,4 @@ func _execute_action_logic(_params: Dictionary = {}) -> DebugActionResult:
 		["debug", "cpp_firebase", "remote_config", "keys"]
 	)
 
-	return DebugActionResult.new_success(
-		true,
-		0,
-		action_name,
-		metadata
-	)
+	return DebugActionResult.new_success(true, 0, action_name, metadata)

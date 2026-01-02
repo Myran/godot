@@ -22,6 +22,9 @@ func _execute_action_logic(_params: Dictionary = {}) -> DebugActionResult:
 			{}
 		)
 
+	# Note: Defaults are set in availability action (runs first in suite)
+	# Windows SDK requires defaults before fetch_and_activate returns activated=true
+
 	# Execute fetch_and_activate operation
 	var request_id: int = Time.get_ticks_msec()
 	var start_time: int = Time.get_ticks_msec()
@@ -77,9 +80,4 @@ func _execute_action_logic(_params: Dictionary = {}) -> DebugActionResult:
 		["debug", "cpp_firebase", "remote_config", "fetch"]
 	)
 
-	return DebugActionResult.new_success(
-		true,
-		0,
-		action_name,
-		metadata
-	)
+	return DebugActionResult.new_success(true, 0, action_name, metadata)

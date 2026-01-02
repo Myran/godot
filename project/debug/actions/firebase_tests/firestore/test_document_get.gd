@@ -1,6 +1,7 @@
 ## Test Firestore document_get method
 class_name TestDocumentGet extends FirebaseTestActionBase
 
+
 func _init() -> void:
 	super("test.firestore.document_get", _execute_test)
 	set_category("Firebase SDK")

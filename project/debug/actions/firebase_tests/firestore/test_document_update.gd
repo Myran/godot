@@ -1,6 +1,7 @@
 ## Test Firestore document_update method
 class_name TestDocumentUpdate extends FirebaseTestActionBase
 
+
 func _init() -> void:
 	super("test.firestore.document_update", _execute_test)
 	set_category("Firebase SDK")

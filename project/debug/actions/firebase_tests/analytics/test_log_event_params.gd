@@ -25,12 +25,10 @@ func _execute_test() -> DebugActionResult:
 		return _assertion_result()
 
 	# Test event with parameters
-	_analytics.log_event_params("test_event_params", {
-		"string_param": "test_value",
-		"int_param": 42,
-		"float_param": 3.14,
-		"bool_param": true
-	})
+	_analytics.log_event_params(
+		"test_event_params",
+		{"string_param": "test_value", "int_param": 42, "float_param": 3.14, "bool_param": true}
+	)
 	assert_true(true, "Event with parameters logging works")
 
 	# Mark test as passed before returning

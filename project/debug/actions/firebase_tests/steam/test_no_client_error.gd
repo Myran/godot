@@ -1,6 +1,7 @@
 ## Test Steam graceful error when client not available
 class_name TestSteamNoClientError extends FirebaseTestActionBase
 
+
 func _init() -> void:
 	super("test.steam.no_client_error", _execute_test)
 	set_category("Firebase SDK")

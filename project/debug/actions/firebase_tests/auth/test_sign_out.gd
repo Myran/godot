@@ -1,6 +1,7 @@
 ## Test Auth sign-out
 class_name TestSignOut extends FirebaseTestActionBase
 
+
 func _init() -> void:
 	super("test.auth.sign_out", _execute_test)
 	set_category("Firebase SDK")

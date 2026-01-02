@@ -1,6 +1,7 @@
 ## Test Steam auth ticket retrieval
 class_name TestSteamGetTicket extends FirebaseTestActionBase
 
+
 func _init() -> void:
 	super("test.steam.get_ticket", _execute_test)
 	set_category("Firebase SDK")

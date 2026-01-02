@@ -1,6 +1,7 @@
 ## Test Auth anonymous sign-in
 class_name TestSignInAnonymous extends FirebaseTestActionBase
 
+
 func _init() -> void:
 	super("test.auth.sign_in_anonymous", _execute_test)
 	set_category("Firebase SDK")
