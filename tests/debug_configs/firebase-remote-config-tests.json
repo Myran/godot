@@ -10,6 +10,6 @@
     "test.remote_config.get_keys",
     "test.remote_config.set_defaults"
   ],
-  "platforms": ["android", "ios", "macos", "desktop"],
+  "platforms": ["android", "ios", "macos", "windows-physical", "editor"],
   "tags": ["firebase", "remote-config", "tdd"]
 }
