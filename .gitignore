@@ -70,6 +70,9 @@ logs/
 # Godot 4+ editor cache (auto-generated, user-specific)
 .godot/
 
+# Firebase debug logs
+firebase-debug.log
+
 # Temporary automated test configs
 tests/debug_configs/*_automated.json
 
