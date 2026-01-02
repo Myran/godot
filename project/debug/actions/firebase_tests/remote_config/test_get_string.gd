@@ -63,8 +63,9 @@ func _execute_test() -> DebugActionResult:
 	# These values are set in Firebase Remote Config template
 	# welcome_message: "Hello, World!" (remote)
 	var welcome_message: String = _remote_config.get_string("welcome_message", "")
+	Log.info("Remote Config get_string('welcome_message', '') returned: '%s'" % welcome_message, {}, [Log.TAG_FIREBASE])
 	if not assert_equals(
-		"Hello, World!", welcome_message, "get_string should return remote value 'Hello, World!' for welcome_message"
+		"Hello, World!", welcome_message, "get_string should return remote value 'Hello, World!' for welcome_message (got: '%s')" % welcome_message
 	):
 		return _assertion_result()
 
