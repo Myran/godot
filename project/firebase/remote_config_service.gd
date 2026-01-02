@@ -15,6 +15,7 @@ var _pending_requests: Dictionary = {}
 
 # Fetch throttling (client-side enforcement)
 var _last_fetch_time_ms: int = 0
+var _developer_mode_enabled: bool = false  # Developer mode bypasses throttling
 const MIN_FETCH_INTERVAL_PRODUCTION_MS: int = 43200000  # 12 hours
 const MIN_FETCH_INTERVAL_DEV_MS: int = 60000  # 1 minute
 
@@ -53,6 +54,10 @@ func _get_min_fetch_interval_ms() -> int:
 
 
 func _can_fetch() -> bool:
+	# Developer mode bypasses all throttling
+	if _developer_mode_enabled:
+		return true
+
 	var now_ms: int = Time.get_ticks_msec()
 	var interval_ms: int = _get_min_fetch_interval_ms()
 	return (now_ms - _last_fetch_time_ms) >= interval_ms
@@ -327,6 +332,9 @@ func enable_developer_mode() -> void:
 		"RemoteConfigService: Enabling developer mode (fetch interval = 0)", {}, [Log.TAG_FIREBASE]
 	)
 	_cpp_remote_config.set_instant_fetching()
+	# Enable developer mode flag to bypass GDScript-side throttling
+	_developer_mode_enabled = true
+	_last_fetch_time_ms = 0
 
 
 # === Internal Helpers ===

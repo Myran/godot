@@ -113,7 +113,13 @@
       "Bash(IOS_TEST_DEVICE=\"38A3A7F3-6C49-5C54-B86E-D84C81ABD10C\" just log-run-silent:*)",
       "Bash(IOS_TEST_DEVICE=\"38A3A7F3-6C49-5C54-B86E-D84C81ABD10C\" just log-run-silent test-ios-target battle-animated:*)",
       "Bash(IOS_TEST_DEVICE=\"38A3A7F3-6C49-5C54-B86E-D84C81ABD10C\" just log-run-silent test-ios-target gamestate-save-load-test:*)",
-      "mcp__Context7__query-docs"
+      "mcp__Context7__query-docs",
+      "Bash(ssh-keygen:*)",
+      "Bash(env:*)",
+      "Bash(git tag:*)",
+      "Bash(git describe:*)",
+      "Bash(git -C extras/sentry-godot show 019c0e1:src/sentry/native/native_sdk.cpp)",
+      "Bash(git ls-tree:*)"
     ],
     "deny": [],
     "ask": [

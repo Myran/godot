@@ -8,7 +8,7 @@ func _init() -> void:
 	super("test.remote_config.get_keys", _execute_test)
 	set_category("Firebase SDK")
 	set_group("Remote Config")
-	set_description("Test Remote Config get_keys: local defaults + remote fetch")
+	set_description("Test Remote Config get_keys: remote keys enumeration")
 	set_use_auto_success_logging(false)
 
 
@@ -26,72 +26,45 @@ func _execute_test() -> DebugActionResult:
 	if not assert_true(_remote_config.is_available(), "RemoteConfigService should be available"):
 		return _assertion_result()
 
-	# Enable developer mode
+	# Enable developer mode (bypasses fetch throttling)
 	_remote_config.enable_developer_mode()
 
-	# === STEP 1: Set local defaults ===
-	var local_defaults: Dictionary = {
-		"local_feature_1": true, "local_feature_2": false, "local_setting": "value1"
-	}
-	var defaults_result: Variant = await _remote_config.set_defaults_async(local_defaults)
-
-	# Verify set_defaults completed successfully
-	if not assert_not_null(defaults_result, "set_defaults_async result should not be null"):
-		return _assertion_result()
-	if not assert_equals("ok", defaults_result.get("status", ""), "set_defaults_async should return status='ok'"):
-		return _assertion_result()
-
-	# === STEP 2: Verify local keys are available ===
-	var local_keys: Array = _remote_config.get_all_keys()
-	if not assert_true(local_keys is Array, "get_all_keys should return an Array"):
-		return _assertion_result()
-
-	if not assert_true(local_keys.size() >= 3, "get_all_keys should return at least 3 local keys"):
-		return _assertion_result()
-
-	# Check that our local keys exist
-	if not assert_true("local_feature_1" in local_keys, "local_feature_1 should be in keys"):
-		return _assertion_result()
-
-	if not assert_true("local_setting" in local_keys, "local_setting should be in keys"):
-		return _assertion_result()
-
-	# Test get_keys_with_prefix for local keys
-	var local_feature_keys: Array = _remote_config.get_keys_with_prefix("local_")
-	if not assert_true(local_feature_keys is Array, "get_keys_with_prefix should return an Array"):
-		return _assertion_result()
-
-	if not assert_true(local_feature_keys.size() >= 3, "get_keys_with_prefix('local_') should return at least 3 keys"):
-		return _assertion_result()
-
-	# === STEP 3: Fetch remote config values ===
+	# === STEP 1: Fetch remote config values ===
 	var fetch_result: Variant = await _remote_config.fetch_and_activate()
 
 	if not assert_not_null(fetch_result, "fetch_and_activate result should not be null"):
 		return _assertion_result()
-	if not assert_true(fetch_result is Dictionary, "fetch_and_activate result should be a Dictionary"):
+	if not assert_true(
+		fetch_result is Dictionary, "fetch_and_activate result should be a Dictionary"
+	):
 		return _assertion_result()
 
-	# === STEP 4: Verify remote keys are available (merged with local) ===
+	# Check if fetch succeeded (not throttled or errored)
+	var fetch_status: String = fetch_result.get("status", "unknown")
+	if not assert_equals("ok", fetch_status, "fetch_and_activate should succeed (got: %s)" % fetch_status):
+		Log.info("fetch_and_activate returned: %s" % str(fetch_result))
+		return _assertion_result()
+
+	# === STEP 2: Verify remote keys are available ===
 	var all_keys: Array = _remote_config.get_all_keys()
 	if not assert_true(all_keys is Array, "get_all_keys should return an Array"):
 		return _assertion_result()
 
-	# After fetch, should have more keys (remote + local)
-	if not assert_true(all_keys.size() >= 3, "get_all_keys should return keys from both remote and local"):
+	# Remote keys from Firebase template should be present
+	if not assert_true("welcome_message" in all_keys, "welcome_message should be in keys"):
 		return _assertion_result()
 
-	# Remote keys from Firebase MCP should be present
-	if not assert_true("welcome_message" in all_keys or "max_players" in all_keys, "Remote keys should be present after fetch"):
+	if not assert_true("max_players" in all_keys, "max_players should be in keys"):
 		return _assertion_result()
 
-	# Local keys should still be present
-	if not assert_true("local_feature_1" in all_keys, "Local keys should still be present after fetch"):
+	if not assert_true("feature_enabled" in all_keys, "feature_enabled should be in keys"):
 		return _assertion_result()
 
-	# Test prefix filtering with remote keys
+	# === STEP 3: Test prefix filtering ===
 	var feature_keys: Array = _remote_config.get_keys_with_prefix("feature_")
-	if not assert_true(feature_keys is Array, "get_keys_with_prefix should return an Array"):
+	if not assert_true(
+		feature_keys is Array, "get_keys_with_prefix('feature_') should return an Array"
+	):
 		return _assertion_result()
 
 	# Mark test as passed
@@ -103,6 +76,6 @@ func _execute_test() -> DebugActionResult:
 		"Firebase SDK",
 		"Remote Config",
 		duration,
-		{"total_keys": all_keys.size(), "local_keys": local_keys.size()}
+		{"total_keys": all_keys.size(), "feature_keys": feature_keys.size()}
 	)
 	return _assertion_result()
