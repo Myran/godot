@@ -38,6 +38,9 @@ export/ios/gametwo.xcframework/ios-arm64/libgodot.a
 # Sentry xcframework binary files (track metadata only)
 export/ios/libsentry.ios.*.xcframework/**/*.dylib
 export/ios/Sentry.xcframework/**/*.dylib
+
+# Sentry Android AAR binary files (generated during build)
+project/addons/sentry/*.aar
 export/android/gametwo.aab
 export/android/gametwo_debug.aab
 export/android/gametwo_debug.apk
