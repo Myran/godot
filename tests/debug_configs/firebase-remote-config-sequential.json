@@ -1,0 +1,12 @@
+{
+  "description": "Firebase Remote Config with explicit sequential order - availability (sets defaults) must run before fetch_and_activate",
+  "actions": [
+    "cpp.firebase.remote_config.availability",
+    "cpp.firebase.remote_config.fetch_and_activate",
+    "cpp.firebase.remote_config.get_fetch_info",
+    "cpp.firebase.remote_config.get_json",
+    "cpp.firebase.remote_config.get_keys",
+    "cpp.firebase.remote_config.get_values"
+  ],
+  "platforms": ["android", "ios", "macos", "windows", "windows-physical"]
+}

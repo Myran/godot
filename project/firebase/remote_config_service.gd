@@ -45,6 +45,7 @@ func is_available() -> bool:
 
 # === Fetch Throttling ===
 
+
 func _get_min_fetch_interval_ms() -> int:
 	if OS.is_debug_build():
 		return MIN_FETCH_INTERVAL_DEV_MS
@@ -68,6 +69,7 @@ func get_time_until_next_fetch_ms() -> int:
 
 # === Core Async Operations ===
 
+
 func fetch_and_activate() -> Variant:
 	if not is_available():
 		Log.error(
@@ -75,7 +77,11 @@ func fetch_and_activate() -> Variant:
 			{},
 			[Log.TAG_FIREBASE, Log.TAG_ERROR]
 		)
-		return {"status": "error", "code": "SERVICE_UNAVAILABLE", "message": "Remote Config not available"}
+		return {
+			"status": "error",
+			"code": "SERVICE_UNAVAILABLE",
+			"message": "Remote Config not available"
+		}
 
 	if not _can_fetch():
 		var time_remaining: int = get_time_until_next_fetch_ms()
@@ -84,7 +90,11 @@ func fetch_and_activate() -> Variant:
 			{"time_remaining_ms": time_remaining},
 			[Log.TAG_FIREBASE]
 		)
-		return {"status": "error", "code": "THROTTLED", "message": "Fetch throttled, try again in " + str(time_remaining / 1000) + " seconds"}
+		return {
+			"status": "error",
+			"code": "THROTTLED",
+			"message": "Fetch throttled, try again in " + str(time_remaining / 1000) + " seconds"
+		}
 
 	var request_id: int = _get_next_request_id()
 	var request: FirebaseRequest = FirebaseRequest.new(request_id)
@@ -104,7 +114,10 @@ func fetch_and_activate() -> Variant:
 	if result.get("status") == "ok":
 		Log.info(
 			"RemoteConfigService: fetch_and_activate completed successfully",
-			{"request_id": request_id, "activated": result.get("payload", {}).get("activated", false)},
+			{
+				"request_id": request_id,
+				"activated": result.get("payload", {}).get("activated", false)
+			},
 			[Log.TAG_FIREBASE]
 		)
 		config_loaded.emit()
@@ -121,11 +134,13 @@ func fetch_and_activate() -> Variant:
 func fetch() -> Variant:
 	if not is_available():
 		Log.error(
-			"RemoteConfigService: Not available for fetch",
-			{},
-			[Log.TAG_FIREBASE, Log.TAG_ERROR]
+			"RemoteConfigService: Not available for fetch", {}, [Log.TAG_FIREBASE, Log.TAG_ERROR]
 		)
-		return {"status": "error", "code": "SERVICE_UNAVAILABLE", "message": "Remote Config not available"}
+		return {
+			"status": "error",
+			"code": "SERVICE_UNAVAILABLE",
+			"message": "Remote Config not available"
+		}
 
 	if not _can_fetch():
 		var time_remaining: int = get_time_until_next_fetch_ms()
@@ -140,11 +155,7 @@ func fetch() -> Variant:
 	var request: FirebaseRequest = FirebaseRequest.new(request_id)
 	_pending_requests[request_id] = request
 
-	Log.debug(
-		"RemoteConfigService: Starting fetch",
-		{"request_id": request_id},
-		[Log.TAG_FIREBASE]
-	)
+	Log.debug("RemoteConfigService: Starting fetch", {"request_id": request_id}, [Log.TAG_FIREBASE])
 
 	_cpp_remote_config.fetch_async(request_id)
 	_last_fetch_time_ms = Time.get_ticks_msec()
@@ -155,20 +166,20 @@ func fetch() -> Variant:
 func activate() -> Variant:
 	if not is_available():
 		Log.error(
-			"RemoteConfigService: Not available for activate",
-			{},
-			[Log.TAG_FIREBASE, Log.TAG_ERROR]
+			"RemoteConfigService: Not available for activate", {}, [Log.TAG_FIREBASE, Log.TAG_ERROR]
 		)
-		return {"status": "error", "code": "SERVICE_UNAVAILABLE", "message": "Remote Config not available"}
+		return {
+			"status": "error",
+			"code": "SERVICE_UNAVAILABLE",
+			"message": "Remote Config not available"
+		}
 
 	var request_id: int = _get_next_request_id()
 	var request: FirebaseRequest = FirebaseRequest.new(request_id)
 	_pending_requests[request_id] = request
 
 	Log.debug(
-		"RemoteConfigService: Starting activate",
-		{"request_id": request_id},
-		[Log.TAG_FIREBASE]
+		"RemoteConfigService: Starting activate", {"request_id": request_id}, [Log.TAG_FIREBASE]
 	)
 
 	_cpp_remote_config.activate_async(request_id)
@@ -182,6 +193,7 @@ func activate() -> Variant:
 
 
 # === Value Retrieval (Synchronous) ===
+
 
 func get_boolean(key: String, default_value: bool = false) -> bool:
 	if not is_available() or not _cpp_remote_config.loaded():
@@ -215,6 +227,7 @@ func get_json(key: String) -> Dictionary:
 
 # === Feature Flag Helpers ===
 
+
 func is_feature_enabled(feature_key: String, default_enabled: bool = false) -> bool:
 	return get_boolean(feature_key, default_enabled)
 
@@ -224,6 +237,7 @@ func get_feature_variant(feature_key: String, default_variant: String = "control
 
 
 # === Key Enumeration ===
+
 
 func get_all_keys() -> Array:
 	if not is_available():
@@ -239,6 +253,7 @@ func get_keys_with_prefix(prefix: String) -> Array:
 
 # === Status & Info ===
 
+
 func is_loaded() -> bool:
 	if not is_available():
 		return false
@@ -253,6 +268,7 @@ func get_fetch_info() -> Dictionary:
 
 # === Configuration ===
 
+
 func set_defaults(defaults: Dictionary) -> void:
 	if not is_available():
 		Log.error(
@@ -263,11 +279,39 @@ func set_defaults(defaults: Dictionary) -> void:
 		return
 
 	Log.debug(
-		"RemoteConfigService: Setting defaults",
+		"RemoteConfigService: Setting defaults (sync)",
 		{"key_count": defaults.size()},
 		[Log.TAG_FIREBASE]
 	)
 	_cpp_remote_config.set_defaults(defaults)
+
+
+func set_defaults_async(defaults: Dictionary) -> Variant:
+	if not is_available():
+		Log.error(
+			"RemoteConfigService: Not available for set_defaults_async",
+			{},
+			[Log.TAG_FIREBASE, Log.TAG_ERROR]
+		)
+		return {
+			"status": "error",
+			"code": "SERVICE_UNAVAILABLE",
+			"message": "Remote Config not available"
+		}
+
+	var request_id: int = _get_next_request_id()
+	var request: FirebaseRequest = FirebaseRequest.new(request_id)
+	_pending_requests[request_id] = request
+
+	Log.debug(
+		"RemoteConfigService: Starting set_defaults_async",
+		{"request_id": request_id, "key_count": defaults.size()},
+		[Log.TAG_FIREBASE]
+	)
+
+	_cpp_remote_config.set_defaults_async(request_id, defaults)
+
+	return await request.await_completion()
 
 
 func enable_developer_mode() -> void:
@@ -280,14 +324,13 @@ func enable_developer_mode() -> void:
 		return
 
 	Log.info(
-		"RemoteConfigService: Enabling developer mode (fetch interval = 0)",
-		{},
-		[Log.TAG_FIREBASE]
+		"RemoteConfigService: Enabling developer mode (fetch interval = 0)", {}, [Log.TAG_FIREBASE]
 	)
 	_cpp_remote_config.set_instant_fetching()
 
 
 # === Internal Helpers ===
+
 
 func _get_next_request_id() -> int:
 	var id: int = _next_request_id
@@ -304,28 +347,52 @@ func _connect_signals() -> void:
 
 	err = _cpp_remote_config.fetch_and_activate_completed.connect(_on_fetch_and_activate_completed)
 	if err != OK:
-		Log.error("RemoteConfigService: Failed to connect fetch_and_activate_completed", {"error": error_string(err)}, [Log.TAG_FIREBASE])
+		Log.error(
+			"RemoteConfigService: Failed to connect fetch_and_activate_completed",
+			{"error": error_string(err)},
+			[Log.TAG_FIREBASE]
+		)
 
 	err = _cpp_remote_config.fetch_completed.connect(_on_fetch_completed)
 	if err != OK:
-		Log.error("RemoteConfigService: Failed to connect fetch_completed", {"error": error_string(err)}, [Log.TAG_FIREBASE])
+		Log.error(
+			"RemoteConfigService: Failed to connect fetch_completed",
+			{"error": error_string(err)},
+			[Log.TAG_FIREBASE]
+		)
 
 	err = _cpp_remote_config.activate_completed.connect(_on_activate_completed)
 	if err != OK:
-		Log.error("RemoteConfigService: Failed to connect activate_completed", {"error": error_string(err)}, [Log.TAG_FIREBASE])
+		Log.error(
+			"RemoteConfigService: Failed to connect activate_completed",
+			{"error": error_string(err)},
+			[Log.TAG_FIREBASE]
+		)
+
+	err = _cpp_remote_config.set_defaults_completed.connect(_on_set_defaults_completed)
+	if err != OK:
+		Log.error(
+			"RemoteConfigService: Failed to connect set_defaults_completed",
+			{"error": error_string(err)},
+			[Log.TAG_FIREBASE]
+		)
 
 	err = _cpp_remote_config.config_error.connect(_on_config_error)
 	if err != OK:
-		Log.error("RemoteConfigService: Failed to connect config_error", {"error": error_string(err)}, [Log.TAG_FIREBASE])
+		Log.error(
+			"RemoteConfigService: Failed to connect config_error",
+			{"error": error_string(err)},
+			[Log.TAG_FIREBASE]
+		)
 
 	Log.debug(
-		"RemoteConfigService: Signals connected",
-		{},
-		[Log.TAG_FIREBASE, Log.TAG_INITIALIZATION]
+		"RemoteConfigService: Signals connected", {}, [Log.TAG_FIREBASE, Log.TAG_INITIALIZATION]
 	)
 
 
-func _on_fetch_and_activate_completed(request_id: int, success: bool, activated: bool, error_message: String) -> void:
+func _on_fetch_and_activate_completed(
+	request_id: int, success: bool, activated: bool, error_message: String
+) -> void:
 	Log.debug(
 		"RemoteConfigService: fetch_and_activate_completed received",
 		{"request_id": request_id, "success": success, "activated": activated},
@@ -373,7 +440,9 @@ func _on_fetch_completed(request_id: int, success: bool, error_message: String) 
 		request.complete_with_error("FETCH_FAILED", error_message)
 
 
-func _on_activate_completed(request_id: int, success: bool, activated: bool, error_message: String) -> void:
+func _on_activate_completed(
+	request_id: int, success: bool, activated: bool, error_message: String
+) -> void:
 	Log.debug(
 		"RemoteConfigService: activate_completed received",
 		{"request_id": request_id, "success": success, "activated": activated},
@@ -395,6 +464,32 @@ func _on_activate_completed(request_id: int, success: bool, activated: bool, err
 		request.complete_with_success({"activated": activated})
 	else:
 		request.complete_with_error("ACTIVATE_FAILED", error_message)
+
+
+func _on_set_defaults_completed(
+	request_id: int, success: bool, error_code: int, error_message: String
+) -> void:
+	Log.debug(
+		"RemoteConfigService: set_defaults_completed received",
+		{"request_id": request_id, "success": success, "error_code": error_code},
+		[Log.TAG_FIREBASE]
+	)
+
+	if not _pending_requests.has(request_id):
+		Log.warning(
+			"RemoteConfigService: No pending request for ID",
+			{"request_id": request_id},
+			[Log.TAG_FIREBASE]
+		)
+		return
+
+	var request: FirebaseRequest = _pending_requests[request_id]
+	_pending_requests.erase(request_id)
+
+	if success:
+		request.complete_with_success({})
+	else:
+		request.complete_with_error("SET_DEFAULTS_FAILED", error_message)
 
 
 func _on_config_error(error_code: String, error_message: String) -> void:
