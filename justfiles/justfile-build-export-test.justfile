@@ -8,14 +8,20 @@
 # ================================
 
 # Android: Rebuild templates → Export APK → Deploy → Test (full suite or specific config)
+# Defaults to 'main' test list if no CONFIG provided
 build-export-test-android CONFIG="":
     #!/usr/bin/env bash
     set -euo pipefail
 
     CONFIG="{{CONFIG}}"
+    # Default to main test list if no config specified
+    if [ -z "$CONFIG" ]; then
+        CONFIG="main"
+    fi
 
     echo "🤖 ANDROID: Build + Export + Test"
     echo "===================================="
+    echo "🎯 Target configuration: $CONFIG"
     echo ""
 
     # 1. Rebuild templates with Firebase C++ module
@@ -34,13 +40,8 @@ build-export-test-android CONFIG="":
     echo ""
 
     # 4. Run tests
-    if [ -n "$CONFIG" ]; then
-        echo "🧪 Step 4: Testing config: $CONFIG"
-        just test-android-target "$CONFIG"
-    else
-        echo "🧪 Step 4: Running full test suite (fzf selection)..."
-        just test-android
-    fi
+    echo "🧪 Step 4: Testing config: $CONFIG"
+    just test-android-target "$CONFIG"
 
     echo ""
     echo "✅ Android build-export-test complete!"
@@ -50,14 +51,20 @@ build-export-test-android CONFIG="":
 # ================================
 
 # iOS: Rebuild templates → Build app → Deploy → Test (full suite or specific config)
+# Defaults to 'main' test list if no CONFIG provided
 build-export-test-ios CONFIG="":
     #!/usr/bin/env bash
     set -euo pipefail
 
     CONFIG="{{CONFIG}}"
+    # Default to main test list if no config specified
+    if [ -z "$CONFIG" ]; then
+        CONFIG="main"
+    fi
 
     echo "🍎 iOS: Build + Export + Test"
     echo "=============================="
+    echo "🎯 Target configuration: $CONFIG"
     echo ""
 
     # Auto-select iOS device
@@ -89,13 +96,8 @@ build-export-test-ios CONFIG="":
     echo ""
 
     # 4. Run tests
-    if [ -n "$CONFIG" ]; then
-        echo "🧪 Step 4: Testing config: $CONFIG"
-        just test-ios-target "$CONFIG"
-    else
-        echo "🧪 Step 4: Running full test suite (fzf selection)..."
-        just test-ios
-    fi
+    echo "🧪 Step 4: Testing config: $CONFIG"
+    just test-ios-target "$CONFIG"
 
     echo ""
     echo "✅ iOS build-export-test complete!"
@@ -105,14 +107,20 @@ build-export-test-ios CONFIG="":
 # ================================
 
 # macOS: Rebuild templates → Export app → Test (full suite or specific config)
+# Defaults to 'main' test list if no CONFIG provided
 build-export-test-macos CONFIG="":
     #!/usr/bin/env bash
     set -euo pipefail
 
     CONFIG="{{CONFIG}}"
+    # Default to main test list if no config specified
+    if [ -z "$CONFIG" ]; then
+        CONFIG="main"
+    fi
 
     echo "🍎 macOS: Build + Export + Test"
     echo "================================="
+    echo "🎯 Target configuration: $CONFIG"
     echo ""
 
     # 1. Rebuild templates with Firebase C++ module
@@ -131,13 +139,8 @@ build-export-test-macos CONFIG="":
     echo ""
 
     # 4. Run tests
-    if [ -n "$CONFIG" ]; then
-        echo "🧪 Step 4: Testing config: $CONFIG"
-        just test-macos-target "$CONFIG"
-    else
-        echo "🧪 Step 4: Running full test suite (fzf selection)..."
-        just test-macos
-    fi
+    echo "🧪 Step 4: Testing config: $CONFIG"
+    just test-macos-target "$CONFIG"
 
     echo ""
     echo "✅ macOS build-export-test complete!"
@@ -147,14 +150,20 @@ build-export-test-macos CONFIG="":
 # ================================
 
 # Windows: VM sync → Rebuild templates → Package → Export → Deploy → Test (full suite or specific config)
+# Defaults to 'main' test list if no CONFIG provided
 build-export-test-windows CONFIG="":
     #!/usr/bin/env bash
     set -euo pipefail
 
     CONFIG="{{CONFIG}}"
+    # Default to main test list if no config specified
+    if [ -z "$CONFIG" ]; then
+        CONFIG="main"
+    fi
 
     echo "🪟 Windows: Build + Export + Test"
     echo "==================================="
+    echo "🎯 Target configuration: $CONFIG"
     echo ""
 
     # 1. Sync repo to VM
@@ -184,13 +193,8 @@ build-export-test-windows CONFIG="":
     echo ""
 
     # 6. Run tests
-    if [ -n "$CONFIG" ]; then
-        echo "🧪 Step 6: Testing config: $CONFIG"
-        just test-windows-physical-target "$CONFIG"
-    else
-        echo "🧪 Step 6: Running full test suite (fzf selection)..."
-        just test-windows-physical
-    fi
+    echo "🧪 Step 6: Testing config: $CONFIG"
+    just test-windows-physical-target "$CONFIG"
 
     echo ""
     echo "✅ Windows build-export-test complete!"
@@ -200,24 +204,23 @@ build-export-test-windows CONFIG="":
 # ================================
 
 # All platforms: Full rebuild + export + deploy + test (full suite or specific config)
+# Defaults to 'main' test list if no CONFIG provided
 build-export-test-all CONFIG="":
     #!/usr/bin/env bash
     set -euo pipefail
 
     CONFIG="{{CONFIG}}"
+    # Default to main test list if no config specified
+    if [ -z "$CONFIG" ]; then
+        CONFIG="main"
+    fi
     MULTI_SESSION="$(date +%s)"
     export MULTI_PLATFORM_SESSION="$MULTI_SESSION"
 
     echo "🚀 BUILD-EXPORT-TEST: All Platforms"
     echo "====================================="
     echo "🔍 Multi-platform session: $MULTI_SESSION"
-    echo ""
-
-    if [ -n "$CONFIG" ]; then
-        echo "🎯 Target configuration: $CONFIG"
-    else
-        echo "🎯 Running full test suite on all platforms"
-    fi
+    echo "🎯 Target configuration: $CONFIG"
     echo ""
 
     # Track results using temp files (for bash 3.2 compatibility)
