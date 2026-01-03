@@ -29,18 +29,23 @@ build-export-test-android CONFIG="":
     just rebuild-all-android
     echo ""
 
-    # 2. Export APK
-    echo "📤 Step 2: Exporting APK..."
+    # 2. Install templates + inject SDKs (required after rebuild)
+    echo "📥 Step 2: Installing templates + injecting Firebase/Sentry SDKs..."
+    just setup-android-templates force=yes
+    echo ""
+
+    # 3. Export APK
+    echo "📤 Step 3: Exporting APK..."
     just export-android-apk
     echo ""
 
-    # 3. Deploy to device
-    echo "📲 Step 3: Deploying to Android device..."
+    # 4. Deploy to device
+    echo "📲 Step 4: Deploying to Android device..."
     just deploy-android
     echo ""
 
-    # 4. Run tests
-    echo "🧪 Step 4: Testing config: $CONFIG"
+    # 5. Run tests
+    echo "🧪 Step 5: Testing config: $CONFIG"
     just test-android-target "$CONFIG"
 
     echo ""

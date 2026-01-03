@@ -11,6 +11,7 @@ var _pending_requests: Dictionary = {}
 var _rate_limiter: RefCounted
 var analytics: AnalyticsService  # Analytics service instance
 var remote_config: RemoteConfigService  # Remote Config service instance
+var auth: AuthService  # Auth service instance (Task-399)
 
 
 func _ready() -> void:
@@ -194,6 +195,32 @@ func get_remote_config() -> RemoteConfigService:
 		Log.info("RemoteConfigService created", {}, [Log.TAG_FIREBASE, Log.TAG_INITIALIZATION])
 
 	return remote_config
+
+
+func get_auth() -> AuthService:
+	# Lazy initialization of Auth service (Task-399)
+	if auth == null:
+		if not ClassDB.class_exists("FirebaseAuth"):
+			Log.error(
+				"FirebaseAuth C++ module not available",
+				{"platform": OS.get_name()},
+				[Log.TAG_FIREBASE, Log.TAG_ERROR]
+			)
+			return null
+
+		var cpp_auth: Object = ClassDB.instantiate("FirebaseAuth")
+		if not is_instance_valid(cpp_auth):
+			Log.error(
+				"Failed to instantiate FirebaseAuth C++ module",
+				{},
+				[Log.TAG_FIREBASE, Log.TAG_ERROR]
+			)
+			return null
+
+		auth = AuthService.new(cpp_auth)
+		Log.info("AuthService created", {}, [Log.TAG_FIREBASE, Log.TAG_INITIALIZATION, "auth"])
+
+	return auth
 
 
 func get_value(path: Array[Variant], key: String = "") -> FirebaseRequest:
