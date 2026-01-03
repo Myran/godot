@@ -289,8 +289,8 @@ ios-test-file-access:
 # Duplicate removed - use export-pck-ios instead
 
 
-# Update iOS PCK file
-ios-update-pck: pre-build
+# Update iOS PCK file (without building/installing app)
+update-ios-pck: pre-build
     @echo "🔄 Updating iOS PCK file..."
     just export-pck-ios
     @echo "✅ iOS PCK updated"

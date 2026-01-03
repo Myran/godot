@@ -148,7 +148,7 @@ _android-install-apk APK_TYPE="release": _validate-android-workflow
 # Generic iOS hot reload - handles device selection
 _ios-hotreload DEVICE_TYPE BUILD_TYPE="debug":
     @echo "Updating game content and running on {{DEVICE_TYPE}}..."
-    just ios-update-pck
+    just update-ios-pck
     just _ios-launch-app {{DEVICE_TYPE}} {{BUILD_TYPE}}
 
 # ================================

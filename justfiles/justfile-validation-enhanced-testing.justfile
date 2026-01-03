@@ -2166,7 +2166,7 @@ _test-list-generic test_list platform:
     if [[ "$PLATFORM" == "ios" ]]; then
         echo ""
         echo "📦 Preparing iOS PCK (one-time for all configs)..."
-        just ios-update-pck
+        just update-ios-pck
         echo "✅ iOS PCK ready"
         echo ""
     fi
@@ -2875,7 +2875,7 @@ _execute-test-with-analysis config_name platform session="":
     # Platform-specific preparation (for single configs not in test list)
     if [[ "$PLATFORM" == "ios" && "${INSIDE_TEST_LIST_EXECUTION:-false}" != "true" ]]; then
         echo "📦 Preparing iOS PCK..."
-        just ios-update-pck
+        just update-ios-pck
         echo "✅ iOS PCK ready"
         echo ""
     fi
