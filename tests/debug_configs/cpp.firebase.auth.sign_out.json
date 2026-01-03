@@ -1,0 +1,11 @@
+{
+  "description": "Firebase Auth sign out test (Task-399)",
+  "actions": [
+    "cpp.firebase.auth.sign_out"
+  ],
+  "platforms": [
+    "android",
+    "desktop",
+    "macos"
+  ]
+}

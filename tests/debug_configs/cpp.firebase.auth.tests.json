@@ -1,0 +1,17 @@
+{
+  "description": "Firebase Auth comprehensive test suite (Task-399)",
+  "actions": [
+    "cpp.firebase.auth.sign_in_anonymous",
+    "cpp.firebase.auth.get_user_info",
+    "cpp.firebase.auth.get_id_token",
+    "cpp.firebase.auth.sign_out",
+    "cpp.firebase.auth.get_user_info"
+  ],
+  "platforms": [
+    "android",
+    "ios",
+    "desktop",
+    "macos",
+    "editor"
+  ]
+}

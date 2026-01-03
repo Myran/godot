@@ -1,0 +1,11 @@
+{
+  "description": "Firebase Auth get ID token test (Task-399)",
+  "actions": [
+    "cpp.firebase.auth.get_id_token"
+  ],
+  "platforms": [
+    "android",
+    "desktop",
+    "macos"
+  ]
+}

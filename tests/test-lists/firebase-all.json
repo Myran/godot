@@ -16,6 +16,7 @@
     "firebase-two-actions-test",
     "firebase-three-actions-test",
     "system-error-handling",
-    "system-performance"
+    "system-performance",
+    "cpp.firebase.auth.tests"
   ]
 }

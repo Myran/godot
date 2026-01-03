@@ -1,0 +1,11 @@
+{
+  "description": "Firebase Auth get user info test (Task-399)",
+  "actions": [
+    "cpp.firebase.auth.get_user_info"
+  ],
+  "platforms": [
+    "android",
+    "desktop",
+    "macos"
+  ]
+}
