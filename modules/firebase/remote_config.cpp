@@ -74,6 +74,24 @@ FirebaseRemoteConfig::FirebaseRemoteConfig() {
 
 				if (rc != nullptr) {
 					print_line("[RemConf] Remote Config instance obtained successfully.");
+
+					// Configure for development: zero cache expiration to force fresh fetches
+					firebase::remote_config::ConfigSettings settings;
+					settings.minimum_fetch_interval_in_milliseconds = 0;  // Force fresh fetch every time
+					firebase::Future<void> settings_future = rc->SetConfigSettings(settings);
+
+					// Wait briefly for settings to apply (synchronous wait for simplicity)
+					while (settings_future.status() == firebase::kFutureStatusPending) {
+						// Busy wait - settings are quick to apply
+					}
+
+					if (settings_future.error() == 0) {
+						print_line("[RemConf] Config settings applied: minimum_fetch_interval = 0ms (force fresh)");
+					} else {
+						print_error(String("[RemConf] Failed to set config settings: ") +
+							String::utf8(settings_future.error_message()));
+					}
+
 					inited.store(true);
 					print_line("[RemConf] Firebase Remote Config Module initialized successfully (thread-safe).");
 				} else {
@@ -245,28 +263,58 @@ void FirebaseRemoteConfig::_handle_set_defaults_on_main_thread(int req_id, bool 
 	emit_signal("set_defaults_completed", req_id, success, error, error_msg);
 }
 
+// Helper function to convert ValueSource enum to readable string
+static String value_source_to_string(firebase::remote_config::ValueSource source) {
+	switch (source) {
+		case firebase::remote_config::kValueSourceStaticValue:
+			return "STATIC";
+		case firebase::remote_config::kValueSourceRemoteValue:
+			return "REMOTE";
+		case firebase::remote_config::kValueSourceDefaultValue:
+			return "DEFAULT";
+		default:
+			return "UNKNOWN";
+	}
+}
+
 bool FirebaseRemoteConfig::get_boolean(const String& param) {
 	if (!rc) return false;
 	CharString cs = param.utf8();
-	return rc->GetBoolean(cs.get_data());
+	firebase::remote_config::ValueInfo info;
+	bool value = rc->GetBoolean(cs.get_data(), &info);
+	print_verbose(String("[RemConf] get_boolean('") + param + "') = " + (value ? "true" : "false") +
+		" [source: " + value_source_to_string(info.source) + "]");
+	return value;
 }
 
 double FirebaseRemoteConfig::get_double(const String& param) {
 	if (!rc) return 0.0;
 	CharString cs = param.utf8();
-	return rc->GetDouble(cs.get_data());
+	firebase::remote_config::ValueInfo info;
+	double value = rc->GetDouble(cs.get_data(), &info);
+	print_verbose(String("[RemConf] get_double('") + param + "') = " + String::num(value) +
+		" [source: " + value_source_to_string(info.source) + "]");
+	return value;
 }
 
 int64_t FirebaseRemoteConfig::get_int(const String& param) {
 	if (!rc) return 0;
 	CharString cs = param.utf8();
-	return rc->GetLong(cs.get_data());
+	firebase::remote_config::ValueInfo info;
+	int64_t value = rc->GetLong(cs.get_data(), &info);
+	print_verbose(String("[RemConf] get_int('") + param + "') = " + String::num_int64(value) +
+		" [source: " + value_source_to_string(info.source) + "]");
+	return value;
 }
 
 String FirebaseRemoteConfig::get_string(const String& param) {
 	if (!rc) return "";
 	CharString cs = param.utf8();
-	return String::utf8(rc->GetString(cs.get_data()).c_str());
+	firebase::remote_config::ValueInfo info;
+	std::string value = rc->GetString(cs.get_data(), &info);
+	print_verbose(String("[RemConf] get_string('") + param + "') = '" + String::utf8(value.c_str()) + "'" +
+		" [source: " + value_source_to_string(info.source) + "]");
+	return String::utf8(value.c_str());
 }
 
 bool FirebaseRemoteConfig::loaded() {
@@ -282,7 +330,11 @@ void FirebaseRemoteConfig::fetch_and_activate_async(int p_request_id) {
 		return;
 	}
 
+	// Log current config settings
+	firebase::remote_config::ConfigSettings current_settings = rc->GetConfigSettings();
 	print_line(String("[RemConf] FetchAndActivate ReqID:") + itos(p_request_id) + " started.");
+	print_line(String("[RemConf] Current minimum_fetch_interval: ") +
+		String::num_int64(current_settings.minimum_fetch_interval_in_milliseconds) + "ms");
 
 	firebase::Future<bool> future = rc->FetchAndActivate();
 	future.OnCompletion([this, p_request_id](const firebase::Future<bool>& result) {
@@ -312,10 +364,10 @@ void FirebaseRemoteConfig::fetch_async(int p_request_id) {
 		return;
 	}
 
-	print_line(String("[RemConf] Fetch ReqID:") + itos(p_request_id) + " started.");
+	print_line(String("[RemConf] Fetch ReqID:") + itos(p_request_id) + " started (cache_expiration=0 FORCE FRESH).");
 
-	// Use default cache expiration (12 hours in production, 0 if developer mode)
-	firebase::Future<void> future = rc->Fetch();
+	// Force fresh fetch with 0 cache expiration (bypasses all caching)
+	firebase::Future<void> future = rc->Fetch(0);
 	future.OnCompletion([this, p_request_id](const firebase::Future<void>& result) {
 		// WORKER THREAD - Extract thread-safe data only
 		int error = result.error();
@@ -448,6 +500,111 @@ Dictionary FirebaseRemoteConfig::get_fetch_info() {
 	info["last_fetch_failure_reason"] = failure_reason_str;
 
 	return info;
+}
+
+// --- NEW: Value Info for debugging platform differences ---
+
+Dictionary FirebaseRemoteConfig::get_value_info(const String& param) {
+	Dictionary result;
+	if (!rc) {
+		print_error("[RemConf] get_value_info failed: Remote Config not initialized.");
+		result["error"] = "Remote Config not initialized";
+		return result;
+	}
+
+	CharString cs = param.utf8();
+	firebase::remote_config::ValueInfo info;
+	std::string value = rc->GetString(cs.get_data(), &info);
+
+	result["key"] = param;
+	result["value"] = String::utf8(value.c_str());
+
+	// Convert source to readable string
+	String source_str;
+	switch (info.source) {
+		case firebase::remote_config::kValueSourceStaticValue:
+			source_str = "static";
+			break;
+		case firebase::remote_config::kValueSourceRemoteValue:
+			source_str = "remote";
+			break;
+		case firebase::remote_config::kValueSourceDefaultValue:
+			source_str = "default";
+			break;
+		default:
+			source_str = "unknown";
+			break;
+	}
+	result["source"] = source_str;
+
+	return result;
+}
+
+// --- NEW: Dump all config for debugging ---
+
+Dictionary FirebaseRemoteConfig::dump_all_config() {
+	Dictionary result;
+	if (!rc) {
+		print_error("[RemConf] dump_all_config failed: Remote Config not initialized.");
+		result["error"] = "Remote Config not initialized";
+		return result;
+	}
+
+	// Get App info
+	firebase::App* app = Firebase::AppId();
+	if (app) {
+		const firebase::AppOptions& options = app->options();
+		Dictionary app_info;
+		app_info["name"] = String::utf8(app->name());
+		app_info["project_id"] = String::utf8(options.project_id());
+		app_info["app_id"] = String::utf8(options.app_id());
+		app_info["api_key"] = String::utf8(options.api_key());
+		result["app"] = app_info;
+	}
+
+	// Get fetch info
+	const firebase::remote_config::ConfigInfo& config_info = rc->GetInfo();
+	Dictionary fetch_info;
+	fetch_info["fetch_time"] = static_cast<int64_t>(config_info.fetch_time);
+	fetch_info["throttled_end_time"] = static_cast<int64_t>(config_info.throttled_end_time);
+	fetch_info["last_fetch_status"] = static_cast<int64_t>(config_info.last_fetch_status);
+	fetch_info["last_fetch_failure_reason"] = static_cast<int64_t>(config_info.last_fetch_failure_reason);
+	result["fetch_info"] = fetch_info;
+
+	// Get all keys with their values and sources
+	Dictionary values;
+	std::vector<std::string> keys = rc->GetKeys();
+	result["key_count"] = static_cast<int64_t>(keys.size());
+
+	for (const auto& key : keys) {
+		firebase::remote_config::ValueInfo info;
+		std::string value = rc->GetString(key.c_str(), &info);
+
+		Dictionary key_info;
+		key_info["value"] = String::utf8(value.c_str());
+
+		String source_str;
+		switch (info.source) {
+			case firebase::remote_config::kValueSourceStaticValue:
+				source_str = "static";
+				break;
+			case firebase::remote_config::kValueSourceRemoteValue:
+				source_str = "remote";
+				break;
+			case firebase::remote_config::kValueSourceDefaultValue:
+				source_str = "default";
+				break;
+			default:
+				source_str = "unknown";
+				break;
+		}
+		key_info["source"] = source_str;
+
+		values[String::utf8(key.c_str())] = key_info;
+	}
+	result["values"] = values;
+
+	return result;
 }
 
 // --- NEW: JSON Value Support ---
@@ -594,6 +751,10 @@ void FirebaseRemoteConfig::_bind_methods() {
 	// === NEW: Utilities ===
 	ClassDB::bind_method(D_METHOD("get_fetch_info"), &FirebaseRemoteConfig::get_fetch_info);
 	ClassDB::bind_method(D_METHOD("get_json", "param"), &FirebaseRemoteConfig::get_json);
+
+	// === NEW: Debug/Diagnostic Methods ===
+	ClassDB::bind_method(D_METHOD("get_value_info", "param"), &FirebaseRemoteConfig::get_value_info);
+	ClassDB::bind_method(D_METHOD("dump_all_config"), &FirebaseRemoteConfig::dump_all_config);
 
 	// === Signals ===
 	// Legacy signal (backward compatibility)

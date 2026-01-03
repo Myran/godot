@@ -75,6 +75,10 @@ public:
 
 	// === NEW: JSON Value Support ===
 	Dictionary get_json(const String& param);
+
+	// === NEW: Debug/Diagnostic Methods ===
+	Dictionary get_value_info(const String& param);
+	Dictionary dump_all_config();
 };
 
 #endif // FirebaseRemoteConfig_h
