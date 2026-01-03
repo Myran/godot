@@ -7,9 +7,26 @@ var firebase_auth: Object  # FirebaseAuth instance
 var godot_apple_auth: Object
 var apple_aut_res: Dictionary = {}
 
+# Task-399: Reference to new AuthService for production-ready async operations
+# Lazy-loaded via FirebaseService.get_auth()
+var _auth_service: AuthService
+
 
 func uid() -> String:
-	return firebase_auth.uid()
+	# Use AuthService if available, otherwise fall back to C++ direct
+	if _auth_service and _auth_service.is_available():
+		return _auth_service.get_uid()
+	if firebase_auth:
+		return firebase_auth.uid()
+	return ""
+
+
+func get_auth_service() -> AuthService:
+	# Task-399: Get or create the AuthService instance
+	if _auth_service == null:
+		if FirebaseService:
+			_auth_service = FirebaseService.get_auth()
+	return _auth_service
 
 
 func is_available() -> bool:

@@ -83,6 +83,12 @@ func _register_all_actions() -> void:
 	if firebase_remote_config_actions_script:
 		firebase_remote_config_actions_script.register_all(self)
 
+	var firebase_auth_actions_script: GDScript = load(
+		"res://debug/actions/registrations/firebase_auth_actions.gd"
+	)
+	if firebase_auth_actions_script:
+		firebase_auth_actions_script.register_all(self)
+
 
 func register_action(action: DebugAction) -> bool:
 	if not action:
