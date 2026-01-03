@@ -31,10 +31,7 @@ func _execute_test() -> DebugActionResult:
 
 	# === STEP 1: Set defaults ===
 	var test_defaults: Dictionary = {
-		"test_string": "default_value",
-		"test_bool": true,
-		"test_int": 42,
-		"test_float": 3.14
+		"test_string": "default_value", "test_bool": true, "test_int": 42, "test_float": 3.14
 	}
 	var result: Variant = await _remote_config.set_defaults_async(test_defaults)
 

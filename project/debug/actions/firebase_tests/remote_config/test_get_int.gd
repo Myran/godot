@@ -41,7 +41,9 @@ func _execute_test() -> DebugActionResult:
 
 	# Check if fetch succeeded (not throttled or errored)
 	var fetch_status: String = fetch_result.get("status", "unknown")
-	if not assert_equals("ok", fetch_status, "fetch_and_activate should succeed (got: %s)" % fetch_status):
+	if not assert_equals(
+		"ok", fetch_status, "fetch_and_activate should succeed (got: %s)" % fetch_status
+	):
 		Log.info("fetch_and_activate returned: %s" % str(fetch_result))
 		return _assertion_result()
 
@@ -51,9 +53,13 @@ func _execute_test() -> DebugActionResult:
 
 	# === STEP 2: Verify remote int values ===
 	var max_players: int = _remote_config.get_int("max_players", 0)
-	Log.info("Remote Config get_int('max_players', 0) returned: %d" % max_players, {}, [Log.TAG_FIREBASE])
+	Log.info(
+		"Remote Config get_int('max_players', 0) returned: %d" % max_players, {}, [Log.TAG_FIREBASE]
+	)
 	if not assert_equals(
-		100, max_players, "get_int should return remote value 100 for max_players (got: %d)" % max_players
+		100,
+		max_players,
+		"get_int should return remote value 100 for max_players (got: %d)" % max_players
 	):
 		return _assertion_result()
 
@@ -71,10 +77,6 @@ func _execute_test() -> DebugActionResult:
 
 	var duration: int = Time.get_ticks_msec() - start_time
 	_log_test_success(
-		action_name,
-		"Firebase SDK",
-		"Remote Config",
-		duration,
-		{"remote_max_players": max_players}
+		action_name, "Firebase SDK", "Remote Config", duration, {"remote_max_players": max_players}
 	)
 	return _assertion_result()

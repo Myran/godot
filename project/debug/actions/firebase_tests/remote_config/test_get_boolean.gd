@@ -28,10 +28,10 @@ func _execute_test() -> DebugActionResult:
 
 	# Check initial loaded state (may be false before first fetch)
 	Log.info(
-		"Remote Config initial state: available=%s, loaded=%s" % [
-			_remote_config.is_available(),
-			_remote_config.is_loaded()
-		],
+		(
+			"Remote Config initial state: available=%s, loaded=%s"
+			% [_remote_config.is_available(), _remote_config.is_loaded()]
+		),
 		{},
 		[Log.TAG_FIREBASE]
 	)
@@ -51,7 +51,9 @@ func _execute_test() -> DebugActionResult:
 
 	# Check if fetch succeeded (not throttled or errored)
 	var fetch_status: String = fetch_result.get("status", "unknown")
-	if not assert_equals("ok", fetch_status, "fetch_and_activate should succeed (got: %s)" % fetch_status):
+	if not assert_equals(
+		"ok", fetch_status, "fetch_and_activate should succeed (got: %s)" % fetch_status
+	):
 		Log.info(
 			"fetch_and_activate returned: %s" % str(fetch_result),
 			{},

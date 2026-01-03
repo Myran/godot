@@ -41,7 +41,9 @@ func _execute_test() -> DebugActionResult:
 
 	# Check if fetch succeeded (not throttled or errored)
 	var fetch_status: String = fetch_result.get("status", "unknown")
-	if not assert_equals("ok", fetch_status, "fetch_and_activate should succeed (got: %s)" % fetch_status):
+	if not assert_equals(
+		"ok", fetch_status, "fetch_and_activate should succeed (got: %s)" % fetch_status
+	):
 		Log.info("fetch_and_activate returned: %s" % str(fetch_result))
 		return _assertion_result()
 
