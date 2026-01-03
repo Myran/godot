@@ -4,3 +4,7 @@ implementation "com.google.firebase:firebase-messaging"
 implementation "com.google.firebase:firebase-database"
 implementation "com.google.firebase:firebase-config"
 implementation "com.google.firebase:firebase-analytics"
+
+// Sentry Android SDK (needed for Sentry plugin transitive dependencies)
+// See: task-413, task-399
+implementation "io.sentry:sentry-android:8.28.0"
