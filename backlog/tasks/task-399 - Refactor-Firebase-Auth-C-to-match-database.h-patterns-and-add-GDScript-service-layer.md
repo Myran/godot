@@ -6,7 +6,7 @@ title: >-
 status: To Do
 assignee: []
 created_date: '2025-12-30 21:26'
-updated_date: '2026-01-01 14:08'
+updated_date: '2026-01-03 11:36'
 labels:
   - firebase
   - auth
@@ -140,6 +140,10 @@ The current auth.cpp works for Facebook and Apple sign-in. Changes must:
 - [ ] #16 #16 Use FirebaseRequest pattern (not raw signal indexing) for type-safe async handling
 
 - [ ] #17 Add firebase-auth-tests to firebase-all.json so tests run with `just test`
+
+- [ ] #18 #18 Facebook OAuth regression test passes after refactoring
+- [ ] #19 #19 Apple OAuth regression test passes after refactoring
+- [ ] #20 #20 All existing string parameters audited for CharString dangling pointer fix
 <!-- AC:END -->
 
 ## Implementation Plan
@@ -337,4 +341,190 @@ Exploration revealed that `auth.cpp` (11KB, 265 lines) already has:
 - `project/firebase/auth_service.gd` - New service layer
 - Debug actions in `project/debug/actions/firebase_auth/`
 - Test configs in `tests/debug_configs/`
+
+## Insights from Completed Tasks (2026-01-03)
+
+### From task-402 (Analytics) - DONE
+
+**C++ Patterns Established:**
+
+1. **Thread-safe singleton** - All new Firebase modules use:
+```cpp
+static std::mutex initialization_mutex;
+static std::atomic<bool> inited{false};
+static std::atomic<bool> is_shutting_down{false};
+static FirebaseAnalytics* singleton_instance;
+static std::mutex instance_mutex;
+```
+
+2. **Shutdown safety methods** (REQUIRED for macOS crash prevention):
+```cpp
+static void begin_shutdown();
+static bool is_app_shutting_down();
+```
+
+3. **UTF-8 Dangling Pointer Fix** - CRITICAL for Android JNI:
+```cpp
+// ❌ CRASHES - Dangling pointer
+const char* cstr = string_name.utf8().get_data();
+
+// ✅ CORRECT - Store CharString to extend lifetime
+CharString cs = string_name.utf8();
+firebase_call(cs.get_data());
+```
+
+4. **Game-specific helpers in GDScript, NOT C++** - No template rebuild for game changes
+
+**GDScript Patterns:**
+- `AnalyticsService extends RefCounted` (not Node)
+- `is_available()` check before all operations
+- Logging with `Log.info/debug/error` and tag arrays
+
+### From task-400 (Remote Config) - DONE
+
+**C++ Async Patterns:**
+
+1. **Request ID tracking** on all async methods:
+```cpp
+void fetch_and_activate_async(int p_request_id);
+```
+
+2. **MessageQueue marshalling** for thread safety:
+```cpp
+void _handle_fetch_on_main_thread(int req_id, bool success, int error, String error_msg);
+```
+
+3. **Signal structure** (consistent format):
+```cpp
+ADD_SIGNAL(MethodInfo("sign_in_completed",
+    PropertyInfo(Variant::INT, "request_id"),
+    PropertyInfo(Variant::BOOL, "success"),
+    PropertyInfo(Variant::STRING, "uid"),
+    PropertyInfo(Variant::STRING, "error_message")));
+```
+
+**GDScript Service Patterns:**
+
+1. **FirebaseRequest pattern**:
+```gdscript
+var request: FirebaseRequest = FirebaseRequest.new(request_id)
+_pending_requests[request_id] = request
+_cpp_auth.sign_in_async(request_id, ...)
+var result: Variant = await request.await_completion()
+```
+
+2. **Signal connection in `_connect_signals()`**
+3. **Pending request cleanup** after completion
+4. **Developer mode** for testing (bypass throttling)
+
+**Test Infrastructure:**
+- 5-8 debug actions per service
+- Platform filtering: `["android", "ios", "macos", "windows-physical", "editor"]`
+- Tags: `["firebase", "auth", "tdd"]`
+
+### Auth-Specific Implementation Checklist
+
+**Current auth.h MISSING:**
+- ❌ Thread-safe singleton (`static bool` → `std::atomic<bool>`)
+- ❌ `is_shutting_down` flag
+- ❌ `begin_shutdown()` / `is_app_shutting_down()`
+- ❌ Request ID parameters
+- ❌ `_handle_*_on_main_thread` methods
+- ❌ `sign_in_with_custom_token()` (BLOCKS task-404)
+- ❌ `get_id_token_async()` (backend verification)
+
+**Files to Create:**
+- `project/firebase/auth_service.gd`
+- `project/debug/actions/firebase_auth/auth_sign_in_anonymous_action.gd`
+- `project/debug/actions/firebase_auth/auth_sign_out_action.gd`
+- `project/debug/actions/firebase_auth/auth_get_user_info_action.gd`
+- `project/debug/actions/firebase_auth/auth_sign_in_custom_token_action.gd`
+- `project/debug/actions/firebase_auth/auth_get_id_token_action.gd`
+- `tests/debug_configs/firebase-auth-tests.json`
+
+**Implementation Order:**
+1. Thread Safety (singleton pattern)
+2. MessageQueue (main thread marshalling)
+3. Request IDs (concurrent operations)
+4. New Methods (custom token, ID token)
+5. GDScript Service (FirebaseRequest pattern)
+6. Debug Actions (5+ tests)
+7. Test Config (add to firebase-all.json)
+
+**Risk Mitigation:**
+- Preserve Facebook/Apple auth functionality
+- Apply UTF-8 CharString pattern to ALL strings
+- Test on Android first (strictest JNI validation)
+
+## CTO Review Approval (2026-01-03)
+
+**Verdict: ✅ APPROVED FOR IMPLEMENTATION**
+
+**Confidence: 85%**
+
+Expert panel reviewed:
+- Systems Architect: Thread safety pattern correct
+- Platform Specialist: UTF-8 CharString fix identified
+- Test Infrastructure: Added regression test criteria
+- Performance Engineer: MessageQueue marshalling sound
+- Debt Reviewer: Refactor-not-rewrite approach approved
+
+### Recommended Implementation Order
+
+**Phase 1: Thread Safety Foundation (CRITICAL - do first)**
+- Add std::atomic<bool> inited, is_shutting_down
+- Add std::mutex initialization_mutex
+- Add begin_shutdown()/is_app_shutting_down()
+- Audit existing methods for CharString fix
+
+**Phase 2: MessageQueue Marshalling**
+- Add _handle_*_on_main_thread methods
+- Modify existing callbacks to use MessageQueue
+- Add request ID parameters to existing methods
+
+**Phase 3: New Methods (unblocks task-404)**
+- sign_in_with_custom_token_async()
+- get_id_token_async()
+- AuthStateListener
+
+**Phase 4: GDScript Service Layer**
+- Create auth_service.gd with FirebaseRequest
+- Extend auth.gd for backward compatibility
+- Add to firebase_service.gd
+
+**Phase 5: Testing & Validation**
+- 5+ debug actions
+- firebase-auth-tests.json
+- Add to firebase-all.json
+- Regression test Facebook/Apple OAuth
+
+## Implementation Progress (2025-01-03)
+
+### ✅ Phase 1: Thread-Safe C++ Foundation
+
+- **auth.h**: Complete rewrite with thread-safe singleton pattern
+
+- **auth.cpp**: 727 lines with all CharString fixes applied
+
+- 6 CharString dangling pointer bugs fixed
+
+### ✅ Phase 2: MessageQueue Marshalling
+
+- All async operations use MessageQueue::push_callable
+
+### ✅ Phase 3: New Async Methods
+
+- sign_in_with_custom_token_async(), get_id_token_async()
+
+### ✅ Phase 4: GDScript Service Layer
+
+- auth_service.gd: 370+ lines with FirebaseRequest pattern
+
+### ✅ Phase 5: Debug Actions & Tests
+
+- 5 debug actions + 5 test configs created
+
+- Registered in debug_action_registry.gd
+
+- CI validation: 242 GDScript files passed
 <!-- SECTION:NOTES:END -->

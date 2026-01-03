@@ -1,10 +1,10 @@
 ---
 id: task-403
 title: 'Firebase Services Integration Epic - Auth, Remote Config, Firestore, Analytics'
-status: To Do
+status: In Progress
 assignee: []
 created_date: '2025-12-30 21:26'
-updated_date: '2025-12-31 11:21'
+updated_date: '2026-01-03 10:41'
 labels:
   - firebase
   - epic
@@ -123,9 +123,9 @@ All implementations must follow patterns from `database.cpp`:
 ## Acceptance Criteria
 <!-- AC:BEGIN -->
 - [ ] #1 #1 task-399 (Auth) completed with all acceptance criteria met
-- [ ] #2 #2 task-400 (Remote Config) completed with all acceptance criteria met
+- [x] #2 #2 task-400 (Remote Config) completed with all acceptance criteria met
 - [ ] #3 #3 task-401 (Firestore) completed with all acceptance criteria met
-- [ ] #4 #4 task-402 (Analytics) completed with all acceptance criteria met
+- [x] #4 #4 task-402 (Analytics) completed with all acceptance criteria met
 - [ ] #5 #5 task-404 (Steam Auth) completed with all acceptance criteria met
 - [ ] #6 #6 All services follow consistent 3-layer architecture (C++ → GDScript Service → Backend)
 - [ ] #7 #7 Cross-platform testing passes on Android (arm64 device)
@@ -240,4 +240,60 @@ Added task-404 (Steam Auth) as 5th child task in this epic.
 
 **task-404 (Steam):**
 - Unchanged: External dependencies + backend infrastructure
+
+## Progress Update (2026-01-03)
+
+### Completed Child Tasks (2 of 5)
+
+**task-402 (Analytics)** - ✅ **DONE** (2025-12-31)
+- Firebase Analytics C++ module implemented with UTF-8 dangling pointer fix
+- 6 debug actions all passing: log_event_basic, log_event_params, set_user_id, set_user_property, collection_enabled, reset_data
+- Cross-platform validation completed on Android, iOS, macOS, Windows
+- Key commits: `ee6b7657`, `6341d941`, `e7a925df`, `4af23be4`
+
+**task-400 (Remote Config)** - ✅ **DONE** (2026-01-01)
+- Remote Config debug actions and service layer implemented
+- Comprehensive tests with local+remote validation
+- TDD test infrastructure established
+- iOS cache issue diagnosed and resolved
+- Key commits: `d92c8df2`, `9d2e443b`, `efb6d6bd`, `e3701903`, `411a0bec`
+
+### Remaining Child Tasks (3 of 5)
+
+**task-399 (Auth)** - To Do
+- Required for Steam auth (signInWithCustomToken)
+- Thread-safe singleton refactoring needed
+
+**task-401 (Firestore)** - To Do (HIGHEST RISK)
+- Library existence must be verified first
+- Depends on Auth completion
+
+**task-404 (Steam Auth)** - To Do
+- Blocked by task-399 (Auth)
+- Requires backend Cloud Function infrastructure
+
+### Related Commits (Last 3 Days)
+
+```
+e3701903 feat: update godot submodule with Remote Config diagnostic improvements
+411a0bec docs: resolve iOS Remote Config cache issue and cleanup logging
+efb6d6bd feat: Add Firebase Remote Config C++ debug actions and TDD test infrastructure
+9d2e443b feat: Implement comprehensive Remote Config tests with local+remote validation
+d92c8df2 feat: Add Firebase Remote Config debug actions and service layer
+6341d941 feat: Complete Firebase Analytics cross-platform validation
+ee6b7657 feat: Implement Firebase Analytics with UTF-8 dangling pointer fix
+8bbfa6cb feat: Implement Firebase SDK Test Suite for TDD Development (task-406)
+```
+
+### Infrastructure Improvements
+
+- TDD test suite established (task-406) enabling rapid Firebase development
+- Build-export-test recipes added for all platforms
+- Cross-platform testing infrastructure validated
+
+### Next Steps
+
+1. **Recommended**: Start task-399 (Auth) - unblocks Steam auth and service integration
+2. After Auth: task-401 (Firestore) with library verification first
+3. Finally: task-404 (Steam Auth) once Auth is complete
 <!-- SECTION:NOTES:END -->
