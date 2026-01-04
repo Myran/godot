@@ -1,8 +1,6 @@
 def can_build(env, platform):
- if platform == "android":
-  return False
- if platform == "ios":
-  return True
+ # Temporarily disabled on all platforms to unblock macOS builds
+ # TODO: Re-enable after fixing module registration cache issue
  return False
 
 def configure(env):
