@@ -2,6 +2,11 @@ class_name CPPAuthDebugAction
 extends DebugAction
 ## Base class for C++ Firebase Auth debug actions.
 ## Provides NSRunLoop pumping for iOS/macOS callback execution (task-414).
+## Provides incremental request ID generation for better debugging.
+
+# Incremental request ID counter (shared across all instances)
+# Sequential IDs make logs easier to follow than random numbers
+static var _next_request_id: int = 0
 
 var cpp_auth: Object = null
 var cpp_auth_instance_id: int = -1
@@ -44,6 +49,15 @@ func get_cpp_firebase_auth() -> Object:
 		["debug", "cpp_auth"]
 	)
 	return cpp_auth
+
+
+# Get the next sequential request ID for Firebase async operations
+# Incremental IDs (0, 1, 2, ...) are more debuggable than random numbers
+# Wraps at 2^31 to fit in signed 32-bit int (C++ parameter type)
+func _get_next_request_id() -> int:
+	var id: int = _next_request_id
+	_next_request_id = (_next_request_id + 1) & 0x7FFFFFFF  # Wrap at 2^31
+	return id
 
 
 # Initialize Firebase instance for NSRunLoop pumping on iOS/macOS

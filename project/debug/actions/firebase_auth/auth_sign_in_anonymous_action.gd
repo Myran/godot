@@ -73,9 +73,8 @@ func _execute_action_logic(_params: Dictionary = {}) -> DebugActionResult:
 	_sign_in_success = false
 	_sign_in_uid = ""
 	_sign_in_error = ""
-	# Use random ID that fits in signed 32-bit int (C++ int parameter)
-	# randi() returns 64-bit, but C++ int is 32-bit - mask to positive 31-bit value
-	_expected_request_id = randi() & 0x7FFFFFFF
+	# Use incremental request ID (sequential, easier to debug than random)
+	_expected_request_id = _get_next_request_id()
 
 	# Get C++ FirebaseAuth instance
 	var auth: Object = get_cpp_firebase_auth()

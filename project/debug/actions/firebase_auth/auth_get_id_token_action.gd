@@ -92,8 +92,8 @@ func _execute_action_logic(_params: Dictionary = {}) -> DebugActionResult:
 	_start_nsloop_pumping()
 
 	# Request ID token with force refresh
-	# Use request ID that fits in signed 32-bit int (C++ int parameter)
-	var request_id: int = Time.get_ticks_msec() & 0x7FFFFFFF
+	# Use incremental request ID (sequential, easier to debug)
+	var request_id: int = _get_next_request_id()
 	Log.info(
 		"Requesting ID token",
 		{"request_id": request_id, "force_refresh": true},
