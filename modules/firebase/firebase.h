@@ -38,6 +38,10 @@ public:
 	static AppActivity GetAppActivity();
 	void cleanup_firebase();
 	void quit_app();
+
+	// iOS: Process Firebase notifications (task-414)
+	// Firebase iOS SDK requires CheckForNotifications() to process async callbacks
+	void process_notifications();
 };
 
 #endif // Firebase_h

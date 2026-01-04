@@ -6,6 +6,13 @@
 #include "firebase.h"
 #include "database.h"  // For FirebaseDatabase::begin_shutdown()
 
+#if defined(__APPLE__)
+#include <TargetConditionals.h>
+#if TARGET_OS_IPHONE
+#include "firebase/app.h"
+#endif
+#endif
+
 firebase::App* Firebase::app_ptr = NULL;
 
 Firebase::Firebase() {

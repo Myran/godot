@@ -12,6 +12,7 @@
 #if defined(__APPLE__)
 #include <TargetConditionals.h>
 #include <unistd.h>  // For _exit()
+#include <CoreFoundation/CoreFoundation.h>  // For CFRunLoopRunInMode (task-414)
 #if TARGET_OS_IPHONE
 // iOS-specific headers
 #import "drivers/apple_embedded/godot_app_delegate.h"
@@ -89,4 +90,25 @@ void Firebase::quit_app() {
 #else
     // Android/other platforms: no-op (they use Engine.get_main_loop().quit())
 #endif
+}
+
+void Firebase::process_notifications() {
+#if TARGET_OS_IPHONE || TARGET_OS_OSX
+    // CRITICAL (task-414): Firebase iOS/macOS SDK uses NSRunLoop to dispatch async callbacks
+    // Without pumping the runloop, Future<T>::OnCompletion callbacks never execute
+    // This is required for Auth, Database, Firestore, Messaging, etc. callbacks to work
+    //
+    // PERFORMANCE (task-414): Use CFRunLoopRunInMode with 0 timeout for minimal overhead
+    // - 0 seconds = don't wait, just process any pending events
+    // - returnAfterSourceHandled = true for quick return after processing
+    // - Estimated overhead: ~0.01ms per call (safe for per-frame calling)
+    //
+    // Reference: firebase-cpp-sdk-repo/messaging/tests/ios/messaging_test_util.mm:59
+    @autoreleasepool {
+        // Process any pending Firebase callbacks without blocking
+        // Returns immediately if no callbacks pending, or after processing one
+        CFRunLoopRunInMode(kCFRunLoopDefaultMode, 0, true);
+    }
+#endif
+    // Android: JNI callbacks work differently, no action needed
 }
