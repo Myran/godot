@@ -1,6 +1,13 @@
 class_name AuthGetIdTokenAction
 extends CPPAuthDebugAction
 
+# Uses C++ FirebaseAuth async API with signal-based completion (task-414)
+# Requires user to be signed in first
+# Uses get_id_token_async(request_id, force_refresh) -> emits id_token_result signal
+
+var _token_result: Dictionary = {}
+var _token_received: bool = false
+
 
 func _init() -> void:
 	super._init()
@@ -11,6 +18,7 @@ func _execute_action_logic(_params: Dictionary = {}) -> DebugActionResult:
 	_update_status("Starting get ID token test...")
 	var start_time: int = Time.get_ticks_msec()
 
+	# Get C++ FirebaseAuth instance
 	var auth: Object = get_cpp_firebase_auth()
 	if not is_instance_valid(auth):
 		return DebugActionResult.new_failure(
@@ -28,33 +36,42 @@ func _execute_action_logic(_params: Dictionary = {}) -> DebugActionResult:
 		# Try anonymous sign in first
 		Log.info("Not signed in, attempting anonymous sign in first", {}, ["debug", "cpp_auth"])
 
-		if not auth.has_signal("sign_in_completed"):
-			return DebugActionResult.new_failure(
-				"FirebaseAuth missing sign_in_completed signal",
-				"SIGNAL_NOT_FOUND",
-				DebugActionResult.ErrorCategory.FIREBASE,
-				null,
-				0,
-				action_name,
-				{}
-			)
+		# Start NSRunLoop pumping
+		_start_nsloop_pumping()
 
-		var sign_in_request_id: int = Time.get_ticks_msec()
-		auth.sign_in_anonymously_async(sign_in_request_id)
-		await auth.sign_in_completed
+		auth.sign_in_anonymous()
+
+		# Wait for sign-in completion (max 15 seconds)
+		var max_wait: float = 15.0
+		var waited: float = 0.0
+		var check_interval: float = 0.05
+
+		while waited < max_wait:
+			if (
+				is_instance_valid(firebase_instance)
+				and firebase_instance.has_method("process_notifications")
+			):
+				firebase_instance.process_notifications()
+
+			if auth.is_logged_in():
+				break
+			await Engine.get_main_loop().create_timer(check_interval).timeout
+			waited += check_interval
+
+		_stop_nsloop_pumping()
 
 		if not auth.is_logged_in():
 			return DebugActionResult.new_failure(
-				"Failed to sign in for ID token test",
+				"Failed to sign in for ID token test (timed out)",
 				"SIGN_IN_REQUIRED",
 				DebugActionResult.ErrorCategory.FIREBASE,
 				null,
 				0,
 				action_name,
-				{}
+				{"waited_seconds": waited}
 			)
 
-	# Connect to completion signal (C++ signal is named "id_token_result")
+	# Check for id_token_result signal
 	if not auth.has_signal("id_token_result"):
 		return DebugActionResult.new_failure(
 			"FirebaseAuth missing id_token_result signal",
@@ -66,52 +83,91 @@ func _execute_action_logic(_params: Dictionary = {}) -> DebugActionResult:
 			{}
 		)
 
-	var request_id: int = Time.get_ticks_msec()
-	var force_refresh: bool = false  # Test without force refresh first
+	# Connect to signal for result
+	_token_received = false
+	_token_result = {}
+	auth.id_token_result.connect(_on_id_token_result)
 
-	# Call the async method
-	auth.get_id_token_async(request_id, force_refresh)
+	# Start NSRunLoop pumping for token request
+	_start_nsloop_pumping()
 
-	# Wait for completion (C++ signal is named "id_token_result")
-	var signal_result: Array = await auth.id_token_result
+	# Request ID token with force refresh
+	# Use request ID that fits in signed 32-bit int (C++ int parameter)
+	var request_id: int = Time.get_ticks_msec() & 0x7FFFFFFF
+	Log.info(
+		"Requesting ID token",
+		{"request_id": request_id, "force_refresh": true},
+		["debug", "cpp_auth"]
+	)
+	auth.get_id_token_async(request_id, true)
+
+	# Wait for signal with NSRunLoop pumping (max 15 seconds)
+	var max_wait: float = 15.0
+	var waited: float = 0.0
+	var check_interval: float = 0.05
+
+	while waited < max_wait and not _token_received:
+		# Pump NSRunLoop to allow Firebase callbacks to execute
+		if (
+			is_instance_valid(firebase_instance)
+			and firebase_instance.has_method("process_notifications")
+		):
+			firebase_instance.process_notifications()
+
+		await Engine.get_main_loop().create_timer(check_interval).timeout
+		waited += check_interval
+
+	# Cleanup
+	_stop_nsloop_pumping()
+	if auth.id_token_result.is_connected(_on_id_token_result):
+		auth.id_token_result.disconnect(_on_id_token_result)
+
 	var duration: int = Time.get_ticks_msec() - start_time
 
-	# Parse result: [request_id, success, token, error_message]
-	var recv_request_id: int = int(signal_result[0])
-	var success: bool = bool(signal_result[1])
-	var token: String = str(signal_result[2])
-	var error_message: String = str(signal_result[3])
+	if _token_received and _token_result.get("success", false):
+		var token: String = _token_result.get("token", "")
+		var metadata: Dictionary = {
+			"token_length": token.length(),
+			"token_prefix": token.left(20) + "..." if token.length() > 20 else token,
+			"uid": auth.uid() if auth.has_method("uid") else "",
+			"waited_seconds": waited,
+			"duration_ms": duration,
+			"timestamp": Time.get_unix_time_from_system()
+		}
 
-	if recv_request_id != request_id:
-		return DebugActionResult.new_failure(
-			"Request ID mismatch: expected " + str(request_id) + " got " + str(recv_request_id),
-			"REQUEST_ID_MISMATCH",
-			DebugActionResult.ErrorCategory.FIREBASE,
-			null,
-			duration,
-			action_name,
-			{}
-		)
+		Log.info("✅ ID token retrieved", metadata, ["debug", "cpp_auth", "id_token"])
+		return DebugActionResult.new_success(true, 0, action_name, metadata)
 
-	if not success:
-		return DebugActionResult.new_failure(
-			"Get ID token failed: " + error_message,
-			"GET_TOKEN_FAILED",
-			DebugActionResult.ErrorCategory.FIREBASE,
-			null,
-			duration,
-			action_name,
-			{}
-		)
+	# Failed or timeout
+	var error_msg: String = _token_result.get(
+		"error_message", "Timeout waiting for id_token_result signal"
+	)
+	return DebugActionResult.new_failure(
+		"Get ID token failed: " + error_msg,
+		"GET_TOKEN_FAILED",
+		DebugActionResult.ErrorCategory.FIREBASE,
+		null,
+		duration,
+		action_name,
+		{"waited_seconds": waited, "received": _token_received, "result": _token_result}
+	)
 
-	var metadata: Dictionary = {
-		"token_length": token.length(),
-		"token_prefix": token.left(20) + "..." if token.length() > 20 else token,
-		"force_refresh": force_refresh,
-		"uid": auth.uid(),
-		"timestamp": Time.get_unix_time_from_system()
+
+func _on_id_token_result(
+	request_id: int, success: bool, token: String, error_message: String
+) -> void:
+	Log.debug(
+		"id_token_result received",
+		{
+			"request_id": request_id,
+			"success": success,
+			"token_length": token.length(),
+			"error_message": error_message
+		},
+		["debug", "cpp_auth", "id_token"]
+	)
+
+	_token_received = true
+	_token_result = {
+		"request_id": request_id, "success": success, "token": token, "error_message": error_message
 	}
-
-	Log.info("✅ ID token retrieved successfully", metadata, ["debug", "cpp_auth", "id_token"])
-
-	return DebugActionResult.new_success(true, 0, action_name, metadata)

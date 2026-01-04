@@ -1,11 +1,13 @@
 {
-  "description": "Firebase Auth anonymous sign in test (Task-399)",
+  "description": "Firebase Auth anonymous sign in test (Task-414 - signal-based)",
   "actions": [
     "cpp.firebase.auth.sign_in_anonymous"
   ],
   "platforms": [
     "android",
     "desktop",
-    "macos"
+    "ios",
+    "macos",
+    "windows-physical"
   ]
 }

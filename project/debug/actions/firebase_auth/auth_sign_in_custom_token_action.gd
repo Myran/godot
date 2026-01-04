@@ -39,7 +39,8 @@ func _execute_action_logic(_params: Dictionary = {}) -> DebugActionResult:
 			{}
 		)
 
-	var request_id: int = Time.get_ticks_msec()
+	# Use request ID that fits in signed 32-bit int (C++ int parameter)
+	var request_id: int = Time.get_ticks_msec() & 0x7FFFFFFF
 
 	# Call the async method with test token
 	auth.sign_in_with_custom_token_async(request_id, test_token)

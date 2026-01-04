@@ -19,7 +19,19 @@ func finish() -> void:
 	queue_free()
 
 
-func _on_signal_received(_signal_param: Variant = null, _signal: Variant = null) -> void:
+# Variadic signal handler - accepts up to 8 signal arguments + bound _signal
+# The _signal parameter (from .bind()) is always passed last by Godot
+func _on_signal_received(
+	_arg0: Variant = null,
+	_arg1: Variant = null,
+	_arg2: Variant = null,
+	_arg3: Variant = null,
+	_arg4: Variant = null,
+	_arg5: Variant = null,
+	_arg6: Variant = null,
+	_arg7: Variant = null,
+	_signal: Variant = null
+) -> void:
 	Log.error(
 		"Method not implemented in SignalAwaiter base class",
 		{"method": "_on_signal_received"},
@@ -31,7 +43,17 @@ func _on_signal_received(_signal_param: Variant = null, _signal: Variant = null)
 class Any:
 	extends SignalAwaiter
 
-	func _on_signal_received(_signal_param: Variant = null, _signal: Variant = null) -> void:
+	func _on_signal_received(
+		_arg0: Variant = null,
+		_arg1: Variant = null,
+		_arg2: Variant = null,
+		_arg3: Variant = null,
+		_arg4: Variant = null,
+		_arg5: Variant = null,
+		_arg6: Variant = null,
+		_arg7: Variant = null,
+		_signal: Variant = null
+	) -> void:
 		finish()
 
 
@@ -43,7 +65,17 @@ class Count:
 		super()
 		_connections = count
 
-	func _on_signal_received(_signal_param: Variant = null, _signal: Variant = null) -> void:
+	func _on_signal_received(
+		_arg0: Variant = null,
+		_arg1: Variant = null,
+		_arg2: Variant = null,
+		_arg3: Variant = null,
+		_arg4: Variant = null,
+		_arg5: Variant = null,
+		_arg6: Variant = null,
+		_arg7: Variant = null,
+		_signal: Variant = null
+	) -> void:
 		if get_incoming_connections().size() == _connections:
 			finish()
 
@@ -63,7 +95,17 @@ class SequenceBreak:
 		super()
 		_signals = signals
 
-	func _on_signal_received(_signal_param: Variant = null, _signal: Variant = null) -> void:
+	func _on_signal_received(
+		_arg0: Variant = null,
+		_arg1: Variant = null,
+		_arg2: Variant = null,
+		_arg3: Variant = null,
+		_arg4: Variant = null,
+		_arg5: Variant = null,
+		_arg6: Variant = null,
+		_arg7: Variant = null,
+		_signal: Variant = null
+	) -> void:
 		if _signal != _signals[0]:
 			finish()
 
@@ -71,7 +113,17 @@ class SequenceBreak:
 class SequenceMatch:
 	extends SequenceBreak
 
-	func _on_signal_received(_signal_param: Variant = null, _signal: Variant = null) -> void:
+	func _on_signal_received(
+		_arg0: Variant = null,
+		_arg1: Variant = null,
+		_arg2: Variant = null,
+		_arg3: Variant = null,
+		_arg4: Variant = null,
+		_arg5: Variant = null,
+		_arg6: Variant = null,
+		_arg7: Variant = null,
+		_signal: Variant = null
+	) -> void:
 		if _signal == _signals[0]:
 			_signals.remove_at(0)
 			if _signals.is_empty():
@@ -87,6 +139,16 @@ class Timeout:
 		_timer = Engine.get_main_loop().create_timer(timeout_seconds)
 		add(_timer.timeout)
 
-	func _on_signal_received(_signal_param: Variant = null, _signal: Variant = null) -> void:
+	func _on_signal_received(
+		_arg0: Variant = null,
+		_arg1: Variant = null,
+		_arg2: Variant = null,
+		_arg3: Variant = null,
+		_arg4: Variant = null,
+		_arg5: Variant = null,
+		_arg6: Variant = null,
+		_arg7: Variant = null,
+		_signal: Variant = null
+	) -> void:
 		# Timer expired - finish the awaiter
 		finish()
