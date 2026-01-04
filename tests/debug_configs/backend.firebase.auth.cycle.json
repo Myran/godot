@@ -1,0 +1,8 @@
+{
+  "description": "Backend AuthService: Full auth lifecycle (sign in -> verify -> sign out -> verify)",
+  "actions": [
+    "backend.firebase.auth.sign_in_then_sign_out"
+  ],
+  "platforms": ["android", "ios", "macos", "windows-physical", "desktop"],
+  "tags": ["firebase", "auth", "backend", "tdd"]
+}

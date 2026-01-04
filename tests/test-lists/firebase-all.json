@@ -17,6 +17,12 @@
     "firebase-three-actions-test",
     "system-error-handling",
     "system-performance",
-    "cpp.firebase.auth.tests"
+    "cpp.firebase.auth.tests",
+    "backend.firebase.auth.sign_in_anonymous",
+    "backend.firebase.auth.cycle",
+    "backend.firebase.auth.id_token",
+    "backend.firebase.auth.anonymous_check",
+    "backend.firebase.auth.error_handling",
+    "backend.firebase.auth.state_transitions"
   ]
 }

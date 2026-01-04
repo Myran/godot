@@ -1,0 +1,13 @@
+{
+  "description": "Backend AuthService: Comprehensive test suite (all service layer tests)",
+  "actions": [
+    "backend.firebase.auth.sign_in_anonymous",
+    "backend.firebase.auth.sign_in_then_sign_out",
+    "backend.firebase.auth.get_id_token_flow",
+    "backend.firebase.auth.anonymous_check",
+    "backend.firebase.auth.error_handling",
+    "backend.firebase.auth.state_transitions"
+  ],
+  "platforms": ["android", "ios", "macos", "windows-physical", "desktop"],
+  "tags": ["firebase", "auth", "backend", "tdd", "comprehensive"]
+}

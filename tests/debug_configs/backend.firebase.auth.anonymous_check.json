@@ -1,0 +1,8 @@
+{
+  "description": "Backend AuthService: Anonymous user detection validation",
+  "actions": [
+    "backend.firebase.auth.anonymous_check"
+  ],
+  "platforms": ["android", "ios", "macos", "windows-physical", "desktop"],
+  "tags": ["firebase", "auth", "backend", "tdd"]
+}

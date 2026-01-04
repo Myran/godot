@@ -1,0 +1,14 @@
+{
+  "description": "Firebase AuthService anonymous sign in test (production layer)",
+  "actions": [
+    "backend.firebase.auth.sign_in_anonymous"
+  ],
+  "platforms": [
+    "android",
+    "ios",
+    "macos",
+    "windows-physical",
+    "desktop"
+  ],
+  "tags": ["firebase", "auth", "backend", "tdd"]
+}

@@ -1,0 +1,8 @@
+{
+  "description": "Backend AuthService: ID token retrieval and validation for backend verification",
+  "actions": [
+    "backend.firebase.auth.get_id_token_flow"
+  ],
+  "platforms": ["android", "ios", "macos", "windows-physical", "desktop"],
+  "tags": ["firebase", "auth", "backend", "tdd"]
+}

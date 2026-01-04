@@ -1,0 +1,8 @@
+{
+  "description": "Backend AuthService: Auth state transition validation (signed out -> signed in -> signed out)",
+  "actions": [
+    "backend.firebase.auth.state_transitions"
+  ],
+  "platforms": ["android", "ios", "macos", "windows-physical", "desktop"],
+  "tags": ["firebase", "auth", "backend", "tdd"]
+}

@@ -89,6 +89,12 @@ func _register_all_actions() -> void:
 	if firebase_auth_actions_script:
 		firebase_auth_actions_script.register_all(self)
 
+	var backend_auth_actions_script: GDScript = load(
+		"res://debug/actions/registrations/backend_auth_actions.gd"
+	)
+	if backend_auth_actions_script:
+		backend_auth_actions_script.register_all(self)
+
 
 func register_action(action: DebugAction) -> bool:
 	if not action:
