@@ -63,6 +63,9 @@ export-test-android CONFIG="":
         PASSED=0
         FAILED=0
 
+        # Temporarily disable exit on error for the loop
+        set +e
+
         INDEX=0
         while IFS= read -r config; do
             if [[ -n "$config" ]]; then
@@ -73,11 +76,12 @@ export-test-android CONFIG="":
                 echo ""
 
                 echo "📤 Step 1: Exporting APK..."
-                # Run in subshell to prevent exit calls from terminating our loop
-                if (just export-android-apk); then
+                just export-android-apk
+                EXPORT_RESULT=$?
+                if [ $EXPORT_RESULT -eq 0 ]; then
                     echo "✅ Export successful"
                 else
-                    echo "❌ Export failed"
+                    echo "❌ Export failed (exit code: $EXPORT_RESULT)"
                     FAILED=$((FAILED + 1))
                     echo "❌ Config $config: FAILED (export)"
                     echo ""
@@ -86,11 +90,12 @@ export-test-android CONFIG="":
                 echo ""
 
                 echo "📲 Step 2: Deploying to Android device..."
-                # Run in subshell to prevent exit calls from terminating our loop
-                if (just deploy-android); then
+                just deploy-android
+                DEPLOY_RESULT=$?
+                if [ $DEPLOY_RESULT -eq 0 ]; then
                     echo "✅ Deploy successful"
                 else
-                    echo "❌ Deploy failed"
+                    echo "❌ Deploy failed (exit code: $DEPLOY_RESULT)"
                     FAILED=$((FAILED + 1))
                     echo "❌ Config $config: FAILED (deploy)"
                     echo ""
@@ -99,17 +104,21 @@ export-test-android CONFIG="":
                 echo ""
 
                 echo "🧪 Step 3: Testing config: $config"
-                # Run test in subshell to prevent exit calls from terminating our loop
-                if (just test-android-target "$config"); then
+                just test-android-target "$config"
+                TEST_RESULT=$?
+                if [ $TEST_RESULT -eq 0 ]; then
                     PASSED=$((PASSED + 1))
                     echo "✅ Config $config: PASSED"
                 else
                     FAILED=$((FAILED + 1))
-                    echo "❌ Config $config: FAILED"
+                    echo "❌ Config $config: FAILED (exit code: $TEST_RESULT)"
                 fi
                 echo ""
             fi
         done <<< "$RESOLVED"
+
+        # Re-enable exit on error
+        set -e
 
         # Summary
         echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
