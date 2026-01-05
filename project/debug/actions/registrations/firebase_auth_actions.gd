@@ -14,6 +14,9 @@ const AuthSignInCustomTokenActionClass = preload(
 const AuthGetIdTokenActionClass = preload(
 	"res://debug/actions/firebase_auth/auth_get_id_token_action.gd"
 )
+const AuthStateListenerActionClass = preload(
+	"res://debug/actions/firebase_auth/auth_state_listener_action.gd"
+)
 
 
 static func register_all(registry: DebugActionRegistry) -> void:
@@ -24,5 +27,6 @@ static func register_all(registry: DebugActionRegistry) -> void:
 	helper.register(AuthGetUserInfoActionClass.new())
 	helper.register(AuthSignInCustomTokenActionClass.new())
 	helper.register(AuthGetIdTokenActionClass.new())
+	helper.register(AuthStateListenerActionClass.new())
 
 	helper.complete()

@@ -1,0 +1,7 @@
+{
+  "description": "C++ AuthStateListener test - Validates auth state change signals (Task-420)",
+  "actions": [
+    "cpp.firebase.auth.state_listener"
+  ],
+  "platforms": ["android", "ios", "macos", "windows-physical"]
+}
