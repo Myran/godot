@@ -1,0 +1,4 @@
+# Backend auth actions use early returns for validation - this is intentional pattern
+project/debug/actions/backend_auth/backend_auth_anonymous_check_action.gd
+project/debug/actions/backend_auth/backend_auth_get_id_token_flow_action.gd
+project/debug/actions/backend_auth/backend_auth_state_transitions_action.gd
