@@ -364,18 +364,13 @@ func _connect_signals() -> void:
 			[Log.TAG_FIREBASE, Log.TAG_ERROR, "auth"]
 		)
 
-	err = _cpp_auth.email_sign_in_completed.connect(_on_email_sign_in_completed)
-	if err != OK:
-		Log.error(
-			"AuthService: Failed to connect email_sign_in_completed",
-			{"error": error_string(err)},
-			[Log.TAG_FIREBASE, Log.TAG_ERROR, "auth"]
-		)
+	# Note: email sign-in uses the standard sign_in_completed signal (same as anonymous)
+	# There is no separate email_sign_in_completed signal in the C++ layer
 
-	err = _cpp_auth.id_token_completed.connect(_on_id_token_completed)
+	err = _cpp_auth.id_token_result.connect(_on_id_token_result)
 	if err != OK:
 		Log.error(
-			"AuthService: Failed to connect id_token_completed",
+			"AuthService: Failed to connect id_token_result",
 			{"error": error_string(err)},
 			[Log.TAG_FIREBASE, Log.TAG_ERROR, "auth"]
 		)
@@ -414,8 +409,10 @@ func _connect_signals() -> void:
 
 
 func _on_sign_in_completed(
-	request_id: int, success: bool, uid: String, error_code: int, error_message: String
+	request_id: int, success: bool, uid: String, error_message: String
 ) -> void:
+	# C++ signal: sign_in_completed(request_id, success, uid, error_message)
+	# Note: C++ layer converts error codes to strings before emitting
 	Log.debug(
 		"AuthService: sign_in_completed received",
 		{"request_id": request_id, "success": success, "uid": uid},
@@ -440,14 +437,15 @@ func _on_sign_in_completed(
 		request.complete_with_success({"uid": uid, "user": get_current_user()})
 		sign_in_completed.emit(request_id, true, uid, "")
 	else:
-		var code: String = _firebase_error_code_to_string(error_code)
-		request.complete_with_error(code, error_message)
+		request.complete_with_error("AUTH_ERROR", error_message)
 		sign_in_completed.emit(request_id, false, "", error_message)
 
 
 func _on_custom_token_sign_in_completed(
-	request_id: int, success: bool, uid: String, error_code: int, error_message: String
+	request_id: int, success: bool, uid: String, error_message: String
 ) -> void:
+	# C++ signal: custom_token_sign_in_completed(request_id, success, uid, error_message)
+	# Note: C++ layer converts error codes to strings before emitting
 	Log.debug(
 		"AuthService: custom_token_sign_in_completed received",
 		{"request_id": request_id, "success": success, "uid": uid},
@@ -470,44 +468,15 @@ func _on_custom_token_sign_in_completed(
 	if success:
 		request.complete_with_success({"uid": uid, "user": get_current_user()})
 	else:
-		var code: String = _firebase_error_code_to_string(error_code)
-		request.complete_with_error(code, error_message)
+		request.complete_with_error("AUTH_ERROR", error_message)
 
 
-func _on_email_sign_in_completed(
-	request_id: int, success: bool, uid: String, error_code: int, error_message: String
-) -> void:
-	Log.debug(
-		"AuthService: email_sign_in_completed received",
-		{"request_id": request_id, "success": success, "uid": uid},
-		[Log.TAG_FIREBASE, "auth"]
-	)
-
-	_refresh_user_state()
-
-	if not _pending_requests.has(request_id):
-		Log.warning(
-			"AuthService: No pending request for email sign in ID",
-			{"request_id": request_id},
-			[Log.TAG_FIREBASE, "auth"]
-		)
-		return
-
-	var request: FirebaseRequest = _pending_requests[request_id]
-	_pending_requests.erase(request_id)
-
-	if success:
-		request.complete_with_success({"uid": uid, "user": get_current_user()})
-	else:
-		var code: String = _firebase_error_code_to_string(error_code)
-		request.complete_with_error(code, error_message)
-
-
-func _on_id_token_completed(
+func _on_id_token_result(
 	request_id: int, success: bool, token: String, error_message: String
 ) -> void:
+	# C++ signal: id_token_result(request_id, success, token, error_message)
 	Log.debug(
-		"AuthService: id_token_completed received",
+		"AuthService: id_token_result received",
 		{"request_id": request_id, "success": success},
 		[Log.TAG_FIREBASE, "auth"]
 	)
