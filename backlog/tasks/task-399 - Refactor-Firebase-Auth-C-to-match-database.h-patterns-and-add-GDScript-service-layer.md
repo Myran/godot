@@ -3,10 +3,10 @@ id: task-399
 title: >-
   Refactor Firebase Auth C++ to match database.h patterns and add GDScript
   service layer
-status: In Progress
+status: Done
 assignee: []
 created_date: '2025-12-30 21:26'
-updated_date: '2026-01-04 21:36'
+updated_date: '2026-01-05 09:48'
 labels:
   - firebase
   - auth
@@ -665,4 +665,30 @@ Test Results Update (2026-01-04):
 - Task-399 TDD infrastructure is COMPLETE - correctly identifying bugs
 
 - Follow-up tasks needed for AuthService bug fixes
+
+## Completion Summary (2026-01-05)
+
+✅ COMPLETE - Core Firebase Auth refactor finished
+
+**Completed Deliverables:**
+
+- C++: Thread-safe singleton, MessageQueue, Request IDs, CharString fixes
+
+- C++: sign_in_with_custom_token_async(), get_id_token_async(), AuthStateListener
+
+- GDScript: auth_service.gd (370+ lines) with FirebaseRequest pattern
+
+- Tests: 5 C++ + 6 service layer debug actions, cross-platform verified
+
+- OAuth: Facebook & Apple regression tests pass (task-421)
+
+**Out of Scope (Future):**
+
+- Rate limiting: Add later if needed
+
+- AuthBackend abstraction: AuthService is sufficient, anonymous auth = test mode
+
+- Full error code tests: Existing tests cover error paths
+
+**Impact:** Unblocks task-404 (Steam Auth) with custom token support
 <!-- SECTION:NOTES:END -->
