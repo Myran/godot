@@ -157,13 +157,24 @@ func _verify_anonymous_state(auth: AuthService, start_time: int) -> Dictionary:
 			"metadata": {"step": "verify_anonymous", "providers": providers}
 		}
 
-	# Verify providers array is empty or has empty provider name for anonymous users
+	# Verify providers array is correct for anonymous users
+	# Firebase uses "firebase" as the provider_id for anonymous users
 	var providers: Array = auth.get_providers()
-	if providers.size() > 0:
+	if providers.size() > 1:
+		return {
+			"message": "Anonymous user has multiple providers",
+			"code": "PROVIDER_MISMATCH",
+			"category": DebugActionResult.ErrorCategory.VALIDATION,
+			"duration": Time.get_ticks_msec() - start_time,
+			"metadata": {"step": "verify_providers", "providers": providers}
+		}
+
+	if providers.size() == 1:
 		var first_provider: Variant = providers[0]
 		if first_provider is Dictionary:
 			var provider_name: String = first_provider.get("name", "")
-			if not provider_name.is_empty():
+			# Anonymous users have either empty name or "firebase" as provider_id
+			if not provider_name.is_empty() and provider_name != "firebase":
 				return {
 					"message": "Anonymous user has non-empty provider name",
 					"code": "PROVIDER_MISMATCH",

@@ -235,8 +235,16 @@ func is_anonymous() -> bool:
 	if not _is_signed_in:
 		return false
 	var providers: Array = get_providers()
-	# Anonymous user has no providers or empty provider name
-	return providers.is_empty() or (providers.size() == 1 and providers[0].get("name", "") == "")
+	# Anonymous user has:
+	# - No providers, OR
+	# - Single provider with empty name (edge case), OR
+	# - Single provider with "firebase" as provider_id (Firebase's anonymous identifier)
+	if providers.is_empty():
+		return true
+	if providers.size() == 1:
+		var provider_name: String = providers[0].get("name", "")
+		return provider_name == "" or provider_name == "firebase"
+	return false
 
 
 func check_provider_connection(provider_name: String) -> bool:
