@@ -15,8 +15,14 @@
 #include <atomic>
 #include <mutex>
 
+// Forward declaration for AuthStateListener
+class GodotAuthStateListener;
+
 class FirebaseAuth : public RefCounted {
 	GDCLASS(FirebaseAuth, RefCounted);
+
+	// Allow listener class to access private members
+	friend class GodotAuthStateListener;
 
 private:
 	// Thread-safe singleton implementation (matches database.h pattern)
@@ -29,6 +35,10 @@ private:
 	// Static Firebase resources
 	static firebase::auth::Auth *auth;
 	static firebase::auth::User::UserProfile profile;
+
+	// AuthStateListener (Task-420)
+	static GodotAuthStateListener* auth_state_listener;
+	static std::atomic<bool> auth_state_listener_active;
 
 	// Private constructor for singleton pattern
 	FirebaseAuth();
@@ -44,6 +54,9 @@ protected:
 	void _handle_unlink_on_main_thread(int req_id, bool success, int error, String error_msg);
 	void _handle_custom_token_on_main_thread(int req_id, bool success, String uid, int error, String error_msg);
 	void _handle_id_token_on_main_thread(int req_id, bool success, String token, String error_msg);
+
+	// AuthStateListener callback handler (Task-420)
+	void _handle_auth_state_changed_on_main_thread(bool is_signed_in, String uid);
 
 public:
 	// Thread-safe singleton access methods
@@ -88,6 +101,11 @@ public:
 	void OnCreateUserCallback(const firebase::Future<firebase::auth::AuthResult> &result, void *user_data);
 	void OnLinkUserCallback(const firebase::Future<firebase::auth::AuthResult> &result, void *user_data);
 	void OnUnLinkUserCallback(const firebase::Future<firebase::auth::AuthResult> &result, void *user_data);
+
+	// --- AuthStateListener Methods (Task-420) ---
+	void start_auth_state_listener();
+	void stop_auth_state_listener();
+	bool is_auth_state_listener_active();
 };
 
 #endif // FirebaseAuth_h

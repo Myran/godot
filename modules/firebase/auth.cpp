@@ -17,6 +17,47 @@
 #endif
 
 
+// --- AuthStateListener Implementation (Task-420) ---
+// Listens for Firebase Auth state changes and marshals callbacks to main thread
+class GodotAuthStateListener : public firebase::auth::AuthStateListener {
+public:
+	GodotAuthStateListener(FirebaseAuth* p_owner) : owner(p_owner) {}
+
+	void OnAuthStateChanged(firebase::auth::Auth* auth) override {
+		// WORKER THREAD - Called from Firebase SDK thread
+		if (FirebaseAuth::is_app_shutting_down()) {
+			print_line("[Auth] AuthStateListener: Ignoring callback during shutdown");
+			return;
+		}
+
+		if (!auth) {
+			print_line("[Auth] AuthStateListener: Auth is null");
+			return;
+		}
+
+		firebase::auth::User user = auth->current_user();
+		bool is_signed_in = user.is_valid();
+		String uid_str = "";
+
+		if (is_signed_in) {
+			uid_str = String(user.uid().c_str());
+			print_line(String("[Auth] AuthStateListener: User signed in. UID: ") + uid_str);
+		} else {
+			print_line("[Auth] AuthStateListener: User signed out");
+		}
+
+		// Marshal to main thread via MessageQueue
+		MessageQueue::get_singleton()->push_callable(
+			callable_mp(owner, &FirebaseAuth::_handle_auth_state_changed_on_main_thread)
+				.bind(is_signed_in, uid_str)
+		);
+	}
+
+private:
+	FirebaseAuth* owner;
+};
+
+
 // --- Thread-Safe Singleton Member Initialization (matches database.cpp pattern) ---
 std::mutex FirebaseAuth::initialization_mutex;
 std::atomic<bool> FirebaseAuth::inited(false);
@@ -27,6 +68,10 @@ std::mutex FirebaseAuth::instance_mutex;
 // Static Firebase resources
 firebase::auth::Auth* FirebaseAuth::auth = nullptr;
 firebase::auth::User::UserProfile FirebaseAuth::profile;
+
+// AuthStateListener resources (Task-420)
+GodotAuthStateListener* FirebaseAuth::auth_state_listener = nullptr;
+std::atomic<bool> FirebaseAuth::auth_state_listener_active(false);
 
 
 // --- Thread-Safe Singleton Access (matches database.cpp pattern) ---
@@ -86,6 +131,15 @@ FirebaseAuth::~FirebaseAuth() {
 
     std::lock_guard<std::mutex> cleanup_lock(instance_mutex);
 
+    // Stop and clean up AuthStateListener (Task-420)
+    if (auth_state_listener && auth) {
+        print_line("[Auth] Removing AuthStateListener");
+        auth->RemoveAuthStateListener(auth_state_listener);
+        delete auth_state_listener;
+        auth_state_listener = nullptr;
+        auth_state_listener_active.store(false);
+    }
+
     // Reset auth instance reference
     auth = nullptr;
 
@@ -141,6 +195,15 @@ void FirebaseAuth::_handle_id_token_on_main_thread(int req_id, bool success, Str
     }
     print_line(String("[Auth] ID token result on main thread. ReqID: ") + itos(req_id) + " Success: " + (success ? "true" : "false"));
     emit_signal("id_token_result", req_id, success, token, error_msg);
+}
+
+void FirebaseAuth::_handle_auth_state_changed_on_main_thread(bool is_signed_in, String uid) {
+    if (is_shutting_down.load()) {
+        print_line("[Auth] Ignoring auth_state_changed callback during shutdown");
+        return;
+    }
+    print_line(String("[Auth] Auth state changed on main thread. SignedIn: ") + (is_signed_in ? "true" : "false") + " UID: " + uid);
+    emit_signal("auth_state_changed", is_signed_in, uid);
 }
 
 
@@ -703,6 +766,52 @@ void FirebaseAuth::unlink_provider_async(int p_request_id, String provider_name)
 }
 
 
+// --- AuthStateListener Methods (Task-420) ---
+
+void FirebaseAuth::start_auth_state_listener() {
+    if (!inited.load() || !auth) {
+        print_error("[Auth] start_auth_state_listener failed: Auth not initialized.");
+        return;
+    }
+
+    if (auth_state_listener_active.load()) {
+        print_line("[Auth] AuthStateListener already active, ignoring start request.");
+        return;
+    }
+
+    print_line("[Auth] Starting AuthStateListener");
+
+    // Create and register the listener
+    auth_state_listener = new GodotAuthStateListener(this);
+    auth->AddAuthStateListener(auth_state_listener);
+    auth_state_listener_active.store(true);
+
+    print_line("[Auth] AuthStateListener registered successfully");
+}
+
+void FirebaseAuth::stop_auth_state_listener() {
+    if (!auth_state_listener_active.load()) {
+        print_line("[Auth] AuthStateListener not active, ignoring stop request.");
+        return;
+    }
+
+    print_line("[Auth] Stopping AuthStateListener");
+
+    if (auth_state_listener && auth) {
+        auth->RemoveAuthStateListener(auth_state_listener);
+        delete auth_state_listener;
+        auth_state_listener = nullptr;
+    }
+    auth_state_listener_active.store(false);
+
+    print_line("[Auth] AuthStateListener stopped successfully");
+}
+
+bool FirebaseAuth::is_auth_state_listener_active() {
+    return auth_state_listener_active.load();
+}
+
+
 // --- Binding Methods ---
 
 void FirebaseAuth::_bind_methods() {
@@ -731,6 +840,11 @@ void FirebaseAuth::_bind_methods() {
     ClassDB::bind_method(D_METHOD("link_facebook_async", "request_id", "token"), &FirebaseAuth::link_facebook_async);
     ClassDB::bind_method(D_METHOD("link_apple_async", "request_id", "token", "nonce"), &FirebaseAuth::link_apple_async);
     ClassDB::bind_method(D_METHOD("unlink_provider_async", "request_id", "provider_name"), &FirebaseAuth::unlink_provider_async);
+
+    // AuthStateListener methods (Task-420)
+    ClassDB::bind_method(D_METHOD("start_auth_state_listener"), &FirebaseAuth::start_auth_state_listener);
+    ClassDB::bind_method(D_METHOD("stop_auth_state_listener"), &FirebaseAuth::stop_auth_state_listener);
+    ClassDB::bind_method(D_METHOD("is_auth_state_listener_active"), &FirebaseAuth::is_auth_state_listener_active);
 
     // Legacy signals (preserved for backward compatibility)
     ADD_SIGNAL(MethodInfo("logged_in", PropertyInfo(Variant::INT, "error")));
@@ -765,4 +879,9 @@ void FirebaseAuth::_bind_methods() {
         PropertyInfo(Variant::INT, "request_id"),
         PropertyInfo(Variant::BOOL, "success"),
         PropertyInfo(Variant::STRING, "error_message")));
+
+    // AuthStateListener signal (Task-420)
+    ADD_SIGNAL(MethodInfo("auth_state_changed",
+        PropertyInfo(Variant::BOOL, "is_signed_in"),
+        PropertyInfo(Variant::STRING, "uid")));
 }
