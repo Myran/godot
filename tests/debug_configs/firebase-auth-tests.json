@@ -1,15 +1,12 @@
 {
-  "description": "Firebase Auth feature tests (8 tests)",
+  "description": "Firebase Auth feature tests - C++ layer tests only. For full auth validation including service layer, use firebase-auth-all.json test list.",
   "actions": [
-    "test.auth.sign_in_anonymous",
-    "test.auth.sign_in_custom_token",
-    "test.auth.sign_in_email",
-    "test.auth.get_id_token",
-    "test.auth.sign_out",
-    "test.auth.get_uid",
-    "test.auth.is_logged_in",
-    "test.auth.state_changed"
+    "cpp.firebase.auth.sign_in_anonymous",
+    "cpp.firebase.auth.get_user_info",
+    "cpp.firebase.auth.get_id_token",
+    "cpp.firebase.auth.sign_out",
+    "cpp.firebase.auth.state_listener"
   ],
   "platforms": ["android", "ios", "macos", "desktop"],
-  "tags": ["firebase", "auth", "tdd"]
+  "tags": ["firebase", "auth", "cpp"]
 }
