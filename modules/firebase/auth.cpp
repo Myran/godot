@@ -511,6 +511,47 @@ void FirebaseAuth::sign_in_with_custom_token_async(int p_request_id, String toke
     });
 }
 
+void FirebaseAuth::sign_in_with_email_async(int p_request_id, String email, String password)
+{
+    if (!inited.load() || !auth) {
+        print_error("[Auth] sign_in_with_email_async failed: Auth not initialized.");
+        call_deferred(SNAME("emit_signal"), SNAME("sign_in_completed"), p_request_id, false, String(""), String("Auth not initialized"));
+        return;
+    }
+
+    print_line(String("[Auth] Start async email sign in. ReqID: ") + itos(p_request_id));
+
+    // CRITICAL: Store CharString to extend lifetime (Task-419)
+    CharString email_cs = email.utf8();
+    CharString password_cs = password.utf8();
+
+    firebase::Future<firebase::auth::AuthResult> result = auth->SignInWithEmailAndPassword(email_cs.get_data(), password_cs.get_data());
+
+    result.OnCompletion([this, p_request_id](const firebase::Future<firebase::auth::AuthResult>& result) {
+        if (is_shutting_down.load()) {
+            print_line("[Auth] Ignoring email sign in callback during shutdown");
+            return;
+        }
+
+        int error = result.error();
+        bool success = (error == firebase::auth::kAuthErrorNone);
+        String uid_str = "";
+        String error_msg = result.error_message() ? String(result.error_message()) : "";
+
+        if (success) {
+            const firebase::auth::AuthResult* auth_result = result.result();
+            if (auth_result && auth_result->user.is_valid()) {
+                uid_str = String(auth_result->user.uid().c_str());
+            }
+        }
+
+        MessageQueue::get_singleton()->push_callable(
+            callable_mp(this, &FirebaseAuth::_handle_sign_in_on_main_thread)
+                .bind(p_request_id, success, uid_str, error, error_msg)
+        );
+    });
+}
+
 void FirebaseAuth::get_id_token_async(int p_request_id, bool force_refresh)
 {
     if (!inited.load() || !auth) {
@@ -685,6 +726,7 @@ void FirebaseAuth::_bind_methods() {
     ClassDB::bind_method(D_METHOD("sign_in_facebook_async", "request_id", "token"), &FirebaseAuth::sign_in_facebook_async);
     ClassDB::bind_method(D_METHOD("sign_in_apple_async", "request_id", "token", "nonce"), &FirebaseAuth::sign_in_apple_async);
     ClassDB::bind_method(D_METHOD("sign_in_with_custom_token_async", "request_id", "token"), &FirebaseAuth::sign_in_with_custom_token_async);
+    ClassDB::bind_method(D_METHOD("sign_in_with_email_async", "request_id", "email", "password"), &FirebaseAuth::sign_in_with_email_async);
     ClassDB::bind_method(D_METHOD("get_id_token_async", "request_id", "force_refresh"), &FirebaseAuth::get_id_token_async);
     ClassDB::bind_method(D_METHOD("link_facebook_async", "request_id", "token"), &FirebaseAuth::link_facebook_async);
     ClassDB::bind_method(D_METHOD("link_apple_async", "request_id", "token", "nonce"), &FirebaseAuth::link_apple_async);

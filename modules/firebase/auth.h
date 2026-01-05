@@ -78,6 +78,7 @@ public:
 	void sign_in_facebook_async(int p_request_id, String token);
 	void sign_in_apple_async(int p_request_id, String token, String nonce);
 	void sign_in_with_custom_token_async(int p_request_id, String token);
+	void sign_in_with_email_async(int p_request_id, String email, String password);
 	void get_id_token_async(int p_request_id, bool force_refresh);
 	void link_facebook_async(int p_request_id, String token);
 	void link_apple_async(int p_request_id, String token, String nonce);
