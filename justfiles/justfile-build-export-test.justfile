@@ -59,6 +59,10 @@ export-test-android CONFIG="":
         echo "📋 Found $LINE_COUNT config(s)"
         echo ""
 
+        # Track pass/fail counts
+        PASSED=0
+        FAILED=0
+
         INDEX=0
         while IFS= read -r config; do
             if [[ -n "$config" ]]; then
@@ -77,10 +81,29 @@ export-test-android CONFIG="":
                 echo ""
 
                 echo "🧪 Step 3: Testing config: $config"
-                just test-android-target "$config"
+                if just test-android-target "$config"; then
+                    PASSED=$((PASSED + 1))
+                    echo "✅ Config $config: PASSED"
+                else
+                    FAILED=$((FAILED + 1))
+                    echo "❌ Config $config: FAILED"
+                fi
                 echo ""
             fi
         done <<< "$RESOLVED"
+
+        # Summary
+        echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+        echo "📊 Test List Summary"
+        echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+        echo "Passed: $PASSED/$LINE_COUNT"
+        echo "Failed: $FAILED/$LINE_COUNT"
+        echo ""
+
+        if [ $FAILED -gt 0 ]; then
+            echo "❌ Some configs failed"
+            exit 1
+        fi
     else
         # Single config
         just _export-test-android-impl "$RESOLVED" 0
