@@ -1,9 +1,10 @@
 ---
 id: task-420
 title: Implement AuthStateListener for Firebase Auth state changes
-status: To Do
+status: Done
 assignee: []
 created_date: '2026-01-04 21:38'
+updated_date: '2026-01-05 08:41'
 labels:
   - firebase
   - auth

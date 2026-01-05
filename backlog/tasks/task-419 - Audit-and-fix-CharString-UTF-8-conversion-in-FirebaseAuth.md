@@ -1,9 +1,10 @@
 ---
 id: task-419
 title: Audit and fix CharString UTF-8 conversion in FirebaseAuth
-status: To Do
+status: Done
 assignee: []
 created_date: '2026-01-04 21:38'
+updated_date: '2026-01-05 08:22'
 labels:
   - firebase
   - auth
@@ -40,3 +41,23 @@ Audit all CharString usage in FirebaseAuth C++ class for proper UTF-8 string han
 - Parent task: task-399 (Firebase Auth service layer)
 - UTF-8 safety is critical for international users
 <!-- SECTION:DESCRIPTION:END -->
+
+## Implementation Notes
+
+<!-- SECTION:NOTES:BEGIN -->
+## Audit Results (2026-01-05)
+
+**All 12 methods that pass String data TO Firebase SDK correctly store CharString:**
+- sign_in_apple, link_to_apple (token_cs, nonce_cs)
+- sign_in_facebook, link_to_facebook (token_cs)
+- unlink_provider (provider_cs)
+- sign_in_facebook_async, sign_in_apple_async, sign_in_with_custom_token_async (token_cs)
+- sign_in_with_email_async (email_cs, password_cs)
+- link_facebook_async, link_apple_async (token_cs, nonce_cs)
+- unlink_provider_async (provider_cs)
+
+**Methods reading FROM Firebase (safe, no CharString needed):**
+- providers(), user_name(), email(), uid(), photo_url() - use c_str() from std::string
+
+**Conclusion:** No issues found. All UTF-8 conversions follow correct lifetime extension pattern.
+<!-- SECTION:NOTES:END -->

@@ -1,9 +1,10 @@
 ---
 id: task-418
 title: Complete C++ Auth sign_in_with_email_async implementation
-status: To Do
+status: Done
 assignee: []
 created_date: '2026-01-04 21:38'
+updated_date: '2026-01-05 08:21'
 labels:
   - firebase
   - auth

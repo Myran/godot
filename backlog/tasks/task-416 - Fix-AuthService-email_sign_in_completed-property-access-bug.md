@@ -1,10 +1,10 @@
 ---
 id: task-416
 title: Fix AuthService email_sign_in_completed property access bug
-status: To Do
+status: Done
 assignee: []
 created_date: '2026-01-04 21:38'
-updated_date: '2026-01-04 23:30'
+updated_date: '2026-01-05 00:12'
 labels:
   - firebase
   - auth

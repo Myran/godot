@@ -1,10 +1,10 @@
 ---
 id: task-417
 title: Fix AuthService _on_sign_in_completed signal arity mismatch
-status: To Do
+status: Done
 assignee: []
 created_date: '2026-01-04 21:38'
-updated_date: '2026-01-04 23:30'
+updated_date: '2026-01-05 00:12'
 labels:
   - firebase
   - auth
