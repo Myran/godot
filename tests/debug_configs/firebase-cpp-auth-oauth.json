@@ -1,0 +1,8 @@
+{
+  "description": "C++ Firebase Auth OAuth regression tests - Facebook and Apple (Task-421)",
+  "actions": [
+    "cpp.firebase.auth.sign_in_facebook",
+    "cpp.firebase.auth.sign_in_apple"
+  ],
+  "platforms": ["android", "ios", "macos"]
+}
