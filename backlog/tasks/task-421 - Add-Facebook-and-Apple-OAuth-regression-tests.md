@@ -1,9 +1,10 @@
 ---
 id: task-421
 title: Add Facebook and Apple OAuth regression tests
-status: To Do
+status: Done
 assignee: []
 created_date: '2026-01-04 21:38'
+updated_date: '2026-01-05 09:04'
 labels:
   - firebase
   - auth
