@@ -73,11 +73,27 @@ export-test-android CONFIG="":
                 echo ""
 
                 echo "📤 Step 1: Exporting APK..."
-                just export-android-apk
+                if just export-android-apk; then
+                    echo "✅ Export successful"
+                else
+                    echo "❌ Export failed"
+                    FAILED=$((FAILED + 1))
+                    echo "❌ Config $config: FAILED (export)"
+                    echo ""
+                    continue
+                fi
                 echo ""
 
                 echo "📲 Step 2: Deploying to Android device..."
-                just deploy-android
+                if just deploy-android; then
+                    echo "✅ Deploy successful"
+                else
+                    echo "❌ Deploy failed"
+                    FAILED=$((FAILED + 1))
+                    echo "❌ Config $config: FAILED (deploy)"
+                    echo ""
+                    continue
+                fi
                 echo ""
 
                 echo "🧪 Step 3: Testing config: $config"
