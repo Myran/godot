@@ -1,0 +1,23 @@
+{
+  "name": "Firebase Auth Complete Test Suite",
+  "description": "Comprehensive Firebase Auth validation - C++ layer, service layer, OAuth, and state listener tests. Add to main test list once all auth features are verified working.",
+  "configs": [
+    "cpp.firebase.auth.tests",
+    "firebase-cpp-auth-state-listener",
+    "firebase-cpp-auth-oauth",
+    "backend.firebase.auth.sign_in_anonymous",
+    "backend.firebase.auth.cycle",
+    "backend.firebase.auth.id_token",
+    "backend.firebase.auth.anonymous_check",
+    "backend.firebase.auth.error_handling",
+    "backend.firebase.auth.state_transitions"
+  ],
+  "metadata": {
+    "total_configs": 9,
+    "layers": ["cpp", "backend"],
+    "features": ["anonymous_auth", "custom_token", "oauth_facebook", "oauth_apple", "state_listener", "id_token"],
+    "platforms": ["android", "ios", "macos", "windows-physical"],
+    "status": "validation",
+    "note": "Add to firebase-all.json or run manually for auth validation"
+  }
+}
