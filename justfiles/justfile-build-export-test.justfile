@@ -1,11 +1,57 @@
-# Build-Export-Test Recipes
+# Build-Export-Test and Export-Test Recipes
 #
-# Full rebuild + export + deploy + test for each platform
-# Reuses existing rebuild recipes (DRY principle)
+# build-export-test-*: Full rebuild + export + deploy + test
+# export-test-*: Export + deploy + test (skip rebuild, uses existing templates)
+#
+# Both variants share the export+deploy+test logic via internal helpers (DRY principle)
 
 # ================================
 # ANDROID
 # ================================
+
+# Internal: Android export + deploy + test (shared logic)
+# STEP_OFFSET controls step numbering (0 for export-test, 2 for build-export-test)
+_export-test-android-impl CONFIG STEP_OFFSET="0":
+    #!/usr/bin/env bash
+    set -euo pipefail
+
+    CONFIG="{{CONFIG}}"
+    OFFSET={{STEP_OFFSET}}
+
+    # Export APK
+    echo "📤 Step $((1 + OFFSET)): Exporting APK..."
+    just export-android-apk
+    echo ""
+
+    # Deploy to device
+    echo "📲 Step $((2 + OFFSET)): Deploying to Android device..."
+    just deploy-android
+    echo ""
+
+    # Run tests
+    echo "🧪 Step $((3 + OFFSET)): Testing config: $CONFIG"
+    just test-android-target "$CONFIG"
+
+# Android: Export APK → Deploy → Test (uses existing templates)
+# Defaults to 'main' test list if no CONFIG provided
+export-test-android CONFIG="":
+    #!/usr/bin/env bash
+    set -euo pipefail
+
+    CONFIG="{{CONFIG}}"
+    if [ -z "$CONFIG" ]; then
+        CONFIG="main"
+    fi
+
+    echo "🤖 ANDROID: Export + Test"
+    echo "=========================="
+    echo "🎯 Target configuration: $CONFIG"
+    echo ""
+
+    just _export-test-android-impl "$CONFIG" 0
+
+    echo ""
+    echo "✅ Android export-test complete!"
 
 # Android: Rebuild templates → Export APK → Deploy → Test (full suite or specific config)
 # Defaults to 'main' test list if no CONFIG provided
@@ -14,7 +60,6 @@ build-export-test-android CONFIG="":
     set -euo pipefail
 
     CONFIG="{{CONFIG}}"
-    # Default to main test list if no config specified
     if [ -z "$CONFIG" ]; then
         CONFIG="main"
     fi
@@ -34,19 +79,7 @@ build-export-test-android CONFIG="":
     just setup-android-templates force=yes
     echo ""
 
-    # 3. Export APK
-    echo "📤 Step 3: Exporting APK..."
-    just export-android-apk
-    echo ""
-
-    # 4. Deploy to device
-    echo "📲 Step 4: Deploying to Android device..."
-    just deploy-android
-    echo ""
-
-    # 5. Run tests
-    echo "🧪 Step 5: Testing config: $CONFIG"
-    just test-android-target "$CONFIG"
+    just _export-test-android-impl "$CONFIG" 2
 
     echo ""
     echo "✅ Android build-export-test complete!"
@@ -55,6 +88,70 @@ build-export-test-android CONFIG="":
 # iOS
 # ================================
 
+# Internal: iOS build app + deploy + test (shared logic)
+# STEP_OFFSET controls step numbering (0 for export-test, 1 for build-export-test)
+# IOS_DEVICE must be set in environment before calling
+_export-test-ios-impl CONFIG STEP_OFFSET="0":
+    #!/usr/bin/env bash
+    set -euo pipefail
+
+    CONFIG="{{CONFIG}}"
+    OFFSET={{STEP_OFFSET}}
+    IOS_DEVICE="${IOS_TEST_DEVICE:-}"
+
+    if [ -z "$IOS_DEVICE" ]; then
+        echo "❌ IOS_TEST_DEVICE not set"
+        exit 1
+    fi
+
+    # Build iOS app
+    echo "📤 Step $((1 + OFFSET)): Building iOS app..."
+    just build-ios-app
+    echo ""
+
+    # Deploy to device (install app)
+    echo "📲 Step $((2 + OFFSET)): Deploying to iOS device..."
+    cd export/ios
+    xcrun devicectl device install app --device "$IOS_DEVICE" Build/Products/Debug-iphoneos/gametwo.app
+    echo "✅ iOS app deployed"
+    cd - > /dev/null
+    echo ""
+
+    # Run tests
+    echo "🧪 Step $((3 + OFFSET)): Testing config: $CONFIG"
+    just test-ios-target "$CONFIG"
+
+# iOS: Build app → Deploy → Test (uses existing templates)
+# Defaults to 'main' test list if no CONFIG provided
+export-test-ios CONFIG="":
+    #!/usr/bin/env bash
+    set -euo pipefail
+
+    CONFIG="{{CONFIG}}"
+    if [ -z "$CONFIG" ]; then
+        CONFIG="main"
+    fi
+
+    echo "🍎 iOS: Export + Test"
+    echo "======================"
+    echo "🎯 Target configuration: $CONFIG"
+    echo ""
+
+    # Auto-select iOS device
+    IOS_DEVICE=$(just _auto-select-ios-device 2>&1)
+    if [ $? -ne 0 ] || [ -z "$IOS_DEVICE" ]; then
+        echo "❌ No iOS device available"
+        exit 1
+    fi
+    export IOS_TEST_DEVICE="$IOS_DEVICE"
+    echo "📱 Using iOS device: $IOS_DEVICE"
+    echo ""
+
+    just _export-test-ios-impl "$CONFIG" 0
+
+    echo ""
+    echo "✅ iOS export-test complete!"
+
 # iOS: Rebuild templates → Build app → Deploy → Test (full suite or specific config)
 # Defaults to 'main' test list if no CONFIG provided
 build-export-test-ios CONFIG="":
@@ -62,7 +159,6 @@ build-export-test-ios CONFIG="":
     set -euo pipefail
 
     CONFIG="{{CONFIG}}"
-    # Default to main test list if no config specified
     if [ -z "$CONFIG" ]; then
         CONFIG="main"
     fi
@@ -87,22 +183,7 @@ build-export-test-ios CONFIG="":
     just rebuild-all-ios
     echo ""
 
-    # 2. Build iOS app
-    echo "📤 Step 2: Building iOS app..."
-    just build-ios-app
-    echo ""
-
-    # 3. Deploy to device (install app)
-    echo "📲 Step 3: Deploying to iOS device..."
-    cd export/ios
-    xcrun devicectl device install app --device "$IOS_DEVICE" Build/Products/Debug-iphoneos/gametwo.app
-    echo "✅ iOS app deployed"
-    cd - > /dev/null
-    echo ""
-
-    # 4. Run tests
-    echo "🧪 Step 4: Testing config: $CONFIG"
-    just test-ios-target "$CONFIG"
+    just _export-test-ios-impl "$CONFIG" 1
 
     echo ""
     echo "✅ iOS build-export-test complete!"
@@ -111,6 +192,49 @@ build-export-test-ios CONFIG="":
 # macOS
 # ================================
 
+# Internal: macOS export + test (shared logic)
+# STEP_OFFSET controls step numbering (0 for export-test, 2 for build-export-test)
+_export-test-macos-impl CONFIG STEP_OFFSET="0":
+    #!/usr/bin/env bash
+    set -euo pipefail
+
+    CONFIG="{{CONFIG}}"
+    OFFSET={{STEP_OFFSET}}
+
+    # Export macOS app
+    echo "📤 Step $((1 + OFFSET)): Exporting macOS app..."
+    just export-macos-debug force=yes
+    echo ""
+
+    # No deploy needed (local app)
+    echo "📲 Step $((2 + OFFSET)): (local app, no deploy needed)"
+    echo ""
+
+    # Run tests
+    echo "🧪 Step $((3 + OFFSET)): Testing config: $CONFIG"
+    just test-macos-target "$CONFIG"
+
+# macOS: Export app → Test (uses existing templates)
+# Defaults to 'main' test list if no CONFIG provided
+export-test-macos CONFIG="":
+    #!/usr/bin/env bash
+    set -euo pipefail
+
+    CONFIG="{{CONFIG}}"
+    if [ -z "$CONFIG" ]; then
+        CONFIG="main"
+    fi
+
+    echo "🍎 macOS: Export + Test"
+    echo "========================"
+    echo "🎯 Target configuration: $CONFIG"
+    echo ""
+
+    just _export-test-macos-impl "$CONFIG" 0
+
+    echo ""
+    echo "✅ macOS export-test complete!"
+
 # macOS: Rebuild templates → Export app → Test (full suite or specific config)
 # Defaults to 'main' test list if no CONFIG provided
 build-export-test-macos CONFIG="":
@@ -118,7 +242,6 @@ build-export-test-macos CONFIG="":
     set -euo pipefail
 
     CONFIG="{{CONFIG}}"
-    # Default to main test list if no config specified
     if [ -z "$CONFIG" ]; then
         CONFIG="main"
     fi
@@ -134,18 +257,7 @@ build-export-test-macos CONFIG="":
     just package-macos-template force=yes
     echo ""
 
-    # 2. Export macOS app
-    echo "📤 Step 2: Exporting macOS app..."
-    just export-macos-debug force=yes
-    echo ""
-
-    # 3. No deploy needed (local app)
-    echo "📲 Step 3: (local app, no deploy needed)"
-    echo ""
-
-    # 4. Run tests
-    echo "🧪 Step 4: Testing config: $CONFIG"
-    just test-macos-target "$CONFIG"
+    just _export-test-macos-impl "$CONFIG" 2
 
     echo ""
     echo "✅ macOS build-export-test complete!"
@@ -154,6 +266,51 @@ build-export-test-macos CONFIG="":
 # WINDOWS
 # ================================
 
+# Internal: Windows export + deploy + test (shared logic)
+# STEP_OFFSET controls step numbering (0 for export-test, 3 for build-export-test)
+_export-test-windows-impl CONFIG STEP_OFFSET="0":
+    #!/usr/bin/env bash
+    set -euo pipefail
+
+    CONFIG="{{CONFIG}}"
+    OFFSET={{STEP_OFFSET}}
+
+    # Export Windows app
+    echo "📤 Step $((1 + OFFSET)): Exporting Windows app..."
+    rm -f export/windows/gametwo_debug.pck
+    just export-windows-debug
+    echo ""
+
+    # Deploy to physical machine
+    echo "📲 Step $((2 + OFFSET)): Deploying to Windows physical machine..."
+    just win-physical-deploy
+    echo ""
+
+    # Run tests
+    echo "🧪 Step $((3 + OFFSET)): Testing config: $CONFIG"
+    just test-windows-physical-target "$CONFIG"
+
+# Windows: Export → Deploy → Test (uses existing templates)
+# Defaults to 'main' test list if no CONFIG provided
+export-test-windows CONFIG="":
+    #!/usr/bin/env bash
+    set -euo pipefail
+
+    CONFIG="{{CONFIG}}"
+    if [ -z "$CONFIG" ]; then
+        CONFIG="main"
+    fi
+
+    echo "🪟 Windows: Export + Test"
+    echo "=========================="
+    echo "🎯 Target configuration: $CONFIG"
+    echo ""
+
+    just _export-test-windows-impl "$CONFIG" 0
+
+    echo ""
+    echo "✅ Windows export-test complete!"
+
 # Windows: VM sync → Rebuild templates → Package → Export → Deploy → Test (full suite or specific config)
 # Defaults to 'main' test list if no CONFIG provided
 build-export-test-windows CONFIG="":
@@ -161,7 +318,6 @@ build-export-test-windows CONFIG="":
     set -euo pipefail
 
     CONFIG="{{CONFIG}}"
-    # Default to main test list if no config specified
     if [ -z "$CONFIG" ]; then
         CONFIG="main"
     fi
@@ -186,20 +342,7 @@ build-export-test-windows CONFIG="":
     just win-vm-templates-package
     echo ""
 
-    # 4. Export Windows app
-    echo "📤 Step 4: Exporting Windows app..."
-    rm -f export/windows/gametwo_debug.pck
-    just export-windows-debug
-    echo ""
-
-    # 5. Deploy to physical machine
-    echo "📲 Step 5: Deploying to Windows physical machine..."
-    just win-physical-deploy
-    echo ""
-
-    # 6. Run tests
-    echo "🧪 Step 6: Testing config: $CONFIG"
-    just test-windows-physical-target "$CONFIG"
+    just _export-test-windows-impl "$CONFIG" 3
 
     echo ""
     echo "✅ Windows build-export-test complete!"
@@ -208,28 +351,30 @@ build-export-test-windows CONFIG="":
 # ALL PLATFORMS
 # ================================
 
-# All platforms: Full rebuild + export + deploy + test (full suite or specific config)
-# Defaults to 'main' test list if no CONFIG provided
-build-export-test-all CONFIG="":
+# Internal: Run export-test or build-export-test for all platforms
+# MODE: "export-test" or "build-export-test"
+_all-platforms-impl CONFIG MODE:
     #!/usr/bin/env bash
     set -euo pipefail
 
     CONFIG="{{CONFIG}}"
-    # Default to main test list if no config specified
-    if [ -z "$CONFIG" ]; then
-        CONFIG="main"
-    fi
+    MODE="{{MODE}}"
     MULTI_SESSION="$(date +%s)"
     export MULTI_PLATFORM_SESSION="$MULTI_SESSION"
 
-    echo "🚀 BUILD-EXPORT-TEST: All Platforms"
-    echo "====================================="
+    if [ "$MODE" = "export-test" ]; then
+        echo "🚀 EXPORT-TEST: All Platforms"
+        echo "==============================="
+    else
+        echo "🚀 BUILD-EXPORT-TEST: All Platforms"
+        echo "====================================="
+    fi
     echo "🔍 Multi-platform session: $MULTI_SESSION"
     echo "🎯 Target configuration: $CONFIG"
     echo ""
 
     # Track results using temp files (for bash 3.2 compatibility)
-    STATUS_DIR="/tmp/build-export-test-${MULTI_SESSION}"
+    STATUS_DIR="/tmp/${MODE}-${MULTI_SESSION}"
     rm -rf "$STATUS_DIR"
     mkdir -p "$STATUS_DIR"
     START_TIME=$(date +%s)
@@ -242,36 +387,12 @@ build-export-test-all CONFIG="":
         echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
         echo ""
 
-        case "$PLATFORM" in
-            macos)
-                if just build-export-test-macos "$CONFIG" 2>&1 | tee "/tmp/build-export-test-${MULTI_SESSION}_${PLATFORM}.log"; then
-                    echo "✅ PASSED" > "$STATUS_DIR/${PLATFORM}.status"
-                else
-                    echo "❌ FAILED" > "$STATUS_DIR/${PLATFORM}.status"
-                fi
-                ;;
-            windows)
-                if just build-export-test-windows "$CONFIG" 2>&1 | tee "/tmp/build-export-test-${MULTI_SESSION}_${PLATFORM}.log"; then
-                    echo "✅ PASSED" > "$STATUS_DIR/${PLATFORM}.status"
-                else
-                    echo "❌ FAILED" > "$STATUS_DIR/${PLATFORM}.status"
-                fi
-                ;;
-            android)
-                if just build-export-test-android "$CONFIG" 2>&1 | tee "/tmp/build-export-test-${MULTI_SESSION}_${PLATFORM}.log"; then
-                    echo "✅ PASSED" > "$STATUS_DIR/${PLATFORM}.status"
-                else
-                    echo "❌ FAILED" > "$STATUS_DIR/${PLATFORM}.status"
-                fi
-                ;;
-            ios)
-                if just build-export-test-ios "$CONFIG" 2>&1 | tee "/tmp/build-export-test-${MULTI_SESSION}_${PLATFORM}.log"; then
-                    echo "✅ PASSED" > "$STATUS_DIR/${PLATFORM}.status"
-                else
-                    echo "❌ FAILED" > "$STATUS_DIR/${PLATFORM}.status"
-                fi
-                ;;
-        esac
+        RECIPE="${MODE}-${PLATFORM}"
+        if just "$RECIPE" "$CONFIG" 2>&1 | tee "/tmp/${MODE}-${MULTI_SESSION}_${PLATFORM}.log"; then
+            echo "✅ PASSED" > "$STATUS_DIR/${PLATFORM}.status"
+        else
+            echo "❌ FAILED" > "$STATUS_DIR/${PLATFORM}.status"
+        fi
     done
 
     # Summary
@@ -280,7 +401,11 @@ build-export-test-all CONFIG="":
 
     echo ""
     echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-    echo "📊 BUILD-EXPORT-TEST SUMMARY"
+    if [ "$MODE" = "export-test" ]; then
+        echo "📊 EXPORT-TEST SUMMARY"
+    else
+        echo "📊 BUILD-EXPORT-TEST SUMMARY"
+    fi
     echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
     echo ""
     echo "Session: $MULTI_SESSION"
@@ -310,3 +435,29 @@ build-export-test-all CONFIG="":
         echo "❌ $FAILED platform(s) failed"
         exit 1
     fi
+
+# All platforms: Export + deploy + test (uses existing templates)
+# Defaults to 'main' test list if no CONFIG provided
+export-test-all CONFIG="":
+    #!/usr/bin/env bash
+    set -euo pipefail
+
+    CONFIG="{{CONFIG}}"
+    if [ -z "$CONFIG" ]; then
+        CONFIG="main"
+    fi
+
+    just _all-platforms-impl "$CONFIG" "export-test"
+
+# All platforms: Full rebuild + export + deploy + test (full suite or specific config)
+# Defaults to 'main' test list if no CONFIG provided
+build-export-test-all CONFIG="":
+    #!/usr/bin/env bash
+    set -euo pipefail
+
+    CONFIG="{{CONFIG}}"
+    if [ -z "$CONFIG" ]; then
+        CONFIG="main"
+    fi
+
+    just _all-platforms-impl "$CONFIG" "build-export-test"
