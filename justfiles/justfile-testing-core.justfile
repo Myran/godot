@@ -863,6 +863,30 @@ _resolve_test_list_reference ref visited_stack:
         done
     fi
 
+# Resolve test input: auto-detects test list vs config name (with or without @ prefix)
+# Outputs either expanded configs (if test list) or single config name
+# Used by both test-*-target and build-export-test-all for consistent behavior
+_resolve-test-input config_input:
+    #!/usr/bin/env bash
+    set -euo pipefail
+
+    CONFIG_INPUT="{{config_input}}"
+    # Remove @ prefix if present for file lookup
+    CONFIG_LOOKUP="${CONFIG_INPUT#@}"
+
+    # Auto-detect: same logic as _execute-test-with-analysis
+    TEST_LIST_PATH="{{TEST_LIST_DIR}}/${CONFIG_LOOKUP}.json"
+    CONFIG_PATH="{{DEBUG_CONFIG_DIR}}/${CONFIG_LOOKUP}.json"
+
+    # Check if it's a test list first
+    if [[ -f "$TEST_LIST_PATH" ]]; then
+        # It's a test list - expand and output all configs
+        just _expand_at_references "$CONFIG_LOOKUP"
+    else
+        # It's a config name - output as-is
+        echo "$CONFIG_INPUT"
+    fi
+
 # Expand @ symbols in test list configs
 _expand_at_references test_list:
     #!/usr/bin/env bash

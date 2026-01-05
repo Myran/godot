@@ -438,7 +438,7 @@ _all-platforms-impl CONFIG MODE:
 
 # All platforms: Export + deploy + test (uses existing templates)
 # Defaults to 'main' test list if no CONFIG provided
-# Supports @ test list references (e.g., @firebase-auth-all)
+# Auto-detects test list vs config (same logic as test-*-target)
 export-test-all CONFIG="":
     #!/usr/bin/env bash
     set -euo pipefail
@@ -448,37 +448,36 @@ export-test-all CONFIG="":
         CONFIG="main"
     fi
 
-    # Check if CONFIG is a @ test list reference and expand it
-    if [[ "$CONFIG" == @* ]]; then
-        TEST_LIST="${CONFIG#@}"
-        if [[ -f "{{TEST_LIST_DIR}}/${TEST_LIST}.json" ]]; then
-            echo "🔄 Expanding @ test list reference: $CONFIG"
-            CONFIGS=$(just _expand_at_references "$TEST_LIST")
-            CONFIG_COUNT=$(echo "$CONFIGS" | wc -l | tr -d ' ')
-            echo "📋 Found $CONFIG_COUNT config(s) in test list"
-            echo ""
+    # Resolve test input: auto-detects test list vs config (with or without @ prefix)
+    RESOLVED=$(just _resolve-test-input "$CONFIG")
 
-            # Run each config through all platforms
-            INDEX=0
-            while IFS= read -r config; do
-                if [[ -n "$config" ]]; then
-                    INDEX=$((INDEX + 1))
-                    echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-                    echo "📋 Config $INDEX/$CONFIG_COUNT: $config"
-                    echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-                    echo ""
-                    just _all-platforms-impl "$config" "export-test"
-                fi
-            done <<< "$CONFIGS"
-            exit 0
-        fi
+    # Check if resolved output contains multiple lines (test list expansion)
+    LINE_COUNT=$(echo "$RESOLVED" | wc -l | tr -d ' ')
+    if [[ $LINE_COUNT -gt 1 ]]; then
+        # It's a test list - iterate through configs
+        echo "🔄 Detected test list: $CONFIG"
+        echo "📋 Found $LINE_COUNT config(s)"
+        echo ""
+
+        INDEX=0
+        while IFS= read -r config; do
+            if [[ -n "$config" ]]; then
+                INDEX=$((INDEX + 1))
+                echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+                echo "📋 Config $INDEX/$LINE_COUNT: $config"
+                echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+                echo ""
+                just _all-platforms-impl "$config" "export-test"
+            fi
+        done <<< "$RESOLVED"
+    else
+        # Single config
+        just _all-platforms-impl "$RESOLVED" "export-test"
     fi
-
-    just _all-platforms-impl "$CONFIG" "export-test"
 
 # All platforms: Full rebuild + export + deploy + test (full suite or specific config)
 # Defaults to 'main' test list if no CONFIG provided
-# Supports @ test list references (e.g., @firebase-auth-all)
+# Auto-detects test list vs config (same logic as test-*-target)
 build-export-test-all CONFIG="":
     #!/usr/bin/env bash
     set -euo pipefail
@@ -488,40 +487,36 @@ build-export-test-all CONFIG="":
         CONFIG="main"
     fi
 
-    # Check if CONFIG is a @ test list reference and expand it
-    if [[ "$CONFIG" == @* ]]; then
-        TEST_LIST="${CONFIG#@}"
-        if [[ -f "{{TEST_LIST_DIR}}/${TEST_LIST}.json" ]]; then
-            echo "🔄 Expanding @ test list reference: $CONFIG"
-            CONFIGS=$(just _expand_at_references "$TEST_LIST")
-            CONFIG_COUNT=$(echo "$CONFIGS" | wc -l | tr -d ' ')
-            echo "📋 Found $CONFIG_COUNT config(s) in test list"
-            echo ""
-            echo "💡 First config will rebuild templates, remaining configs will use cached templates"
-            echo ""
+    # Resolve test input: auto-detects test list vs config (with or without @ prefix)
+    RESOLVED=$(just _resolve-test-input "$CONFIG")
 
-            # Run each config through all platforms
-            INDEX=0
-            while IFS= read -r config; do
-                if [[ -n "$config" ]]; then
-                    INDEX=$((INDEX + 1))
-                    echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-                    echo "📋 Config $INDEX/$CONFIG_COUNT: $config"
-                    if [[ $INDEX -eq 1 ]]; then
-                        echo "🔧 Full rebuild + test"
-                    else
-                        echo "⚡ Using cached templates"
-                    fi
-                    echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-                    echo ""
-                    just _all-platforms-impl "$config" "build-export-test"
+    # Check if resolved output contains multiple lines (test list expansion)
+    LINE_COUNT=$(echo "$RESOLVED" | wc -l | tr -d ' ')
+    if [[ $LINE_COUNT -gt 1 ]]; then
+        # It's a test list - iterate through configs
+        echo "🔄 Detected test list: $CONFIG"
+        echo "📋 Found $LINE_COUNT config(s)"
+        echo ""
+        echo "💡 First config will rebuild templates, remaining configs will use cached templates"
+        echo ""
+
+        INDEX=0
+        while IFS= read -r config; do
+            if [[ -n "$config" ]]; then
+                INDEX=$((INDEX + 1))
+                echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+                echo "📋 Config $INDEX/$LINE_COUNT: $config"
+                if [[ $INDEX -eq 1 ]]; then
+                    echo "🔧 Full rebuild + test"
+                else
+                    echo "⚡ Using cached templates"
                 fi
-            done <<< "$CONFIGS"
-            exit 0
-        else
-            echo "❌ Test list not found: {{TEST_LIST_DIR}}/${TEST_LIST}.json"
-            exit 1
-        fi
+                echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+                echo ""
+                just _all-platforms-impl "$config" "build-export-test"
+            fi
+        done <<< "$RESOLVED"
+    else
+        # Single config
+        just _all-platforms-impl "$RESOLVED" "build-export-test"
     fi
-
-    just _all-platforms-impl "$CONFIG" "build-export-test"
