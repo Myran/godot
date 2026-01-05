@@ -8,6 +8,7 @@ extends RefCounted
 ## Using load() instead of preload() to avoid Android export packaging issues.
 ## Preload is evaluated at parse-time and can fail if files aren't indexed properly.
 
+
 static func register_all(registry: DebugActionRegistry) -> void:
 	var helper: RegistrationHelper = RegistrationHelper.new(registry, "Backend Auth")
 

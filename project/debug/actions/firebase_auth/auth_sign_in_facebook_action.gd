@@ -141,11 +141,7 @@ func _execute_action_logic(_params: Dictionary = {}) -> DebugActionResult:
 	var invalid_token: String = "test_invalid_facebook_token_" + str(_expected_request_id)
 	auth.sign_in_facebook_async(_expected_request_id, invalid_token)
 
-	Log.info(
-		"Waiting for Facebook sign_in response...",
-		{},
-		["debug", "cpp_auth", "facebook"]
-	)
+	Log.info("Waiting for Facebook sign_in response...", {}, ["debug", "cpp_auth", "facebook"])
 
 	await awaiter.finished
 

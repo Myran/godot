@@ -142,11 +142,7 @@ func _execute_action_logic(_params: Dictionary = {}) -> DebugActionResult:
 	var invalid_nonce: String = "test_invalid_apple_nonce_" + str(_expected_request_id)
 	auth.sign_in_apple_async(_expected_request_id, invalid_token, invalid_nonce)
 
-	Log.info(
-		"Waiting for Apple sign_in response...",
-		{},
-		["debug", "cpp_auth", "apple"]
-	)
+	Log.info("Waiting for Apple sign_in response...", {}, ["debug", "cpp_auth", "apple"])
 
 	await awaiter.finished
 
