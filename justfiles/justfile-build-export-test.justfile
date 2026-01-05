@@ -48,7 +48,66 @@ export-test-android CONFIG="":
     echo "🎯 Target configuration: $CONFIG"
     echo ""
 
-    just _export-test-android-impl "$CONFIG" 0
+    # Resolve test input: auto-detects test list vs config (with or without @ prefix)
+    RESOLVED=$(just _resolve-test-input "$CONFIG")
+
+    # Check if resolved output contains multiple lines (test list expansion)
+    LINE_COUNT=$(echo "$RESOLVED" | wc -l | tr -d ' ')
+    if [[ $LINE_COUNT -gt 1 ]]; then
+        # It's a test list - iterate through configs
+        echo "🔄 Detected test list: $CONFIG"
+        echo "📋 Found $LINE_COUNT config(s)"
+        echo ""
+
+        # Track pass/fail counts
+        PASSED=0
+        FAILED=0
+
+        INDEX=0
+        while IFS= read -r config; do
+            if [[ -n "$config" ]]; then
+                INDEX=$((INDEX + 1))
+                echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+                echo "📋 Config $INDEX/$LINE_COUNT: $config"
+                echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+                echo ""
+
+                echo "📤 Step 1: Exporting APK..."
+                just export-android-apk
+                echo ""
+
+                echo "📲 Step 2: Deploying to Android device..."
+                just deploy-android
+                echo ""
+
+                echo "🧪 Step 3: Testing config: $config"
+                if just test-android-target "$config"; then
+                    PASSED=$((PASSED + 1))
+                    echo "✅ Config $config: PASSED"
+                else
+                    FAILED=$((FAILED + 1))
+                    echo "❌ Config $config: FAILED"
+                fi
+                echo ""
+            fi
+        done <<< "$RESOLVED"
+
+        # Summary
+        echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+        echo "📊 Test List Summary"
+        echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+        echo "Passed: $PASSED/$LINE_COUNT"
+        echo "Failed: $FAILED/$LINE_COUNT"
+        echo ""
+
+        if [ $FAILED -gt 0 ]; then
+            echo "❌ Some configs failed"
+            exit 1
+        fi
+    else
+        # Single config
+        just _export-test-android-impl "$RESOLVED" 0
+    fi
 
     echo ""
     echo "✅ Android export-test complete!"
@@ -69,17 +128,84 @@ build-export-test-android CONFIG="":
     echo "🎯 Target configuration: $CONFIG"
     echo ""
 
-    # 1. Rebuild templates with Firebase C++ module
-    echo "📦 Step 1: Rebuilding Android templates..."
-    just rebuild-all-android
-    echo ""
+    # Resolve test input: auto-detects test list vs config (with or without @ prefix)
+    RESOLVED=$(just _resolve-test-input "$CONFIG")
 
-    # 2. Install templates + inject SDKs (required after rebuild)
-    echo "📥 Step 2: Installing templates + injecting Firebase/Sentry SDKs..."
-    just setup-android-templates force=yes
-    echo ""
+    # Check if resolved output contains multiple lines (test list expansion)
+    LINE_COUNT=$(echo "$RESOLVED" | wc -l | tr -d ' ')
+    if [[ $LINE_COUNT -gt 1 ]]; then
+        # It's a test list - iterate through configs
+        echo "🔄 Detected test list: $CONFIG"
+        echo "📋 Found $LINE_COUNT config(s)"
+        echo ""
+        echo "💡 First config will rebuild templates, remaining configs will use cached templates"
+        echo ""
 
-    just _export-test-android-impl "$CONFIG" 2
+        INDEX=0
+        while IFS= read -r config; do
+            if [[ -n "$config" ]]; then
+                INDEX=$((INDEX + 1))
+                echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+                echo "📋 Config $INDEX/$LINE_COUNT: $config"
+                if [[ $INDEX -eq 1 ]]; then
+                    echo "🔧 Full rebuild + test"
+                else
+                    echo "⚡ Using cached templates"
+                fi
+                echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+                echo ""
+
+                if [[ $INDEX -eq 1 ]]; then
+                    # First config: rebuild templates
+                    echo "📦 Step 1: Rebuilding Android templates..."
+                    just rebuild-all-android
+                    echo ""
+
+                    echo "📥 Step 2: Installing templates + injecting Firebase/Sentry SDKs..."
+                    just setup-android-templates force=yes
+                    echo ""
+
+                    echo "📤 Step 3: Exporting APK..."
+                    just export-android-apk
+                    echo ""
+
+                    echo "📲 Step 4: Deploying to Android device..."
+                    just deploy-android
+                    echo ""
+
+                    echo "🧪 Step 5: Testing config: $config"
+                    just test-android-target "$config"
+                else
+                    # Remaining configs: use cached templates, just export + deploy + test
+                    echo "📤 Step 1: Exporting APK (using cached templates)..."
+                    just export-android-apk
+                    echo ""
+
+                    echo "📲 Step 2: Deploying to Android device..."
+                    just deploy-android
+                    echo ""
+
+                    echo "🧪 Step 3: Testing config: $config"
+                    just test-android-target "$config"
+                fi
+
+                echo ""
+            fi
+        done <<< "$RESOLVED"
+    else
+        # Single config
+        # 1. Rebuild templates with Firebase C++ module
+        echo "📦 Step 1: Rebuilding Android templates..."
+        just rebuild-all-android
+        echo ""
+
+        # 2. Install templates + inject SDKs (required after rebuild)
+        echo "📥 Step 2: Installing templates + injecting Firebase/Sentry SDKs..."
+        just setup-android-templates force=yes
+        echo ""
+
+        just _export-test-android-impl "$RESOLVED" 2
+    fi
 
     echo ""
     echo "✅ Android build-export-test complete!"
@@ -147,7 +273,46 @@ export-test-ios CONFIG="":
     echo "📱 Using iOS device: $IOS_DEVICE"
     echo ""
 
-    just _export-test-ios-impl "$CONFIG" 0
+    # Resolve test input: auto-detects test list vs config (with or without @ prefix)
+    RESOLVED=$(just _resolve-test-input "$CONFIG")
+
+    # Check if resolved output contains multiple lines (test list expansion)
+    LINE_COUNT=$(echo "$RESOLVED" | wc -l | tr -d ' ')
+    if [[ $LINE_COUNT -gt 1 ]]; then
+        # It's a test list - iterate through configs
+        echo "🔄 Detected test list: $CONFIG"
+        echo "📋 Found $LINE_COUNT config(s)"
+        echo ""
+
+        INDEX=0
+        while IFS= read -r config; do
+            if [[ -n "$config" ]]; then
+                INDEX=$((INDEX + 1))
+                echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+                echo "📋 Config $INDEX/$LINE_COUNT: $config"
+                echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+                echo ""
+
+                echo "📤 Step 1: Building iOS app..."
+                just build-ios-app
+                echo ""
+
+                echo "📲 Step 2: Deploying to iOS device..."
+                cd export/ios
+                xcrun devicectl device install app --device "$IOS_DEVICE" Build/Products/Debug-iphoneos/gametwo.app
+                echo "✅ iOS app deployed"
+                cd - > /dev/null
+                echo ""
+
+                echo "🧪 Step 3: Testing config: $config"
+                just test-ios-target "$config"
+                echo ""
+            fi
+        done <<< "$RESOLVED"
+    else
+        # Single config
+        just _export-test-ios-impl "$RESOLVED" 0
+    fi
 
     echo ""
     echo "✅ iOS export-test complete!"
@@ -178,12 +343,81 @@ build-export-test-ios CONFIG="":
     echo "📱 Using iOS device: $IOS_DEVICE"
     echo ""
 
-    # 1. Rebuild templates with Firebase C++ module
-    echo "📦 Step 1: Rebuilding iOS templates..."
-    just rebuild-all-ios
-    echo ""
+    # Resolve test input: auto-detects test list vs config (with or without @ prefix)
+    RESOLVED=$(just _resolve-test-input "$CONFIG")
 
-    just _export-test-ios-impl "$CONFIG" 1
+    # Check if resolved output contains multiple lines (test list expansion)
+    LINE_COUNT=$(echo "$RESOLVED" | wc -l | tr -d ' ')
+    if [[ $LINE_COUNT -gt 1 ]]; then
+        # It's a test list - iterate through configs
+        echo "🔄 Detected test list: $CONFIG"
+        echo "📋 Found $LINE_COUNT config(s)"
+        echo ""
+        echo "💡 First config will rebuild templates, remaining configs will use cached templates"
+        echo ""
+
+        INDEX=0
+        while IFS= read -r config; do
+            if [[ -n "$config" ]]; then
+                INDEX=$((INDEX + 1))
+                echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+                echo "📋 Config $INDEX/$LINE_COUNT: $config"
+                if [[ $INDEX -eq 1 ]]; then
+                    echo "🔧 Full rebuild + test"
+                else
+                    echo "⚡ Using cached templates"
+                fi
+                echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+                echo ""
+
+                if [[ $INDEX -eq 1 ]]; then
+                    # First config: rebuild templates
+                    echo "📦 Step 1: Rebuilding iOS templates..."
+                    just rebuild-all-ios
+                    echo ""
+
+                    echo "📤 Step 2: Building iOS app..."
+                    just build-ios-app
+                    echo ""
+
+                    echo "📲 Step 3: Deploying to iOS device..."
+                    cd export/ios
+                    xcrun devicectl device install app --device "$IOS_DEVICE" Build/Products/Debug-iphoneos/gametwo.app
+                    echo "✅ iOS app deployed"
+                    cd - > /dev/null
+                    echo ""
+
+                    echo "🧪 Step 4: Testing config: $config"
+                    just test-ios-target "$config"
+                else
+                    # Remaining configs: use cached templates, just build + deploy + test
+                    echo "📤 Step 1: Building iOS app (using cached templates)..."
+                    just build-ios-app
+                    echo ""
+
+                    echo "📲 Step 2: Deploying to iOS device..."
+                    cd export/ios
+                    xcrun devicectl device install app --device "$IOS_DEVICE" Build/Products/Debug-iphoneos/gametwo.app
+                    echo "✅ iOS app deployed"
+                    cd - > /dev/null
+                    echo ""
+
+                    echo "🧪 Step 3: Testing config: $config"
+                    just test-ios-target "$config"
+                fi
+
+                echo ""
+            fi
+        done <<< "$RESOLVED"
+    else
+        # Single config
+        # 1. Rebuild templates with Firebase C++ module
+        echo "📦 Step 1: Rebuilding iOS templates..."
+        just rebuild-all-ios
+        echo ""
+
+        just _export-test-ios-impl "$RESOLVED" 1
+    fi
 
     echo ""
     echo "✅ iOS build-export-test complete!"
@@ -230,7 +464,42 @@ export-test-macos CONFIG="":
     echo "🎯 Target configuration: $CONFIG"
     echo ""
 
-    just _export-test-macos-impl "$CONFIG" 0
+    # Resolve test input: auto-detects test list vs config (with or without @ prefix)
+    RESOLVED=$(just _resolve-test-input "$CONFIG")
+
+    # Check if resolved output contains multiple lines (test list expansion)
+    LINE_COUNT=$(echo "$RESOLVED" | wc -l | tr -d ' ')
+    if [[ $LINE_COUNT -gt 1 ]]; then
+        # It's a test list - iterate through configs
+        echo "🔄 Detected test list: $CONFIG"
+        echo "📋 Found $LINE_COUNT config(s)"
+        echo ""
+
+        INDEX=0
+        while IFS= read -r config; do
+            if [[ -n "$config" ]]; then
+                INDEX=$((INDEX + 1))
+                echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+                echo "📋 Config $INDEX/$LINE_COUNT: $config"
+                echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+                echo ""
+
+                echo "📤 Step 1: Exporting macOS app..."
+                just export-macos-debug force=yes
+                echo ""
+
+                echo "📲 Step 2: (local app, no deploy needed)"
+                echo ""
+
+                echo "🧪 Step 3: Testing config: $config"
+                just test-macos-target "$config"
+                echo ""
+            fi
+        done <<< "$RESOLVED"
+    else
+        # Single config
+        just _export-test-macos-impl "$RESOLVED" 0
+    fi
 
     echo ""
     echo "✅ macOS export-test complete!"
@@ -251,13 +520,75 @@ build-export-test-macos CONFIG="":
     echo "🎯 Target configuration: $CONFIG"
     echo ""
 
-    # 1. Rebuild templates with Firebase C++ module
-    echo "📦 Step 1: Rebuilding macOS templates..."
-    just macos-build-template force=yes
-    just package-macos-template force=yes
-    echo ""
+    # Resolve test input: auto-detects test list vs config (with or without @ prefix)
+    RESOLVED=$(just _resolve-test-input "$CONFIG")
 
-    just _export-test-macos-impl "$CONFIG" 2
+    # Check if resolved output contains multiple lines (test list expansion)
+    LINE_COUNT=$(echo "$RESOLVED" | wc -l | tr -d ' ')
+    if [[ $LINE_COUNT -gt 1 ]]; then
+        # It's a test list - iterate through configs
+        echo "🔄 Detected test list: $CONFIG"
+        echo "📋 Found $LINE_COUNT config(s)"
+        echo ""
+        echo "💡 First config will rebuild templates, remaining configs will use cached templates"
+        echo ""
+
+        INDEX=0
+        while IFS= read -r config; do
+            if [[ -n "$config" ]]; then
+                INDEX=$((INDEX + 1))
+                echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+                echo "📋 Config $INDEX/$LINE_COUNT: $config"
+                if [[ $INDEX -eq 1 ]]; then
+                    echo "🔧 Full rebuild + test"
+                else
+                    echo "⚡ Using cached templates"
+                fi
+                echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+                echo ""
+
+                if [[ $INDEX -eq 1 ]]; then
+                    # First config: rebuild templates
+                    echo "📦 Step 1: Rebuilding macOS templates..."
+                    just macos-build-template force=yes
+                    just package-macos-template force=yes
+                    echo ""
+
+                    echo "📤 Step 2: Exporting macOS app..."
+                    just export-macos-debug force=yes
+                    echo ""
+
+                    echo "📲 Step 3: (local app, no deploy needed)"
+                    echo ""
+
+                    echo "🧪 Step 4: Testing config: $config"
+                    just test-macos-target "$config"
+                else
+                    # Remaining configs: use cached templates, just export + test
+                    echo "📤 Step 1: Exporting macOS app (using cached templates)..."
+                    just export-macos-debug force=yes
+                    echo ""
+
+                    echo "📲 Step 2: (local app, no deploy needed)"
+                    echo ""
+
+                    echo "🧪 Step 3: Testing config: $config"
+                    just test-macos-target "$config"
+                fi
+
+                echo ""
+            fi
+        done <<< "$RESOLVED"
+    else
+        # Single config
+        # 1. Rebuild templates with Firebase C++ module
+        echo "📦 Step 1: Rebuilding macOS templates..."
+        just macos-build-template force=yes
+        just package-macos-template force=yes
+        echo ""
+
+        just _export-test-macos-impl "$RESOLVED" 2
+    fi
 
     echo ""
     echo "✅ macOS build-export-test complete!"
@@ -306,7 +637,44 @@ export-test-windows CONFIG="":
     echo "🎯 Target configuration: $CONFIG"
     echo ""
 
-    just _export-test-windows-impl "$CONFIG" 0
+    # Resolve test input: auto-detects test list vs config (with or without @ prefix)
+    RESOLVED=$(just _resolve-test-input "$CONFIG")
+
+    # Check if resolved output contains multiple lines (test list expansion)
+    LINE_COUNT=$(echo "$RESOLVED" | wc -l | tr -d ' ')
+    if [[ $LINE_COUNT -gt 1 ]]; then
+        # It's a test list - iterate through configs
+        echo "🔄 Detected test list: $CONFIG"
+        echo "📋 Found $LINE_COUNT config(s)"
+        echo ""
+
+        INDEX=0
+        while IFS= read -r config; do
+            if [[ -n "$config" ]]; then
+                INDEX=$((INDEX + 1))
+                echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+                echo "📋 Config $INDEX/$LINE_COUNT: $config"
+                echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+                echo ""
+
+                echo "📤 Step 1: Exporting Windows app..."
+                rm -f export/windows/gametwo_debug.pck
+                just export-windows-debug
+                echo ""
+
+                echo "📲 Step 2: Deploying to Windows physical machine..."
+                just win-physical-deploy
+                echo ""
+
+                echo "🧪 Step 3: Testing config: $config"
+                just test-windows-physical-target "$config"
+                echo ""
+            fi
+        done <<< "$RESOLVED"
+    else
+        # Single config
+        just _export-test-windows-impl "$RESOLVED" 0
+    fi
 
     echo ""
     echo "✅ Windows export-test complete!"
@@ -327,22 +695,95 @@ build-export-test-windows CONFIG="":
     echo "🎯 Target configuration: $CONFIG"
     echo ""
 
-    # 1. Sync repo to VM
-    echo "📦 Step 1: Syncing repo to VM..."
-    just win-vm-sync
-    echo ""
+    # Resolve test input: auto-detects test list vs config (with or without @ prefix)
+    RESOLVED=$(just _resolve-test-input "$CONFIG")
 
-    # 2. Rebuild templates on VM
-    echo "🔨 Step 2: Rebuilding Windows templates on VM..."
-    just win-vm-template-debug
-    echo ""
+    # Check if resolved output contains multiple lines (test list expansion)
+    LINE_COUNT=$(echo "$RESOLVED" | wc -l | tr -d ' ')
+    if [[ $LINE_COUNT -gt 1 ]]; then
+        # It's a test list - iterate through configs
+        echo "🔄 Detected test list: $CONFIG"
+        echo "📋 Found $LINE_COUNT config(s)"
+        echo ""
+        echo "💡 First config will rebuild templates, remaining configs will use cached templates"
+        echo ""
 
-    # 3. Package templates from VM
-    echo "📦 Step 3: Packaging templates from VM..."
-    just win-vm-templates-package
-    echo ""
+        INDEX=0
+        while IFS= read -r config; do
+            if [[ -n "$config" ]]; then
+                INDEX=$((INDEX + 1))
+                echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+                echo "📋 Config $INDEX/$LINE_COUNT: $config"
+                if [[ $INDEX -eq 1 ]]; then
+                    echo "🔧 Full rebuild + test"
+                else
+                    echo "⚡ Using cached templates"
+                fi
+                echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+                echo ""
 
-    just _export-test-windows-impl "$CONFIG" 3
+                if [[ $INDEX -eq 1 ]]; then
+                    # First config: rebuild templates
+                    echo "📦 Step 1: Syncing repo to VM..."
+                    just win-vm-sync
+                    echo ""
+
+                    echo "🔨 Step 2: Rebuilding Windows templates on VM..."
+                    just win-vm-template-debug
+                    echo ""
+
+                    echo "📦 Step 3: Packaging templates from VM..."
+                    just win-vm-templates-package
+                    echo ""
+
+                    echo "📤 Step 4: Exporting Windows app..."
+                    rm -f export/windows/gametwo_debug.pck
+                    just export-windows-debug
+                    echo ""
+
+                    echo "📲 Step 5: Deploying to Windows physical machine..."
+                    just win-physical-deploy
+                    echo ""
+
+                    echo "🧪 Step 6: Testing config: $config"
+                    just test-windows-physical-target "$config"
+                else
+                    # Remaining configs: use cached templates, just export + deploy + test
+                    echo "📤 Step 1: Exporting Windows app (using cached templates)..."
+                    rm -f export/windows/gametwo_debug.pck
+                    just export-windows-debug
+                    echo ""
+
+                    echo "📲 Step 2: Deploying to Windows physical machine..."
+                    just win-physical-deploy
+                    echo ""
+
+                    echo "🧪 Step 3: Testing config: $config"
+                    just test-windows-physical-target "$config"
+                fi
+
+                echo ""
+            fi
+        done <<< "$RESOLVED"
+    else
+        # Single config
+        # 1. Sync repo to VM
+        echo "📦 Step 1: Syncing repo to VM..."
+        just win-vm-sync
+        echo ""
+
+        # 2. Rebuild templates on VM
+        echo "🔨 Step 2: Rebuilding Windows templates on VM..."
+        just win-vm-template-debug
+        echo ""
+
+        # 3. Package templates from VM
+        echo "📦 Step 3: Packaging templates from VM..."
+        just win-vm-templates-package
+        echo ""
+
+        just _export-test-windows-impl "$RESOLVED" 3
+    fi
 
     echo ""
     echo "✅ Windows build-export-test complete!"
