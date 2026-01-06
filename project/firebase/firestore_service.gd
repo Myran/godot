@@ -18,9 +18,7 @@ var _pending_requests: Dictionary = {}
 func _init(cpp_firestore: Object) -> void:
 	if not is_instance_valid(cpp_firestore):
 		Log.error(
-			"FirestoreService: Invalid C++ instance provided",
-			{},
-			[Log.TAG_FIREBASE, Log.TAG_ERROR]
+			"FirestoreService: Invalid C++ instance provided", {}, [Log.TAG_FIREBASE, Log.TAG_ERROR]
 		)
 		return
 
@@ -51,9 +49,7 @@ func get_document(path: String) -> Variant:
 			[Log.TAG_FIREBASE, Log.TAG_ERROR]
 		)
 		return {
-			"status": "error",
-			"code": "SERVICE_UNAVAILABLE",
-			"message": "Firestore not available"
+			"status": "error", "code": "SERVICE_UNAVAILABLE", "message": "Firestore not available"
 		}
 
 	var request_id: int = _get_next_request_id()
@@ -99,9 +95,7 @@ func set_document(path: String, data: Dictionary) -> Variant:
 			[Log.TAG_FIREBASE, Log.TAG_ERROR]
 		)
 		return {
-			"status": "error",
-			"code": "SERVICE_UNAVAILABLE",
-			"message": "Firestore not available"
+			"status": "error", "code": "SERVICE_UNAVAILABLE", "message": "Firestore not available"
 		}
 
 	var request_id: int = _get_next_request_id()
@@ -144,9 +138,7 @@ func update_document(path: String, data: Dictionary) -> Variant:
 			[Log.TAG_FIREBASE, Log.TAG_ERROR]
 		)
 		return {
-			"status": "error",
-			"code": "SERVICE_UNAVAILABLE",
-			"message": "Firestore not available"
+			"status": "error", "code": "SERVICE_UNAVAILABLE", "message": "Firestore not available"
 		}
 
 	var request_id: int = _get_next_request_id()
@@ -189,9 +181,7 @@ func delete_document(path: String) -> Variant:
 			[Log.TAG_FIREBASE, Log.TAG_ERROR]
 		)
 		return {
-			"status": "error",
-			"code": "SERVICE_UNAVAILABLE",
-			"message": "Firestore not available"
+			"status": "error", "code": "SERVICE_UNAVAILABLE", "message": "Firestore not available"
 		}
 
 	var request_id: int = _get_next_request_id()
@@ -249,9 +239,7 @@ func query_collection(collection_path: String, query_params: Dictionary = {}) ->
 			[Log.TAG_FIREBASE, Log.TAG_ERROR]
 		)
 		return {
-			"status": "error",
-			"code": "SERVICE_UNAVAILABLE",
-			"message": "Firestore not available"
+			"status": "error", "code": "SERVICE_UNAVAILABLE", "message": "Firestore not available"
 		}
 
 	var request_id: int = _get_next_request_id()
@@ -306,11 +294,7 @@ func configure_settings(settings: Dictionary) -> void:
 		)
 		return
 
-	Log.debug(
-		"FirestoreService: Configuring settings",
-		{"settings": settings},
-		[Log.TAG_FIREBASE]
-	)
+	Log.debug("FirestoreService: Configuring settings", {"settings": settings}, [Log.TAG_FIREBASE])
 	_cpp_firestore.configure_settings(settings)
 
 
@@ -370,19 +354,19 @@ func _connect_signals() -> void:
 			[Log.TAG_FIREBASE]
 		)
 
-	Log.debug(
-		"FirestoreService: Signals connected",
-		{},
-		[Log.TAG_FIREBASE, Log.TAG_INITIALIZATION]
-	)
+	Log.debug("FirestoreService: Signals connected", {}, [Log.TAG_FIREBASE, Log.TAG_INITIALIZATION])
 
 
 # === Signal Handlers ===
 
 
 func _on_document_get_completed(
-	request_id: int, success: bool, exists: bool, data: Dictionary,
-	error_code: int, error_message: String
+	request_id: int,
+	success: bool,
+	exists: bool,
+	data: Dictionary,
+	error_code: int,
+	error_message: String
 ) -> void:
 	Log.debug(
 		"FirestoreService: document_get_completed received",
@@ -490,8 +474,7 @@ func _on_document_delete_completed(
 
 
 func _on_collection_query_completed(
-	request_id: int, success: bool, documents: Array,
-	error_code: int, error_message: String
+	request_id: int, success: bool, documents: Array, error_code: int, error_message: String
 ) -> void:
 	Log.debug(
 		"FirestoreService: collection_query_completed received",

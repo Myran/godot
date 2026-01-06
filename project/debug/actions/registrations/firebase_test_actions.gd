@@ -10,95 +10,98 @@ const _BASE_CLASS: GDScript = preload(
 )
 
 ## Preload all test classes to ensure they're available
-const _TestLogEventBasic: GDScript = preload(
+const TestLogEventBasic: GDScript = preload(
 	"res://debug/actions/firebase_tests/analytics/test_log_event_basic.gd"
 )
-const _TestLogEventParams: GDScript = preload(
+const TestLogEventParams: GDScript = preload(
 	"res://debug/actions/firebase_tests/analytics/test_log_event_params.gd"
 )
-const _TestSetUserId: GDScript = preload(
+const TestSetUserId: GDScript = preload(
 	"res://debug/actions/firebase_tests/analytics/test_set_user_id.gd"
 )
-const _TestSetUserProperty: GDScript = preload(
+const TestSetUserProperty: GDScript = preload(
 	"res://debug/actions/firebase_tests/analytics/test_set_user_property.gd"
 )
-const _TestCollectionEnabled: GDScript = preload(
+const TestCollectionEnabled: GDScript = preload(
 	"res://debug/actions/firebase_tests/analytics/test_collection_enabled.gd"
 )
-const _TestResetData: GDScript = preload(
+const TestResetData: GDScript = preload(
 	"res://debug/actions/firebase_tests/analytics/test_reset_data.gd"
 )
 
-const _TestSignInAnonymous: GDScript = preload(
+const TestSignInAnonymous: GDScript = preload(
 	"res://debug/actions/firebase_tests/auth/test_sign_in_anonymous.gd"
 )
-const _TestSignInCustomToken: GDScript = preload(
+const TestSignInCustomToken: GDScript = preload(
 	"res://debug/actions/firebase_tests/auth/test_sign_in_custom_token.gd"
 )
-const _TestSignInEmail: GDScript = preload(
+const TestSignInEmail: GDScript = preload(
 	"res://debug/actions/firebase_tests/auth/test_sign_in_email.gd"
 )
-const _TestGetIdToken: GDScript = preload(
+const TestGetIdToken: GDScript = preload(
 	"res://debug/actions/firebase_tests/auth/test_get_id_token.gd"
 )
-const _TestSignOut: GDScript = preload("res://debug/actions/firebase_tests/auth/test_sign_out.gd")
-const _TestGetUid: GDScript = preload("res://debug/actions/firebase_tests/auth/test_get_uid.gd")
-const _TestIsLoggedIn: GDScript = preload(
+const TestSignOut: GDScript = preload("res://debug/actions/firebase_tests/auth/test_sign_out.gd")
+const TestGetUid: GDScript = preload("res://debug/actions/firebase_tests/auth/test_get_uid.gd")
+const TestIsLoggedIn: GDScript = preload(
 	"res://debug/actions/firebase_tests/auth/test_is_logged_in.gd"
 )
-const _TestStateChanged: GDScript = preload(
+const TestStateChanged: GDScript = preload(
 	"res://debug/actions/firebase_tests/auth/test_state_changed.gd"
 )
 
-const _TestGetBoolean: GDScript = preload(
+const TestGetBoolean: GDScript = preload(
 	"res://debug/actions/firebase_tests/remote_config/test_get_boolean.gd"
 )
-const _TestGetString: GDScript = preload(
+const TestGetString: GDScript = preload(
 	"res://debug/actions/firebase_tests/remote_config/test_get_string.gd"
 )
-const _TestGetInt: GDScript = preload(
+const TestGetInt: GDScript = preload(
 	"res://debug/actions/firebase_tests/remote_config/test_get_int.gd"
 )
-const _TestFetchAndActivate: GDScript = preload(
+const TestFetchAndActivate: GDScript = preload(
 	"res://debug/actions/firebase_tests/remote_config/test_fetch_and_activate.gd"
 )
-const _TestFetchAsync: GDScript = preload(
+const TestFetchAsync: GDScript = preload(
 	"res://debug/actions/firebase_tests/remote_config/test_fetch_async.gd"
 )
-const _TestActivateAsync: GDScript = preload(
+const TestActivateAsync: GDScript = preload(
 	"res://debug/actions/firebase_tests/remote_config/test_activate_async.gd"
 )
-const _TestGetKeys: GDScript = preload(
+const TestGetKeys: GDScript = preload(
 	"res://debug/actions/firebase_tests/remote_config/test_get_keys.gd"
 )
-const _TestSetDefaults: GDScript = preload(
+const TestSetDefaults: GDScript = preload(
 	"res://debug/actions/firebase_tests/remote_config/test_set_defaults.gd"
 )
 
-const _TestDocumentGet: GDScript = preload(
+const TestDocumentGet: GDScript = preload(
 	"res://debug/actions/firebase_tests/firestore/test_document_get.gd"
 )
-const _TestDocumentSet: GDScript = preload(
+const TestDocumentSet: GDScript = preload(
 	"res://debug/actions/firebase_tests/firestore/test_document_set.gd"
 )
-const _TestDocumentUpdate: GDScript = preload(
+const TestDocumentUpdate: GDScript = preload(
 	"res://debug/actions/firebase_tests/firestore/test_document_update.gd"
 )
-const _TestDocumentDelete: GDScript = preload(
+const TestDocumentDelete: GDScript = preload(
 	"res://debug/actions/firebase_tests/firestore/test_document_delete.gd"
 )
-const _TestQuery: GDScript = preload(
+const TestQuery: GDScript = preload(
 	"res://debug/actions/firebase_tests/firestore/test_simple_query.gd"
 )
+const TestFirestoreErrorHandling: GDScript = preload(
+	"res://debug/actions/firebase_tests/firestore/test_error_handling.gd"
+)
 
-const _TestSteamInit: GDScript = preload("res://debug/actions/firebase_tests/steam/test_init.gd")
-const _TestSteamGetTicket: GDScript = preload(
+const TestSteamInit: GDScript = preload("res://debug/actions/firebase_tests/steam/test_init.gd")
+const TestSteamGetTicket: GDScript = preload(
 	"res://debug/actions/firebase_tests/steam/test_get_ticket.gd"
 )
-const _TestSteamSignInFlow: GDScript = preload(
+const TestSteamSignInFlow: GDScript = preload(
 	"res://debug/actions/firebase_tests/steam/test_sign_in_flow.gd"
 )
-const _TestSteamNoClientError: GDScript = preload(
+const TestSteamNoClientError: GDScript = preload(
 	"res://debug/actions/firebase_tests/steam/test_no_client_error.gd"
 )
 
@@ -115,7 +118,7 @@ static func register_all(registry: DebugActionRegistry) -> void:
 	# Remote Config tests (8)
 	_register_remote_config_tests(helper)
 
-	# Firestore tests (5)
+	# Firestore tests (6)
 	_register_firestore_tests(helper)
 
 	# Steam tests (4, desktop only)
@@ -125,46 +128,47 @@ static func register_all(registry: DebugActionRegistry) -> void:
 
 
 static func _register_analytics_tests(helper: RegistrationHelper) -> void:
-	helper.register(_TestLogEventBasic.new())
-	helper.register(_TestLogEventParams.new())
-	helper.register(_TestSetUserId.new())
-	helper.register(_TestSetUserProperty.new())
-	helper.register(_TestCollectionEnabled.new())
-	helper.register(_TestResetData.new())
+	helper.register(TestLogEventBasic.new())
+	helper.register(TestLogEventParams.new())
+	helper.register(TestSetUserId.new())
+	helper.register(TestSetUserProperty.new())
+	helper.register(TestCollectionEnabled.new())
+	helper.register(TestResetData.new())
 
 
 static func _register_auth_tests(helper: RegistrationHelper) -> void:
-	helper.register(_TestSignInAnonymous.new())
-	helper.register(_TestSignInCustomToken.new())
-	helper.register(_TestSignInEmail.new())
-	helper.register(_TestGetIdToken.new())
-	helper.register(_TestSignOut.new())
-	helper.register(_TestGetUid.new())
-	helper.register(_TestIsLoggedIn.new())
-	helper.register(_TestStateChanged.new())
+	helper.register(TestSignInAnonymous.new())
+	helper.register(TestSignInCustomToken.new())
+	helper.register(TestSignInEmail.new())
+	helper.register(TestGetIdToken.new())
+	helper.register(TestSignOut.new())
+	helper.register(TestGetUid.new())
+	helper.register(TestIsLoggedIn.new())
+	helper.register(TestStateChanged.new())
 
 
 static func _register_remote_config_tests(helper: RegistrationHelper) -> void:
-	helper.register(_TestGetBoolean.new())
-	helper.register(_TestGetString.new())
-	helper.register(_TestGetInt.new())
-	helper.register(_TestFetchAndActivate.new())
-	helper.register(_TestFetchAsync.new())
-	helper.register(_TestActivateAsync.new())
-	helper.register(_TestGetKeys.new())
-	helper.register(_TestSetDefaults.new())
+	helper.register(TestGetBoolean.new())
+	helper.register(TestGetString.new())
+	helper.register(TestGetInt.new())
+	helper.register(TestFetchAndActivate.new())
+	helper.register(TestFetchAsync.new())
+	helper.register(TestActivateAsync.new())
+	helper.register(TestGetKeys.new())
+	helper.register(TestSetDefaults.new())
 
 
 static func _register_firestore_tests(helper: RegistrationHelper) -> void:
-	helper.register(_TestDocumentGet.new())
-	helper.register(_TestDocumentSet.new())
-	helper.register(_TestDocumentUpdate.new())
-	helper.register(_TestDocumentDelete.new())
-	helper.register(_TestQuery.new())
+	helper.register(TestDocumentGet.new())
+	helper.register(TestDocumentSet.new())
+	helper.register(TestDocumentUpdate.new())
+	helper.register(TestDocumentDelete.new())
+	helper.register(TestQuery.new())
+	helper.register(TestFirestoreErrorHandling.new())
 
 
 static func _register_steam_tests(helper: RegistrationHelper) -> void:
-	helper.register(_TestSteamInit.new())
-	helper.register(_TestSteamGetTicket.new())
-	helper.register(_TestSteamSignInFlow.new())
-	helper.register(_TestSteamNoClientError.new())
+	helper.register(TestSteamInit.new())
+	helper.register(TestSteamGetTicket.new())
+	helper.register(TestSteamSignInFlow.new())
+	helper.register(TestSteamNoClientError.new())
