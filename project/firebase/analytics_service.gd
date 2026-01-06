@@ -6,6 +6,75 @@ extends RefCounted
 # Firebase Analytics Service - Handles event logging and user properties
 # All operations are synchronous fire-and-forget (no await needed)
 
+## --- Predefined Event Constants ---
+## These match Firebase Analytics predefined events
+
+## Event names
+const EVENT_AD_IMPRESSION: String = "ad_impression"
+const EVENT_ADD_PAYMENT_INFO: String = "add_payment_info"
+const EVENT_ADD_SHIPPING_INFO: String = "add_shipping_info"
+const EVENT_ADD_TO_CART: String = "add_to_cart"
+const EVENT_ADD_TO_WISHLIST: String = "add_to_wishlist"
+const EVENT_APP_OPEN: String = "app_open"
+const EVENT_BEGIN_CHECKOUT: String = "begin_checkout"
+const EVENT_CAMPAIGN_DETAILS: String = "campaign_details"
+const EVENT_CHECKOUT_PROGRESS: String = "checkout_progress"
+const EVENT_EARN_VIRTUAL_CURRENCY: String = "earn_virtual_currency"
+const EVENT_ECOMMERCE_PURCHASE: String = "ecommerce_purchase"
+const EVENT_GENERATE_LEAD: String = "generate_lead"
+const EVENT_JOIN_GROUP: String = "join_group"
+const EVENT_LEVEL_END: String = "level_end"
+const EVENT_LEVEL_START: String = "level_start"
+const EVENT_LEVEL_UP: String = "level_up"
+const EVENT_LOGIN: String = "login"
+const EVENT_POST_SCORE: String = "post_score"
+const EVENT_PURCHASE: String = "purchase"
+const EVENT_REFUND: String = "refund"
+const EVENT_REMOVE_FROM_CART: String = "remove_from_cart"
+const EVENT_SCREEN_VIEW: String = "screen_view"
+const EVENT_SEARCH: String = "search"
+const EVENT_SELECT_CONTENT: String = "select_content"
+const EVENT_SELECT_ITEM: String = "select_item"
+const EVENT_SHARE: String = "share"
+const EVENT_SIGN_UP: String = "sign_up"
+const EVENT_SPEND_VIRTUAL_CURRENCY: String = "spend_virtual_currency"
+const EVENT_TUTORIAL_BEGIN: String = "tutorial_begin"
+const EVENT_TUTORIAL_COMPLETE: String = "tutorial_complete"
+const EVENT_UNLOCK_ACHIEVEMENT: String = "unlock_achievement"
+const EVENT_VIEW_ITEM: String = "view_item"
+const EVENT_VIEW_ITEM_LIST: String = "view_item_list"
+const EVENT_VIEW_SEARCH_RESULTS: String = "view_search_results"
+const EVENT_TURN_COMPLETE: String = "turn_complete"
+const EVENT_SESSION_START: String = "session_start"
+const EVENT_SESSION_END: String = "session_end"
+const EVENT_XP_GAINED: String = "xp_gained"
+
+## Common parameter names
+const PARAM_ACHIEVEMENT_ID: String = "achievement_id"
+const PARAM_CHARACTER: String = "character"
+const PARAM_LEVEL: String = "level"
+const PARAM_SCORE: String = "score"
+const PARAM_ITEM_ID: String = "item_id"
+const PARAM_ITEM_NAME: String = "item_name"
+const PARAM_ITEM_CATEGORY: String = "item_category"
+const PARAM_QUANTITY: String = "quantity"
+const PARAM_PRICE: String = "price"
+const PARAM_VALUE: String = "value"
+const PARAM_CURRENCY: String = "currency"
+const PARAM_VIRTUAL_CURRENCY_NAME: String = "virtual_currency_name"
+const PARAM_SIGN_UP_METHOD: String = "sign_up_method"
+const PARAM_GROUP_ID: String = "group_id"
+const PARAM_SCREEN_NAME: String = "screen_name"
+const PARAM_SEARCH_TERM: String = "search_term"
+const PARAM_DURATION_MS: String = "duration_ms"
+const PARAM_DIFFICULTY: String = "difficulty"
+const PARAM_SOURCE: String = "source"
+const PARAM_TURN_NUMBER: String = "turn_number"
+const PARAM_RESULT: String = "result"
+
+## Common user property names
+const PROPERTY_SIGN_UP_METHOD: String = "sign_up_method"
+
 var _native: FirebaseAnalytics
 var _is_initialized: bool = false
 
@@ -286,62 +355,27 @@ func track_search(search_term: String) -> void:
 	log_event_params(EVENT_SEARCH, {PARAM_SEARCH_TERM: search_term})
 
 
-## --- Predefined Event Constants ---
-## These match Firebase Analytics predefined events
+## Track turn completion (battle system)
+func track_turn_completed(turn_number: int, duration_ms: int = -1) -> void:
+	var params: Dictionary = {PARAM_TURN_NUMBER: turn_number}
+	if duration_ms >= 0:
+		params[PARAM_DURATION_MS] = duration_ms
+	log_event_params(EVENT_TURN_COMPLETE, params)
 
-## Event names
-const EVENT_AD_IMPRESSION: String = "ad_impression"
-const EVENT_ADD_PAYMENT_INFO: String = "add_payment_info"
-const EVENT_ADD_SHIPPING_INFO: String = "add_shipping_info"
-const EVENT_ADD_TO_CART: String = "add_to_cart"
-const EVENT_ADD_TO_WISHLIST: String = "add_to_wishlist"
-const EVENT_APP_OPEN: String = "app_open"
-const EVENT_BEGIN_CHECKOUT: String = "begin_checkout"
-const EVENT_CAMPAIGN_DETAILS: String = "campaign_details"
-const EVENT_CHECKOUT_PROGRESS: String = "checkout_progress"
-const EVENT_EARN_VIRTUAL_CURRENCY: String = "earn_virtual_currency"
-const EVENT_ECOMMERCE_PURCHASE: String = "ecommerce_purchase"
-const EVENT_GENERATE_LEAD: String = "generate_lead"
-const EVENT_JOIN_GROUP: String = "join_group"
-const EVENT_LEVEL_END: String = "level_end"
-const EVENT_LEVEL_START: String = "level_start"
-const EVENT_LEVEL_UP: String = "level_up"
-const EVENT_LOGIN: String = "login"
-const EVENT_POST_SCORE: String = "post_score"
-const EVENT_PURCHASE: String = "purchase"
-const EVENT_REFUND: String = "refund"
-const EVENT_REMOVE_FROM_CART: String = "remove_from_cart"
-const EVENT_SCREEN_VIEW: String = "screen_view"
-const EVENT_SEARCH: String = "search"
-const EVENT_SELECT_CONTENT: String = "select_content"
-const EVENT_SELECT_ITEM: String = "select_item"
-const EVENT_SHARE: String = "share"
-const EVENT_SIGN_UP: String = "sign_up"
-const EVENT_SPEND_VIRTUAL_CURRENCY: String = "spend_virtual_currency"
-const EVENT_TUTORIAL_BEGIN: String = "tutorial_begin"
-const EVENT_TUTORIAL_COMPLETE: String = "tutorial_complete"
-const EVENT_UNLOCK_ACHIEVEMENT: String = "unlock_achievement"
-const EVENT_VIEW_ITEM: String = "view_item"
-const EVENT_VIEW_ITEM_LIST: String = "view_item_list"
-const EVENT_VIEW_SEARCH_RESULTS: String = "view_search_results"
 
-## Common parameter names
-const PARAM_ACHIEVEMENT_ID: String = "achievement_id"
-const PARAM_CHARACTER: String = "character"
-const PARAM_LEVEL: String = "level"
-const PARAM_SCORE: String = "score"
-const PARAM_ITEM_ID: String = "item_id"
-const PARAM_ITEM_NAME: String = "item_name"
-const PARAM_ITEM_CATEGORY: String = "item_category"
-const PARAM_QUANTITY: String = "quantity"
-const PARAM_PRICE: String = "price"
-const PARAM_VALUE: String = "value"
-const PARAM_CURRENCY: String = "currency"
-const PARAM_VIRTUAL_CURRENCY_NAME: String = "virtual_currency_name"
-const PARAM_SIGN_UP_METHOD: String = "sign_up_method"
-const PARAM_GROUP_ID: String = "group_id"
-const PARAM_SCREEN_NAME: String = "screen_name"
-const PARAM_SEARCH_TERM: String = "search_term"
+## Track session start
+func track_session_start() -> void:
+	log_event(EVENT_SESSION_START)
 
-## Common user property names
-const PROPERTY_SIGN_UP_METHOD: String = "sign_up_method"
+
+## Track session end
+func track_session_end(duration_seconds: int) -> void:
+	log_event_int(EVENT_SESSION_END, PARAM_DURATION_MS, duration_seconds * 1000)
+
+
+## Track XP gained
+func track_xp_gained(amount: int, source: String = "") -> void:
+	var params: Dictionary = {"amount": amount}
+	if not source.is_empty():
+		params[PARAM_SOURCE] = source
+	log_event_params(EVENT_XP_GAINED, params)

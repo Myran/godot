@@ -1,9 +1,10 @@
 ---
 id: task-409
 title: Add game-specific Analytics event helpers to GDScript service
-status: To Do
+status: Done
 assignee: []
 created_date: '2025-12-31 22:59'
+updated_date: '2026-01-06 22:53'
 labels:
   - firebase
   - analytics
@@ -17,34 +18,27 @@ priority: low
 ## Description
 
 <!-- SECTION:DESCRIPTION:BEGIN -->
-Extend AnalyticsService with game-specific event tracking helpers (GDScript layer, not C++).
-
-**Design Principle**: Game-specific helpers belong in GDScript, not C++. This allows iteration without rebuilding templates.
-
-**Helpers to Add**:
-```gdscript
-# Battle events
-func track_battle_start(battle_type: String, level: int) -> void
-func track_battle_end(result: String, duration_ms: int) -> void
-func track_card_played(card_id: String, card_name: String) -> void
-func track_turn_completed(turn_number: int) -> void
-
-# Progression events
-func track_level_start(level_id: String, difficulty: String) -> void
-func track_level_complete(level_id: String, stars: int) -> void
-func track_xp_gained(amount: int, source: String) -> void
-
-# Session events
-func track_session_start() -> void
-func track_session_end(duration_seconds: int) -> void
-
-# Economy events (if needed)
-func track_purchase(item_id: String, currency: String, amount: float) -> void
-```
-
-**Acceptance Criteria**:
-- All helpers use log_event_params() internally
-- Parameter validation follows Firebase naming rules
-- Documented in AnalyticsService class reference
-- Unit tests for each helper
+Revised: Add tracking constants and optional convenience wrappers. Use ONE core log_event_params() with constants (EVENT_*, PARAM_*), NOT multiple custom methods. Convenience wrappers like track_battle_start() are optional for readability only.
 <!-- SECTION:DESCRIPTION:END -->
+
+## Implementation Notes
+
+<!-- SECTION:NOTES:BEGIN -->
+## Revised Architecture (2026-01-06)
+
+### Design Principle
+Use ONE core tracking method with constants + data, NOT multiple custom methods.
+
+### Architecture
+
+### Implementation
+1. Add missing tracking constants (event names, parameter names)
+2. Add optional convenience wrapper methods for readability
+3. Document how to use the core method directly
+
+### Usage Pattern
+
+### Constants to Add
+- Event names: EVENT_TURN_COMPLETE, EVENT_SESSION_START, EVENT_SESSION_END, EVENT_XP_GAINED
+- Parameter names: PARAM_DURATION_MS, PARAM_DIFFICULTY, PARAM_SOURCE, PARAM_TURN_NUMBER
+<!-- SECTION:NOTES:END -->

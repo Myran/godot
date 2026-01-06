@@ -23,6 +23,7 @@
     "backend.firebase.auth.id_token",
     "backend.firebase.auth.anonymous_check",
     "backend.firebase.auth.error_handling",
-    "backend.firebase.auth.state_transitions"
+    "backend.firebase.auth.state_transitions",
+    "firebase-firestore-tests"
   ]
 }

@@ -1,12 +1,13 @@
 {
-  "description": "Firebase Firestore feature tests (5 tests)",
+  "description": "Firebase Firestore feature tests (6 tests)",
   "actions": [
-    "test.firestore.document_get",
     "test.firestore.document_set",
+    "test.firestore.document_get",
     "test.firestore.document_update",
     "test.firestore.document_delete",
-    "test.firestore.query"
+    "test.firestore.collection_query",
+    "test.firestore.error_handling"
   ],
-  "platforms": ["android", "ios", "macos", "desktop"],
-  "tags": ["firebase", "firestore", "tdd"]
+  "platforms": ["android", "desktop", "editor", "macos", "ios", "windows-physical"],
+  "tags": ["firebase", "firestore", "tdd", "crud"]
 }

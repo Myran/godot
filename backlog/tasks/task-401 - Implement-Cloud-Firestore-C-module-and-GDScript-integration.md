@@ -1,10 +1,10 @@
 ---
 id: task-401
 title: Implement Cloud Firestore C++ module and GDScript integration
-status: In Progress
+status: Done
 assignee: []
 created_date: '2025-12-30 21:26'
-updated_date: '2026-01-06 17:23'
+updated_date: '2026-01-06 18:00'
 labels:
   - firebase
   - firestore
