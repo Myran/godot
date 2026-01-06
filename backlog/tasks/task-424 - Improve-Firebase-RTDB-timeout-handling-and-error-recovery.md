@@ -1,9 +1,10 @@
 ---
 id: task-424
 title: Improve Firebase RTDB timeout handling and error recovery
-status: To Do
+status: In Progress
 assignee: []
 created_date: '2026-01-06 00:07'
+updated_date: '2026-01-06 17:08'
 labels:
   - firebase
   - rtdb
