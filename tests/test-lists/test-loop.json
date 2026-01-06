@@ -1,0 +1,8 @@
+{
+  "name": "Test Loop",
+  "description": "Test loop continuation",
+  "configs": [
+    "backend.firebase.auth.anonymous_check",
+    "backend.firebase.auth.sign_in_anonymous"
+  ]
+}
