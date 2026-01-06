@@ -392,6 +392,13 @@ export-macos-debug force="yes": _validate-godot-editor (_ensure-directory-exists
     # Copy Firebase config to app bundle
     just _copy-firebase-config-to-macos-bundle "export/macos/{{GAME_NAME}}_debug.app"
 
+    # Properly code sign the app to reduce keychain prompts during Firebase auth
+    # This uses the Apple Development certificate to sign the app for local testing
+    # Note: First-time keychain access may still require approval; run app manually once to approve
+    echo "🔐 Applying code signature..."
+    codesign --force --deep --sign "5EDCA9904525007B0FBE3255D9F59AC79076651F" \
+        "export/macos/{{GAME_NAME}}_debug.app" 2>/dev/null || echo "⚠️  Code signing failed, app may prompt for keychain access"
+
     echo "✅ macOS debug export completed successfully"
     echo "📁 Debug: export/macos/{{GAME_NAME}}_debug.app"
 
