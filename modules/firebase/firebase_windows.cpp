@@ -10,7 +10,8 @@ void Firebase::createApplication() {
     // Windows desktop initialization
     // Firebase C++ SDK automatically looks for google-services-desktop.json in current directory
     print_line(String("[Firebase] Creating app (Windows)"));
-    app_ptr = firebase::App::Create();
+    // Pass fixed app name to ensure consistent credential storage
+    app_ptr = firebase::App::Create(firebase::AppOptions(), "__FIRAPP_DEFAULT");
     if (app_ptr != nullptr) {
         print_line(String("[Firebase] Success creating app"));
     } else {

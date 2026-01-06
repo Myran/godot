@@ -45,7 +45,8 @@ void Firebase::createApplication() {
 #elif TARGET_OS_IPHONE
     // iOS initialization with UI context
     print_line(String("[Firebase] Creating app (iOS)"));
-    app_ptr = firebase::App::Create();
+    // Pass fixed app name to ensure consistent keychain entries (prevents repeated prompts)
+    app_ptr = firebase::App::Create(firebase::AppOptions(), "__FIRAPP_DEFAULT");
     _instance = (__bridge void *)[GDTAppDelegateService viewController].view;
     print_line(String("[Firebase] Success creating app"));
 #elif TARGET_OS_OSX
@@ -65,12 +66,14 @@ void Firebase::createApplication() {
         [[NSFileManager defaultManager] changeCurrentDirectoryPath:bundlePath];
 
         print_line(String("[Firebase] Creating app (macOS)"));
-        app_ptr = firebase::App::Create();
+        // Pass fixed app name to ensure consistent keychain entries (prevents repeated prompts)
+        app_ptr = firebase::App::Create(firebase::AppOptions(), "__FIRAPP_DEFAULT");
         print_line(String("[Firebase] Success creating app"));
     } else {
         print_line(String("[Firebase] Config file not found, creating app without config"));
         print_line(String("[Firebase] Creating app (macOS)"));
-        app_ptr = firebase::App::Create();
+        // Pass fixed app name to ensure consistent keychain entries (prevents repeated prompts)
+        app_ptr = firebase::App::Create(firebase::AppOptions(), "__FIRAPP_DEFAULT");
         print_line(String("[Firebase] App created but will not be properly configured"));
     }
 #endif
