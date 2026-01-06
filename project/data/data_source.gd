@@ -17,6 +17,30 @@ var using_local_data: bool = false
 var _backend: DataBackend = null
 var _initialized: bool = false
 
+# Static flag to skip card cache activation during tests that don't need cards
+# This prevents 45s RTDB timeout for analytics-only tests (Task-424)
+static var _skip_card_cache: bool = false
+
+
+static func set_skip_card_cache(skip: bool) -> void:
+	"""
+	Set whether to skip card cache activation globally.
+
+	This is used by debug tests that don't need card data (e.g., Analytics tests)
+	to avoid the 45-second RTDB timeout. The flag is automatically reset after
+	the first activation check.
+
+	Args:
+		skip: If true, card cache activation will be skipped
+	"""
+	_skip_card_cache = skip
+	if skip:
+		Log.debug(
+			"Card cache skip flag set - activation will be skipped",
+			{},
+			[Log.TAG_CACHE, Log.TAG_DEBUG]
+		)
+
 
 func _ready() -> void:
 	Log.info("DataSource initializing", {"instance_id": get_instance_id()}, [Log.TAG_DB])
@@ -184,6 +208,17 @@ func is_initialized() -> bool:
 
 
 func activate_card_cache() -> void:
+	# Check if card cache activation should be skipped (for tests that don't need cards)
+	if _skip_card_cache:
+		Log.info(
+			"Skipping card cache activation (test mode - no card-dependent actions)",
+			{"instance_id": get_instance_id()},
+			[Log.TAG_CACHE, Log.TAG_DB, Log.TAG_DEBUG]
+		)
+		# Reset flag after use to avoid affecting subsequent operations
+		_skip_card_cache = false
+		return
+
 	Log.info(
 		"Activating card cache", {"instance_id": get_instance_id()}, [Log.TAG_CACHE, Log.TAG_DB]
 	)

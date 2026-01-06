@@ -69,6 +69,17 @@ func start_debug_coordinator() -> void:
 		"Actions retrieved", {"count": actions.size(), "actions": actions}, ["debug", "startup"]
 	)
 
+	# CRITICAL (Task-424): Set card cache skip flag BEFORE any game initialization
+	# This prevents 45s RTDB timeout for tests that don't need card data (e.g., Analytics)
+	var needs_cards: bool = _actions_need_cards(actions)
+	if not needs_cards:
+		DataSource.set_skip_card_cache(true)
+		Log.info(
+			"Card cache skip flag set - analytics-only test detected",
+			{"action_count": actions.size()},
+			["debug", "startup", "cache", "task424"]
+		)
+
 	# CRITICAL: Check if we should skip test infrastructure entirely
 	# This prevents empty configs from triggering test mode when they should be manual
 	if _should_skip_test_infrastructure(actions):
@@ -96,7 +107,7 @@ func start_debug_coordinator() -> void:
 	await _wait_for_data_source_ready()
 
 	_log_verbose("Activating card cache for debug actions...", {}, ["debug", "startup", "cache"])
-	await _ensure_card_cache_ready()
+	await _ensure_card_cache_ready(actions)
 
 	# CRITICAL FIX (Task-218): Apply RNG seed from config AFTER coordinator starts
 	# This ensures config is loaded at the right time, not during RNG autoload initialization
@@ -605,6 +616,55 @@ func _expand_wildcard_pattern(pattern: String) -> Array[String]:
 	return expanded_actions
 
 
+func _actions_need_cards(action_list: Array) -> bool:
+	"""
+	Check if any action in the list needs card data.
+
+	This enables lazy card cache activation - only fetch from Firebase RTDB
+	when tests actually need card data. Prevents 45s timeout for Analytics-only tests.
+
+	Args:
+		action_list: Array of action items (strings or dictionaries with action/params)
+
+	Returns:
+		true if any action needs cards, false otherwise
+	"""
+	var card_dependent_patterns: Array[String] = [
+		"game.card",
+		"game.battle",
+		"game.match",
+		"card_",
+		"battle_",
+		"match_"
+	]
+
+	for item: Variant in action_list:
+		var action_name: String
+		if item is Dictionary:
+			action_name = item.get("action", "")
+		elif item is String:
+			action_name = item
+		else:
+			continue
+
+		# Check if action name matches any card-dependent pattern
+		for pattern: String in card_dependent_patterns:
+			if pattern in action_name.to_lower():
+				Log.debug(
+					"Action needs card data",
+					{"action": action_name, "matched_pattern": pattern},
+					["debug", "startup", "cache"]
+				)
+				return true
+
+	Log.debug(
+		"No card-dependent actions found",
+		{"action_count": action_list.size()},
+		["debug", "startup", "cache"]
+	)
+	return false
+
+
 func _expand_all_wildcards(action_list: Array) -> Array:
 	"""
 	Expand all wildcard patterns in the action list.
@@ -776,9 +836,27 @@ func _apply_gamestate_at_startup(gamestate_data: Dictionary) -> bool:
 	return true
 
 
-func _ensure_card_cache_ready() -> void:
-	"""Ensure card cache is activated before debug actions that depend on card creation"""
+func _ensure_card_cache_ready(actions: Array) -> void:
+	"""Ensure card cache is activated before debug actions that depend on card creation
+
+	Lazy activation: Only fetch card cache if actions actually need cards.
+	This prevents 45s timeout for tests that don't use card data (e.g., Analytics).
+
+	Args:
+		actions: Array of action items (strings or dictionaries with action/params)
+	"""
 	var data_source_node: Node = data_source
+
+	# Check if any action needs cards - lazy activation to avoid unnecessary RTDB fetch
+	var needs_cards: bool = _actions_need_cards(actions)
+
+	if not needs_cards:
+		Log.info(
+			"Skipping card cache activation - no card-dependent actions in test config",
+			{"action_count": actions.size()},
+			["debug", "startup", "cache"]
+		)
+		return
 
 	Log.info("Activating card cache for debug actions", {}, ["debug", "startup", "cache"])
 	await data_source_node.activate_card_cache()
