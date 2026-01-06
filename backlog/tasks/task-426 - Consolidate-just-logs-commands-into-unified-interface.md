@@ -1,9 +1,10 @@
 ---
 id: task-426
 title: Consolidate just logs-* commands into unified interface
-status: To Do
+status: Consider
 assignee: []
 created_date: '2026-01-06 00:33'
+updated_date: '2026-01-06 10:47'
 labels:
   - justfile
   - logging
@@ -12,6 +13,7 @@ labels:
   - documentation
 dependencies: []
 priority: medium
+ordinal: 15000
 ---
 
 ## Description

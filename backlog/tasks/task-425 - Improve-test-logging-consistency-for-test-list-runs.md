@@ -1,10 +1,10 @@
 ---
 id: task-425
 title: Improve test logging consistency for test list runs
-status: To Do
+status: Consider
 assignee: []
 created_date: '2026-01-06 00:10'
-updated_date: '2026-01-06 00:32'
+updated_date: '2026-01-06 10:47'
 labels:
   - testing
   - logging
@@ -13,6 +13,7 @@ labels:
   - developer-experience
 dependencies: []
 priority: medium
+ordinal: 13500
 ---
 
 ## Description

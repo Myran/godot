@@ -4,9 +4,11 @@ title: Rename all instances of 'desktop' platform to 'editor' in test system
 status: Consider
 assignee: []
 created_date: '2026-01-03 23:22'
+updated_date: '2026-01-06 10:47'
 labels: []
 dependencies: []
 priority: medium
+ordinal: 14000
 ---
 
 ## Description
