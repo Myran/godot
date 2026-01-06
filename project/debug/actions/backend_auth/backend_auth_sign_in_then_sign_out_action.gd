@@ -39,7 +39,8 @@ func _execute_action_logic(_params: Dictionary = {}) -> DebugActionResult:
 			error.metadata
 		)
 
-	var uid: String = sign_in_result.get("uid", "")
+	var payload: Dictionary = sign_in_result.get("payload", {})
+	var uid: String = payload.get("uid", "")
 	Log.info("Auth cycle: Sign in completed", {"uid": uid}, ["debug", "backend_auth"])
 
 	# Step 2: Verify signed in state
@@ -131,7 +132,8 @@ func _validate_sign_in_result(result: Variant, auth: AuthService, start_time: in
 			"metadata": {"step": "verify_signed_in", "expected": true, "actual": false}
 		}
 
-	var uid: String = result.get("uid", "")
+	var payload: Dictionary = result.get("payload", {})
+	var uid: String = payload.get("uid", "")
 	var stored_uid: String = auth.get_uid()
 	if stored_uid != uid:
 		return {

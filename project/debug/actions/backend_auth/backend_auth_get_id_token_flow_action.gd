@@ -59,7 +59,8 @@ func _execute_action_logic(_params: Dictionary = {}) -> DebugActionResult:
 			token_error.metadata
 		)
 
-	var token: String = token_result.get("token", "")
+	var payload: Dictionary = token_result.get("payload", {})
+	var token: String = payload.get("token", "")
 	Log.info(
 		"ID token flow: Token received", {"token_length": token.length()}, ["debug", "backend_auth"]
 	)
@@ -135,7 +136,8 @@ func _validate_token_result(result: Variant, start_time: int) -> Dictionary:
 			"metadata": {"step": "get_token", "code": error_code, "message": error_msg}
 		}
 
-	var token: String = result.get("token", "")
+	var payload: Dictionary = result.get("payload", {})
+	var token: String = payload.get("token", "")
 	if token.is_empty():
 		return {
 			"message": "get_id_token() returned empty token",
