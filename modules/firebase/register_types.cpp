@@ -9,7 +9,7 @@
 #include "modules/register_module_types.h"
 #include "remote_config.h"
 #include "database.h"
-// #include "firestore.h"  // DISABLED: compilation errors
+#include "firestore.h"
 #include "messaging.h"
 /*
 
@@ -28,7 +28,7 @@ void initialize_firebase_module(ModuleInitializationLevel p_level) {
 	ClassDB::register_class<FirebaseAuth>();
 	ClassDB::register_class<FirebaseRemoteConfig>();
 	ClassDB::register_class<FirebaseDatabase>();
-	// ClassDB::register_class<FirebaseFirestore>();  // DISABLED: compilation errors
+	ClassDB::register_class<FirebaseFirestore>();
 	ClassDB::register_class<FirebaseMessaging>();
 	/*
 	ClassDB::register_class<FirebaseFunctions>();
