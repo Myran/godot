@@ -6,6 +6,6 @@
     "test.steam.sign_in_flow",
     "test.steam.no_client_error"
   ],
-  "platforms": ["desktop", "macos", "windows"],
+  "platforms": ["desktop", "editor", "macos", "windows"],
   "tags": ["firebase", "steam", "tdd"]
 }

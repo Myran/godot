@@ -1,10 +1,10 @@
 ---
 id: task-404
 title: Implement Steam Authentication with Firebase Custom Tokens
-status: To Do
+status: Done
 assignee: []
 created_date: '2025-12-30 23:33'
-updated_date: '2026-01-01 14:09'
+updated_date: '2026-01-07 00:33'
 labels:
   - firebase
   - steam
@@ -211,15 +211,15 @@ func _on_token_request_completed(result: int, code: int, headers: PackedStringAr
 
 ## Acceptance Criteria
 <!-- AC:BEGIN -->
-- [ ] #1 #1 #1 GodotSteam GDExtension integrated and initializing
-- [ ] #2 #2 #2 Steam session tickets generated successfully
-- [ ] #3 #3 #3 Backend validates tickets with Steam Web API
-- [ ] #4 #4 #4 Firebase custom tokens created from validated tickets
-- [ ] #5 #5 #5 signInWithCustomToken() working in C++ module
-- [ ] #6 #6 #6 GDScript service layer for Steam auth
-- [ ] #7 #7 #7 Account linking (Steam + existing Firebase user)
-- [ ] #8 #8 #8 Debug actions for testing Steam auth flow
-- [ ] #9 #9 #9 Cross-platform support (Windows, Linux, macOS)
+- [ ] #1 #1 #1 #1 GodotSteam GDExtension integrated and initializing
+- [ ] #2 #2 #2 #2 Steam session tickets generated successfully
+- [ ] #3 #3 #3 #3 Backend validates tickets with Steam Web API
+- [ ] #4 #4 #4 #4 Firebase custom tokens created from validated tickets
+- [ ] #5 #5 #5 #5 signInWithCustomToken() working in C++ module
+- [ ] #6 #6 #6 #6 GDScript service layer for Steam auth
+- [ ] #7 #7 #7 #7 Account linking (Steam + existing Firebase user)
+- [ ] #8 #8 #8 #8 Debug actions for testing Steam auth flow
+- [ ] #9 #9 #9 #9 Cross-platform support (Windows, Linux, macOS)
 <!-- SECTION:DESCRIPTION:END -->
 
 ## Implementation Plan
@@ -494,6 +494,8 @@ func _request_custom_token_with_retry(ticket: String, retries: int = 0) -> Dicti
 4. **Fourth**: Implement GodotSteam client integration
 5. **Last**: Account linking and edge case handling
 <!-- SECTION:NOTES:END -->
+
+<!-- AC:END -->
 
 - [ ] #10 Add firebase-steam-tests to firebase-all.json so tests run with `just test`
 <!-- AC:END -->

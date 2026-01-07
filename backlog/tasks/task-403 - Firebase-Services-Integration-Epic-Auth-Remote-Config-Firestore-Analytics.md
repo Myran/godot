@@ -4,7 +4,7 @@ title: 'Firebase Services Integration Epic - Auth, Remote Config, Firestore, Ana
 status: In Progress
 assignee: []
 created_date: '2025-12-30 21:26'
-updated_date: '2026-01-03 10:41'
+updated_date: '2026-01-07 00:33'
 labels:
   - firebase
   - epic
@@ -296,4 +296,30 @@ ee6b7657 feat: Implement Firebase Analytics with UTF-8 dangling pointer fix
 1. **Recommended**: Start task-399 (Auth) - unblocks Steam auth and service integration
 2. After Auth: task-401 (Firestore) with library verification first
 3. Finally: task-404 (Steam Auth) once Auth is complete
+
+### Progress Update (2026-01-06)
+
+**task-404 (Steam Auth)** - ✅ **PLACEHOLDER DONE** (2026-01-06)
+
+- SteamAuthService created with graceful degradation pattern
+
+- Cloud Function backend documentation created
+
+- 4 debug tests passing (validate behavior when Steam unavailable)
+
+- Full implementation pending: GodotSteam GDExtension integration + backend deployment
+
+### Completed Child Tasks (3 of 5)
+
+- task-402 (Analytics) - ✅ DONE
+
+- task-400 (Remote Config) - ✅ DONE
+
+- task-404 (Steam Auth) - ✅ PLACEHOLDER DONE (graceful degradation)
+
+### Remaining Child Tasks (2 of 5)
+
+- task-399 (Auth) - To Do (unblocks Steam full implementation)
+
+- task-401 (Firestore) - To Do
 <!-- SECTION:NOTES:END -->
