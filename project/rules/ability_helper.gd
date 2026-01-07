@@ -156,6 +156,30 @@ static func deal_damage_to_all_enemies(unit: BattleAbilityEvent, damage: int) ->
 	)
 
 
+static func deal_breakthrough_damage(
+	unit: BattleAbilityEvent, target_position: int, damage: int
+) -> void:
+	"""
+	Deal breakthrough damage to units behind the primary target.
+	This is used by spearman-like abilities that pierce through to hit back-row units.
+	"""
+	if damage <= 0:
+		return
+
+	# Get the target side (enemy of the attacker)
+	var target_is_allied: bool = not unit.is_allied
+
+	# Get breakthrough targets using BattleRules positioning logic
+	var breakthrough_targets: Array[int] = BattleRules.get_breakthrough_targets(
+		unit.battle_context, target_position, target_is_allied
+	)
+
+	# Deal damage to all breakthrough targets
+	BattleRules.deal_damage_to_targets(
+		unit.battle_context, unit.is_allied, breakthrough_targets, damage
+	)
+
+
 static func grant_bonuses_to_all_allies_including_self(
 	unit: BattleAbilityEvent, health_bonus: int, attack_bonus: int
 ) -> void:

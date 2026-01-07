@@ -519,6 +519,20 @@ static func _deserialize_ability(ability_data: Variant) -> Variant:
 			var attack_per_evil: int = ability_dict.get("attack_per_evil", 1)
 			ability = EvilSynergyAbility.new(health_per_evil, attack_per_evil)
 
+		"BarbarianAbility":
+			var health_bonus: int = ability_dict.get("health_bonus", 1)
+			var attack_bonus: int = ability_dict.get("attack_bonus", 1)
+			ability = BarbarianAbility.new(health_bonus, attack_bonus)
+
+		"WizardAbility":
+			var zap_damage: int = ability_dict.get("zap_damage", 1)
+			var zaps_per_level: int = ability_dict.get("zaps_per_level", 1)
+			ability = WizardAbility.new(zap_damage, zaps_per_level)
+
+		"SpearmanAbility":
+			var breakthrough_damage: int = ability_dict.get("breakthrough_damage", 1)
+			ability = SpearmanAbility.new(breakthrough_damage)
+
 		"DamageShieldAbility":
 			ability = DamageShieldAbility.new()
 			if ability_dict.has("shield_used"):

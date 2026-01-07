@@ -1,10 +1,10 @@
 ---
 id: task-044
 title: Barbarian ally bonus mechanics
-status: To Do
+status: Done
 assignee: []
 created_date: '2025-08-12 12:20'
-updated_date: '2025-11-11 20:25'
+updated_date: '2026-01-07 04:00'
 labels:
   - abilities
   - barbarian
@@ -14,18 +14,9 @@ dependencies:
 priority: high
 ---
 
-## Assessment (2025-12-06)
-
-**Value: HIGH** - Core gameplay feature required for complete card roster.
-
-**Recommendation: KEEP** - This is essential game content. The Barbarian card needs this ability to be playable. Architecture is ready, implementation is well-documented. Should be implemented when card content is priority.
-
-**Blocker**: Depends on task-034 (Archer ability) which should be completed first.
-
----
-
 ## Description
 
+<!-- SECTION:DESCRIPTION:BEGIN -->
 Implement the Barbarian ally bonus mechanics using the revolutionary three-class architecture demonstrating cross-unit state management through the AbilityHelper.grant_ally_bonuses() pattern. This ability validates the architecture's power to handle complex multi-unit interactions and area detection through BattleRules delegation while achieving dramatic code simplification from traditional 15+ line implementations to single helper calls.
 
 **Phase 1 Analysis Complete (2025-10-26)**:
@@ -119,13 +110,56 @@ func handle_battle_event(unit: BattleAbilityEvent) -> void:
 - **Single-Parameter API**: Demonstrates revolutionary `handle_battle_event(unit: BattleAbilityEvent)` simplification
 - **Event-Driven Design**: Clean separation between death detection and bonus application
 - **Delegation Pattern**: Shows architecture's power to reduce complex multi-unit interactions to simple helper calls
-## Acceptance Criteria
+<!-- SECTION:DESCRIPTION:END -->
 
-- [ ] Ally bonus system uses AbilityHelper.grant_ally_bonuses(unit 1 1) for +1/+1 bonuses to all allies
-- [ ] Enemy death detection leverages AbilityHelper.is_death_post() and revolutionary single-parameter API
-- [ ] Cross-unit state management handled through BattleRules.grant_bonuses_to_all_allies() delegation
-- [ ] Revolutionary handle_battle_event(unit: UnitContext) API with get_handled_event_classes() returning [BattleContext.DeathEvent]
-- [ ] Area detection and ally identification centralized in BattleRules positioning logic
-- [ ] Bonus duration and stacking managed through BattleRules centralized state management
-- [ ] Code reduction demonstration: traditional 15+ lines reduced to 1 helper call with crystal-clear intent
-- [ ] Performance optimization with death event filtering and centralized bonus calculation logic
+## Assessment (2025-12-06)
+
+**Value: HIGH** - Core gameplay feature required for complete card roster.
+
+**Recommendation: KEEP** - This is essential game content. The Barbarian card needs this ability to be playable. Architecture is ready, implementation is well-documented. Should be implemented when card content is priority.
+
+**Blocker**: Depends on task-034 (Archer ability) which should be completed first.
+
+---
+
+## Acceptance Criteria
+<!-- AC:BEGIN -->
+- [x] #1 Ally bonus system uses AbilityHelper.grant_ally_bonuses(unit 1 1) for +1/+1 bonuses to all allies
+- [x] #2 Enemy death detection leverages AbilityHelper.is_death_post() and revolutionary single-parameter API
+- [x] #3 Cross-unit state management handled through BattleRules.grant_bonuses_to_all_allies() delegation
+- [x] #4 Revolutionary handle_battle_event(unit: UnitContext) API with get_handled_event_classes() returning [BattleContext.DeathEvent]
+- [x] #5 Area detection and ally identification centralized in BattleRules positioning logic
+- [x] #6 Bonus duration and stacking managed through BattleRules centralized state management
+- [x] #7 Code reduction demonstration: traditional 15+ lines reduced to 1 helper call with crystal-clear intent
+- [x] #8 Performance optimization with death event filtering and centralized bonus calculation logic
+<!-- AC:END -->
+
+## Implementation Notes
+
+<!-- SECTION:NOTES:BEGIN -->
+BarbarianAbility class created with death-triggered ally bonus mechanics.
+
+Implementation:
+
+- Created `project/rules/barbarian_ability.gd`
+
+- Uses `get_handled_event_classes()` returning `[BattleContext.DeathEvent]`
+
+- Uses `AbilityHelper.is_death_post()` to detect enemy deaths in POST phase
+
+- Uses `not event.is_allied` to verify the dying unit is an enemy
+
+- Uses `AbilityHelper.grant_ally_bonuses(event, 1, 1)` for +1/+1 to all allies
+
+- Integrated into ability creation system (`block_base_card.gd` deserialization)
+
+- Integrated into ability parser (`abilities_handler.gd` maps "cleave" to BarbarianAbility)
+
+Files modified:
+
+- project/rules/barbarian_ability.gd (created)
+
+- project/core/clicker/blocks/block_base_card.gd (added BarbarianAbility case)
+
+- project/rules/abilities_handler.gd (added "cleave" ability type)
+<!-- SECTION:NOTES:END -->

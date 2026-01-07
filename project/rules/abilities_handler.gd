@@ -47,6 +47,26 @@ static func create_ability_from_type(ability_type: String, params: PackedStringA
 			new_ability = MergeBonusAbility.new(health_bonus, attack_bonus)
 		"harmony":
 			new_ability = HarmonyAbility.new()
+		"cleave":
+			var health_bonus: int = 1
+			var attack_bonus: int = 1
+			if params.size() > 0:
+				health_bonus = int(params[0])
+			if params.size() > 1:
+				attack_bonus = int(params[1])
+			new_ability = BarbarianAbility.new(health_bonus, attack_bonus)
+		"alternateattack":
+			# Handle alternateattack:zap;damage format
+			if params.size() >= 2 and params[0] == "zap":
+				var zap_damage: int = int(params[1])
+				new_ability = WizardAbility.new(zap_damage, 1)
+		"damage":
+			# Handle damage:frontandbackrow format (Spearman breakthrough)
+			if params.size() > 0 and params[0] == "frontandbackrow":
+				var breakthrough_damage: int = 1
+				if params.size() > 1:
+					breakthrough_damage = int(params[1])
+				new_ability = SpearmanAbility.new(breakthrough_damage)
 		_:
 			if not ability_type.is_empty():
 				Log.warning(

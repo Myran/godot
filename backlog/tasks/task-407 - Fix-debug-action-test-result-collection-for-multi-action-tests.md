@@ -1,9 +1,10 @@
 ---
 id: task-407
 title: Fix debug action test result collection for multi-action tests
-status: To Do
+status: Done
 assignee: []
 created_date: '2025-12-31 22:59'
+updated_date: '2026-01-06 23:05'
 labels:
   - testing
   - debug-framework

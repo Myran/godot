@@ -1,10 +1,10 @@
 ---
 id: task-043
 title: Spearman breakthrough damage mechanics
-status: To Do
+status: Done
 assignee: []
 created_date: '2025-08-12 12:20'
-updated_date: '2025-11-11 20:25'
+updated_date: '2026-01-07 04:16'
 labels:
   - abilities
   - spearman
@@ -14,19 +14,9 @@ dependencies:
 priority: medium
 ---
 
-## Assessment (2025-12-06)
-
-**Value: HIGH** - Core gameplay feature required for complete card roster.
-
-**Recommendation: KEEP** - Essential card ability. Spearman needs breakthrough mechanic. Architecture ready. Depends on task-034 (Archer) being completed first.
-
-**Effort**: Small-Medium (architecture ready, positional logic needed)
-**Blocker**: Depends on task-034
-
----
-
 ## Description
 
+<!-- SECTION:DESCRIPTION:BEGIN -->
 Implement the Spearman breakthrough damage mechanics using the revolutionary three-class architecture demonstrating positional multi-target damage through BattleRules delegation. This ability showcases the architecture's ability to handle complex line-of-sight calculations and positioning logic through centralized game rules while achieving dramatic code simplification with the AbilityHelper multi-target damage pattern.
 
 **Phase 1 Analysis Complete (2025-10-26)**:
@@ -141,13 +131,27 @@ func handle_battle_event(unit: BattleAbilityEvent) -> void:
 - **Unit Tests**: Validate breakthrough positioning calculations
 - **Integration Tests**: Ensure breakthrough timing works with combat resolution
 - **Edge Case Tests**: Verify behavior with empty positions, invalid targets, battlefield edges
-## Acceptance Criteria
+<!-- SECTION:DESCRIPTION:END -->
 
-- [ ] Breakthrough line targeting uses BattleRules centralized positioning logic through AbilityHelper delegation
-- [ ] Multi-target damage leverages AbilityHelper.deal_damage_to_positioned_enemies() pattern for line attacks
-- [ ] Revolutionary handle_battle_event(unit: UnitContext) API with get_handled_event_classes() returning [BattleContext.CombatEvent]
-- [ ] Line-of-sight calculations centralized in BattleRules with position-based targeting rules
-- [ ] Damage reduction per target implemented through BattleRules diminishing damage calculations
-- [ ] Event filtering optimization limits processing to combat events only for performance
-- [ ] Code simplification demonstration: complex positioning logic reduced through centralized rule delegation
-- [ ] Cross-platform deterministic behavior maintained with BattleRules handling all positioning calculations
+## Assessment (2025-12-06)
+
+**Value: HIGH** - Core gameplay feature required for complete card roster.
+
+**Recommendation: KEEP** - Essential card ability. Spearman needs breakthrough mechanic. Architecture ready. Depends on task-034 (Archer) being completed first.
+
+**Effort**: Small-Medium (architecture ready, positional logic needed)
+**Blocker**: Depends on task-034
+
+---
+
+## Acceptance Criteria
+<!-- AC:BEGIN -->
+- [ ] #1 Breakthrough line targeting uses BattleRules centralized positioning logic through AbilityHelper delegation
+- [ ] #2 Multi-target damage leverages AbilityHelper.deal_damage_to_positioned_enemies() pattern for line attacks
+- [ ] #3 Revolutionary handle_battle_event(unit: UnitContext) API with get_handled_event_classes() returning [BattleContext.CombatEvent]
+- [ ] #4 Line-of-sight calculations centralized in BattleRules with position-based targeting rules
+- [ ] #5 Damage reduction per target implemented through BattleRules diminishing damage calculations
+- [ ] #6 Event filtering optimization limits processing to combat events only for performance
+- [ ] #7 Code simplification demonstration: complex positioning logic reduced through centralized rule delegation
+- [ ] #8 Cross-platform deterministic behavior maintained with BattleRules handling all positioning calculations
+<!-- AC:END -->

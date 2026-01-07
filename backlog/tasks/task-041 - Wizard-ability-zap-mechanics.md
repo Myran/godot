@@ -1,10 +1,10 @@
 ---
 id: task-041
 title: Wizard ability zap mechanics
-status: To Do
+status: Done
 assignee: []
 created_date: '2025-08-12 12:20'
-updated_date: '2025-11-11 20:25'
+updated_date: '2026-01-07 04:04'
 labels:
   - abilities
   - wizard
@@ -14,19 +14,9 @@ dependencies:
 priority: medium
 ---
 
-## Assessment (2025-12-06)
-
-**Value: HIGH** - Core gameplay feature required for complete card roster.
-
-**Recommendation: KEEP** - Essential card ability. Wizard is a key unit. Architecture ready, implementation documented. Depends on task-034 (Archer) being completed first.
-
-**Effort**: Small (architecture ready, single ability implementation)
-**Blocker**: Depends on task-034
-
----
-
 ## Description
 
+<!-- SECTION:DESCRIPTION:BEGIN -->
 Implement the Wizard zap mechanics using the revolutionary three-class architecture demonstrating multi-target chain lightning with the AbilityHelper.deal_damage_to_random_enemy() pattern. This ability showcases the architecture's power to simplify complex targeting logic from 20+ lines to a single helper call while maintaining full chain lightning functionality and visual effects integration.
 
 **Phase 1 Analysis Complete (2025-10-26)**:
@@ -109,13 +99,27 @@ func handle_battle_event(unit: BattleAbilityEvent) -> void:
 - **Unit Tests**: Validate level scaling and targeting logic
 - **Integration Tests**: Ensure zap timing works with combat system
 - **Edge Case Tests**: Verify behavior with empty battlefield, shield abilities, death mid-zap
-## Acceptance Criteria
+<!-- SECTION:DESCRIPTION:END -->
 
-- [ ] Multi-target zap uses AbilityHelper.deal_damage_to_random_enemy(unit 2 3) for 2 damage to 3 random enemies
-- [ ] Chain lightning targeting leverages BattleRules centralized targeting through AbilityHelper delegation
-- [ ] Revolutionary handle_battle_event(unit: UnitContext) API with get_handled_event_classes() optimization
-- [ ] Event filtering returns [BattleContext.CombatEvent] for performance optimization
-- [ ] Code reduction demonstration: traditional 20+ lines of targeting logic reduced to 1 helper call
-- [ ] Visual effects integration works seamlessly with simplified targeting system
-- [ ] Cross-platform deterministic behavior maintained with proper RNG delegation to BattleRules
-- [ ] Performance validation shows <5% overhead vs traditional implementation with dramatic code simplification
+## Assessment (2025-12-06)
+
+**Value: HIGH** - Core gameplay feature required for complete card roster.
+
+**Recommendation: KEEP** - Essential card ability. Wizard is a key unit. Architecture ready, implementation documented. Depends on task-034 (Archer) being completed first.
+
+**Effort**: Small (architecture ready, single ability implementation)
+**Blocker**: Depends on task-034
+
+---
+
+## Acceptance Criteria
+<!-- AC:BEGIN -->
+- [ ] #1 Multi-target zap uses AbilityHelper.deal_damage_to_random_enemy(unit 2 3) for 2 damage to 3 random enemies
+- [ ] #2 Chain lightning targeting leverages BattleRules centralized targeting through AbilityHelper delegation
+- [ ] #3 Revolutionary handle_battle_event(unit: UnitContext) API with get_handled_event_classes() optimization
+- [ ] #4 Event filtering returns [BattleContext.CombatEvent] for performance optimization
+- [ ] #5 Code reduction demonstration: traditional 20+ lines of targeting logic reduced to 1 helper call
+- [ ] #6 Visual effects integration works seamlessly with simplified targeting system
+- [ ] #7 Cross-platform deterministic behavior maintained with proper RNG delegation to BattleRules
+- [ ] #8 Performance validation shows <5% overhead vs traditional implementation with dramatic code simplification
+<!-- AC:END -->

@@ -7,7 +7,7 @@ class_name BattleRules extends RefCounted
 # ===== POSITION & TARGETING RULES =====
 
 
-static func get_ally_positions(context: BattleContext, is_allied: bool) -> Array[int]:
+static func get_ally_positions(context: BattleContext, is_allied: bool) -> Array:
 	var side: Side = context.allied_side if is_allied else context.enemy_side
 	var positions: Array[int] = []
 	for pos: int in side.lineup:
@@ -16,7 +16,7 @@ static func get_ally_positions(context: BattleContext, is_allied: bool) -> Array
 	return positions
 
 
-static func get_enemy_positions(context: BattleContext, is_allied: bool) -> Array[int]:
+static func get_enemy_positions(context: BattleContext, is_allied: bool) -> Array:
 	var side: Side = context.enemy_side if is_allied else context.allied_side
 	var positions: Array[int] = []
 	for pos: int in side.lineup:
@@ -99,3 +99,47 @@ static func get_random_ally_position(
 static func is_position_valid(context: BattleContext, position: int, is_allied: bool) -> bool:
 	var side: Side = context.allied_side if is_allied else context.enemy_side
 	return side.lineup.has(position) and side.lineup[position] != null
+
+
+# ===== BREAKTHROUGH TARGETING =====
+
+
+static func get_breakthrough_targets(
+	context: BattleContext, target_position: int, target_is_allied: bool
+) -> Array:
+	"""
+	Get breakthrough targets for spearman-like attacks.
+	Returns the position directly behind the target (same column, next row).
+
+	Grid layout: 5 columns per row
+	- Front row: positions 0-4
+	- Back row: positions 5-9
+
+	Example: If attacking position 2, breakthrough hits position 2 + 5 = 7
+	"""
+	var breakthrough_targets: Array = []
+	const GRID_WIDTH: int = 5
+	const BEHIND_OFFSET: int = 5  # Same column, one row back
+
+	# Calculate breakthrough position (same column, next row back)
+	var breakthrough_position: int = target_position + BEHIND_OFFSET
+
+	# Validate the breakthrough position has an enemy unit
+	if is_position_valid(context, breakthrough_position, target_is_allied):
+		breakthrough_targets.append(breakthrough_position)
+
+	return breakthrough_targets
+
+
+static func deal_damage_to_targets(
+	context: BattleContext, source_allied: bool, target_positions: Array, damage: int
+) -> void:
+	"""Deal damage to specific target positions on the enemy side"""
+	if target_positions.is_empty() or damage <= 0:
+		return
+
+	for target_pos: int in target_positions:
+		var event: BattleContext.DamageEvent = BattleContext.DamageEvent.new(
+			damage, target_pos, not source_allied
+		)
+		context.add_event(event)
