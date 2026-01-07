@@ -14,6 +14,6 @@
     "backend.firebase.auth.sign_out",
     "firebase.auth.state_changed"
   ],
-  "platforms": ["android", "ios", "macos", "desktop"],
-  "tags": ["firebase", "auth"]
+  "platforms": ["android", "ios", "macos", "editor"],
+  "tags": ["firebase", "auth", "cpp"]
 }

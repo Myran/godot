@@ -29,6 +29,6 @@
     "test.firestore.document_delete",
     "test.firestore.query"
   ],
-  "platforms": ["android", "ios", "macos", "desktop"],
+  "platforms": ["android", "ios", "macos", "editor"],
   "tags": ["firebase", "tdd", "sdk"]
 }

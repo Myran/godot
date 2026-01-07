@@ -1095,7 +1095,7 @@ _extract-logs-android test_id:
     just _extract-logs "{{test_id}}" "android"
 
 # Legacy function for backward compatibility - calls unified function  
-_extract-logs-desktop test_id:
+_extract-logs-editor test_id:
     just _extract-logs "{{test_id}}" "editor"
 
 # Desktop log filtering with error-safe suppression (Android-style clean output)
@@ -1450,7 +1450,7 @@ _analyze-test-errors test_id platform config_file="":
                 echo "🔧 Debug: just logs-android-errors $TEST_ID"
                 ;;
             "editor")
-                echo "🔧 Debug: just logs-desktop-errors $TEST_ID"
+                echo "🔧 Debug: just logs-editor-errors $TEST_ID"
                 ;;
             "macos")
                 echo "🔧 Debug: just logs-macos-errors $TEST_ID"
@@ -4753,7 +4753,7 @@ _test-editor-target-original config_name:
     fi
     
     echo "🎉 Desktop test execution complete!"
-    echo "💡 Check logs with: just logs-desktop-last"
+    echo "💡 Check logs with: just logs-editor-last"
 
 # ================================
 # CHECKSUM BASELINE UPDATE COMMANDS

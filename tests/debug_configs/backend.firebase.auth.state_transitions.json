@@ -3,6 +3,6 @@
   "actions": [
     "backend.firebase.auth.state_transitions"
   ],
-  "platforms": ["android", "ios", "macos", "windows-physical", "desktop"],
+  "platforms": ["android", "ios", "macos", "windows-physical", "editor"],
   "tags": ["firebase", "auth", "backend", "tdd"]
 }

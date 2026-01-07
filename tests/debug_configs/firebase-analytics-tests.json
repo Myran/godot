@@ -8,6 +8,6 @@
     "test.analytics.collection_enabled",
     "test.analytics.reset_data"
   ],
-  "platforms": ["android", "ios", "macos", "desktop", "editor", "windows-physical"],
+  "platforms": ["android", "ios", "macos", "editor", "editor", "windows-physical"],
   "tags": ["firebase", "analytics", "tdd"]
 }

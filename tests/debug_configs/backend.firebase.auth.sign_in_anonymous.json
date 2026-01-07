@@ -8,7 +8,7 @@
     "ios",
     "macos",
     "windows-physical",
-    "desktop"
+    "editor"
   ],
   "tags": ["firebase", "auth", "backend", "tdd"]
 }

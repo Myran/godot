@@ -10,13 +10,13 @@ Complete reference for GameTwo justfile commands, patterns, and workflows.
 
 **Essential Commands for Baseline Updates:**
 - `just test-android-update CONFIG_NAME` - Update Android checksum baseline
-- `just test-editor-update CONFIG_NAME` - Update Editor/Desktop checksum baseline
+- `just test-editor-update CONFIG_NAME - Update Editor checksum baseline
 - `just test-ios-update CONFIG_NAME` - Update iOS checksum baseline
 - `just test-macos-update CONFIG_NAME` - Update macOS checksum baseline
 - `just test-windows-update CONFIG_NAME` - Update Windows VM checksum baseline
 - `just test-windows-physical-update CONFIG_NAME` - Update Windows Physical checksum baseline
 - `just test-android-reset CONFIG_NAME` - Reset Android baseline (start fresh)
-- `just test-editor-reset CONFIG_NAME` - Reset Editor/Desktop baseline
+- `just test-editor-reset CONFIG_NAME - Reset Editor baseline
 - `just test-ios-reset CONFIG_NAME` - Reset iOS baseline
 - `just test-macos-reset CONFIG_NAME` - Reset macOS baseline
 - `just test-windows-reset CONFIG_NAME` - Reset Windows VM baseline
@@ -68,13 +68,13 @@ just logs-search TEST_ID "search_term"     # Text search (99% token savings - re
 
 # Platform-specific log retrieval
 just logs-android TEST_ID [TAGS]          # Android logs with optional tag filtering
-just logs-desktop TEST_ID [TAGS]          # Desktop logs with optional tag filtering
+just logs-editor TEST_ID [TAGS]          # Desktop logs with optional tag filtering
 just logs-ios TEST_ID [TAGS]              # iOS logs with optional tag filtering (NEW)
 just logs-macos TEST_ID [TAGS]            # macOS logs with optional tag filtering (NEW)
 
 # Platform-specific error analysis
 just logs-android-errors TEST_ID         # Android errors with tag filtering
-just logs-desktop-errors TEST_ID         # Desktop errors with tag filtering
+just logs-editor-errors TEST_ID         # Editor errors with tag filtering
 just logs-ios-errors TEST_ID             # iOS errors with tag filtering (NEW)
 just logs-macos-errors TEST_ID           # macOS errors with tag filtering (NEW)
 
@@ -122,7 +122,7 @@ just help                                  # Interactive command browser
 
 # Testing
 just test-android-target CONFIG            # Automated testing with validation
-just test-desktop-target CONFIG            # Desktop automated testing
+just test-editor-target CONFIG            # Editor automated testing
 just test-macos-target CONFIG              # macOS automated testing
 just test-windows-physical-target CONFIG   # Windows physical machine (GUI mode)
 just test-android '/archive/generated-replays/'  # All battle replay configs
@@ -143,7 +143,7 @@ just config-restart-android ACTION         # Quick testing (5 sec)
 just development                           # Complete workflow (fastbuild-android + ci-validate + test)
 
 # Gamestate System
-just capture-gamestate-desktop NAME       # Desktop extraction
+just capture-gamestate-editor NAME       # Desktop extraction
 just capture-gamestate-android NAME       # Android extraction
 just list-saved-states                    # Show saved states
 just help-gamestate                       # Workflow guide
@@ -181,8 +181,8 @@ just log-run-silent test-android-target CONFIG  # Automated testing
 ## 📋 Command Reference
 
 **Testing:**
-- `just test-android-target CONFIG` | `just test-desktop-target CONFIG` | `just test-macos-target CONFIG` - Automated testing
-- `just test-android TARGET` | `just test-desktop TARGET` | `just test-macos TARGET` - Manual testing
+- `just test-android-target CONFIG` | `just test-editor-target CONFIG` | `just test-macos-target CONFIG` - Automated testing
+- `just test-android TARGET` | `just test-editor TARGET` | `just test-macos TARGET` - Manual testing
 - `just validate` - Complete validation (format + syntax + runtime)
 
 **Test Lists:**
@@ -215,7 +215,7 @@ just log-run-silent test-android-target CONFIG  # Automated testing
 - `just config-list` - List configs
 
 **Gamestate:**
-- `just capture-gamestate-desktop NAME` | `just capture-gamestate-android NAME`
+- `just capture-gamestate-editor NAME` | `just capture-gamestate-android NAME`
 - `just list-saved-states` | `just clean-saved-states`
 
 > 📚 **For detailed help**: Use `just help` and `just help-[topic]` - Claude can read these directly
@@ -320,9 +320,9 @@ just log-run-silent test-android-target CONFIG  # Automated testing
   "configs": ["gamestate-save-load-test"],
   "commands": [
     {
-      "command": "test-save-load-cycle-desktop",
-      "platforms": ["desktop"],
-      "description": "Desktop save/load consistency"
+      "command": "test-save-load-cycle-editor",
+      "platforms": ["editor"],
+      "description": "Editor save/load consistency"
     },
     {
       "command": "test-save-load-cycle-android",
@@ -334,7 +334,7 @@ just log-run-silent test-android-target CONFIG  # Automated testing
 ```
 
 **Usage:**
-- `just test-desktop-target my-test` - Runs configs + desktop commands
+- `just test-editor-target my-test` - Runs configs + desktop commands
 - `just test-android-target my-test` - Runs configs + android commands
 - Platform filtering: Only compatible commands execute
 - Context inheritance: Commands receive TEST_ID and session data

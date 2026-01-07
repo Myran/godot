@@ -16,7 +16,7 @@
     "workflow_step": "save",
     "next_steps": [
       "Extract with: just capture-gamestate user-workflow-test",
-      "Load test with: just test-desktop-target gamestate-load-user-workflow-test"
+      "Load test with: just test-editor-target gamestate-load-user-workflow-test"
     ]
   }
 }

@@ -18,7 +18,7 @@ This document ensures correct recipe selection during development, testing, and 
 
 ### Test & Validate
 - **Before commit**: `just ci-validate` 🚨 **MANDATORY**
-- **Automated testing**: `just test-android-target CONFIG`, `just test-desktop-target CONFIG`, or `just test-macos-target CONFIG`
+- **Automated testing**: `just test-android-target CONFIG`, `just test-editor-target CONFIG`, or `just test-macos-target CONFIG`
 - **Quick iteration**: `just config-restart-android CONFIG` (5 sec) ⚡
 - **Cross-platform**: `just test-all [CONFIG]` (unified summary)
 
@@ -176,18 +176,18 @@ This document ensures correct recipe selection during development, testing, and 
 - **Purpose**: Platform-agnostic testing infrastructure
 - **Provides**: Shared setup, preparation, validation patterns
 - **Key Functions**:
-  - `_test-setup-android`, `_test-setup-desktop` - Test initialization
-  - `_test-prepare-android`, `_test-prepare-desktop` - Cache clearing, validation
-  - `_test-check-android-device`, `_test-check-desktop-godot` - Environment checks
+  - `_test-setup-android`, `_test-setup-editor` - Test initialization
+  - `_test-prepare-android`, `_test-prepare-editor` - Cache clearing, validation
+  - `_test-check-android-device`, `_test-check-editor-godot` - Environment checks
 
 #### `justfile-validation-enhanced-testing.justfile`
 - **Purpose**: Enhanced testing with automatic validation
 - **Critical Recipes**:
   - `test-android-target CONFIG` - Automated Android testing
-  - `test-desktop-target CONFIG` - Automated desktop testing
+  - `test-editor-target CONFIG` - Automated editor testing
   - `test-macos-target CONFIG` - Automated macOS testing
   - `test-android-manual CONFIG` - Manual testing (stays open)
-  - `test-desktop-manual CONFIG` - Manual desktop testing
+  - `test-editor-manual CONFIG` - Manual editor testing
   - `test-macos-manual CONFIG` - Manual macOS testing
 - **Features**: Checksum validation, error analysis, baseline management
 - **Load Order**: **LAST** to override existing test commands
@@ -241,12 +241,12 @@ This document ensures correct recipe selection during development, testing, and 
   - `logs-search TEST_ID "search_term" [PLATFORM]` ⚡ (99% savings)
   - `logs-latest [PLATFORM]` - Latest test results
   - `logs-android TEST_ID [TAGS...]` - Android log extraction
-  - `logs-desktop TEST_ID [TAGS...]` - Desktop log extraction
+  - `logs-editor TEST_ID [TAGS...]` - Editor log extraction
   - `logs-tags TEST_ID TAGS...` - Precision tag filtering
 - **Progressive Debugging**:
   1. `logs-errors` - Quick error scan
   2. `logs-search` - Simple text search
-  3. `logs-android`/`logs-desktop` - Component analysis
+  3. `logs-android/logs-editor` - Component analysis
   4. `logs-tags` - Precision debugging
 
 #### `justfile-enhanced-log-analysis.justfile`
@@ -341,7 +341,7 @@ This document ensures correct recipe selection during development, testing, and 
 #### `justfile-gamestate-capture.justfile`
 - **Purpose**: Gamestate extraction and management
 - **Critical Recipes**:
-  - `capture-gamestate-desktop NAME` - Desktop extraction
+  - `capture-gamestate-editor NAME` - Editor extraction
   - `capture-gamestate-android NAME` - Android extraction
   - `list-saved-states` - Show saved states
   - `clean-saved-states` - Remove all states
@@ -350,7 +350,7 @@ This document ensures correct recipe selection during development, testing, and 
 #### `justfile-gamestate-testing.justfile`
 - **Purpose**: Gamestate testing and validation
 - **Critical Recipes**:
-  - `test-save-load-cycle-desktop` - Desktop save/load consistency
+  - `test-save-load-cycle-editor` - Editor save/load consistency
   - `test-save-load-cycle-android` - Android save/load consistency
   - `test-gamestate-cycle` - Complete gamestate test cycle
 - **Test Integration**: Included in `just test` validation
@@ -358,7 +358,7 @@ This document ensures correct recipe selection during development, testing, and 
 #### `justfile-semantic-replay-commands.justfile`
 - **Purpose**: Battle replay system
 - **Critical Recipes**:
-  - `replay-generate-desktop SESSION_ID NAME` - Generate replay config
+  - `replay-generate-editor SESSION_ID NAME` - Generate replay config
   - `replay-generate-android SESSION_ID NAME` - Android replay generation
 - **Workflow**: Play → Generate → Test
 
@@ -503,15 +503,15 @@ just logs-tags TEST_ID firebase auth   # Exact tag filtering
 
 ```bash
 # Multi-platform with unified summary
-just test-all [CONFIG]     # Desktop + Android with single report
+just test-all [CONFIG]     # Editor + Android with single report
 
 # Platform-specific automated testing
 just test-android-target CONFIG  # Android automated
-just test-desktop-target CONFIG  # Desktop automated
+just test-editor-target CONFIG  # Editor automated
 
 # Manual testing (stays open)
 just test-android-manual CONFIG  # Android inspection
-just test-desktop-manual CONFIG  # Desktop inspection
+just test-editor-manual CONFIG  # Editor inspection
 ```
 
 ---
@@ -639,7 +639,7 @@ justfile (main entry)
 | Scenario | Recipe | Benefits |
 |----------|--------|----------|
 | Automated Android | `just test-android-target CONFIG` | Checksum validation, error analysis |
-| Automated Desktop | `just test-desktop-target CONFIG` | Cross-platform testing |
+| Automated Editor | `just test-editor-target CONFIG` | Cross-platform testing |
 | Automated macOS | `just test-macos-target CONFIG` | Exported app testing |
 | Automated Windows | `just test-windows-physical-target CONFIG` | GUI mode on physical machine |
 | Cross-platform | `just test-all [CONFIG]` | Unified summary, consistency |
@@ -678,8 +678,8 @@ justfile (main entry)
 |----------|--------|----------|
 | Debug configs | `just config-list` | List available configs |
 | Quick deploy | `just config-restart-android CONFIG` ⚡ | 5-second testing |
-| Gamestate capture | `just capture-gamestate-desktop NAME` | Scenario reproduction |
-| Replay generation | `just replay-generate-desktop SESSION_ID NAME` | Battle replay testing |
+| Gamestate capture | `just capture-gamestate-editor NAME` | Scenario reproduction |
+| Replay generation | `just replay-generate-editor SESSION_ID NAME` | Battle replay testing |
 | Device logs | `just android-logs-status` | Device diagnostics |
 
 ---
@@ -758,7 +758,7 @@ just logs-android-device "term"       # Full device logs
 
 # Config
 just config-list                      # List available configs
-just capture-gamestate-desktop NAME   # Capture scenario
+just capture-gamestate-editor NAME   # Capture scenario
 just list-saved-states                # Show saved states
 
 # Windows Physical Machine (192.168.50.80)
