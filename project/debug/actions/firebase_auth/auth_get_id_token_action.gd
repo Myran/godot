@@ -39,7 +39,7 @@ func _execute_action_logic(_params: Dictionary = {}) -> DebugActionResult:
 		# Start NSRunLoop pumping
 		_start_nsloop_pumping()
 
-		auth.sign_in_anonymous()
+		auth.sign_in_anonymously()
 
 		# Wait for sign-in completion (max 15 seconds)
 		var max_wait: float = 15.0
