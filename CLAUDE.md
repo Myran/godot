@@ -18,14 +18,14 @@ GameTwo mobile game with custom Godot 4.3 engine, Firebase integration, and debu
 
 **Platform-Specific Log Retrieval:**
 - `just logs-android TEST_ID [TAGS]` - Android logs with optional tag filtering
-- `just logs-desktop TEST_ID [TAGS]` - Desktop logs with optional tag filtering
+- `just logs-editor TEST_ID [TAGS]` - Editor logs with optional tag filtering
 - `just logs-ios TEST_ID [TAGS]` - iOS logs with optional tag filtering
 - `just logs-macos TEST_ID [TAGS]` - macOS logs with optional tag filtering
 - `just logs-windows-physical TEST_ID` - Windows physical machine logs
 
 **Platform-Specific Error Analysis:**
 - `just logs-android-errors TEST_ID [TAGS]` - Android errors with optional tag filtering
-- `just logs-desktop-errors TEST_ID [TAGS]` - Desktop errors with optional tag filtering
+- `just logs-editor-errors TEST_ID [TAGS]` - Editor errors with optional tag filtering
 - `just logs-ios-errors TEST_ID [TAGS]` - iOS errors with optional tag filtering
 - `just logs-macos-errors TEST_ID [TAGS]` - macOS errors with optional tag filtering
 - `just logs-windows-physical-errors TEST_ID` - Windows physical machine errors
@@ -37,8 +37,8 @@ GameTwo mobile game with custom Godot 4.3 engine, Firebase integration, and debu
 - `just logs-android-status` - Device & app diagnostics
 
 **Platform Auto-Detection:**
-- Commands auto-detect platform from TEST_ID prefix (`android_*`, `desktop_*`, `ios_*`, `macos_*`, `windows-physical_*`)
-- Explicit platform available: `PLATFORM="android|desktop|ios|macos|windows"`
+- Commands auto-detect platform from TEST_ID prefix (`android_*`, `editor_*`, `ios_*`, `macos_*`, `windows-physical_*`)
+- Explicit platform available: `PLATFORM="android|editor|ios|macos|windows"`
 - Backwards compatible: defaults to "auto" if no platform specified
 
 **🚨 Migration Guide (Old → New):**
@@ -233,7 +233,7 @@ just ship-ios              # Ship to App Store
 just clear-test-android          # Clear Android device config
 just clear-test-ios              # Clear iOS export bundle config
 just clear-test-macos            # Clear macOS user data config
-just clear-test-desktop          # Clear desktop/editor config
+just clear-test-editor          # Clear desktop/editor config
 just clear-test-windows-physical # Clear Windows physical machine config
 ```
 

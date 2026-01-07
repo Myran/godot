@@ -46,7 +46,7 @@ tests/
     "game.battle.play_turn",
     "game.battle.end"
   ],
-  "platforms": ["android", "desktop"],
+  "platforms": ["android", "editor"],
   "checksum_config": {
     "initial_seed": 12345,
     "state_type": "seed_validation"
@@ -60,7 +60,7 @@ tests/
 |-------|------|----------|-------------|
 | `description` | string | ✅ | Human-readable config purpose |
 | `actions` | array | ✅ | Debug actions to execute (in order) |
-| `platforms` | array | ✅ | Supported platforms: `android`, `ios`, `desktop`, `macos` |
+| `platforms` | array | ✅ | Supported platforms: `android`, `ios`, `editor`, `macos` |
 | `checksum_config` | object | ❌ | Checksum validation settings |
 | `checksum_config.initial_seed` | int | ❌ | RNG seed for determinism |
 | `checksum_config.state_type` | string | ❌ | `seed_validation` or `gamestate_replay` |
@@ -94,9 +94,9 @@ tests/
   "configs": ["gamestate-save-load-test"],
   "commands": [
     {
-      "command": "test-save-load-cycle-desktop",
-      "platforms": ["desktop"],
-      "description": "Desktop save/load consistency"
+      "command": "test-save-load-cycle-editor",
+      "platforms": ["editor"],
+      "description": "Editor save/load consistency"
     },
     {
       "command": "test-save-load-cycle-android",
@@ -136,14 +136,14 @@ just run-editor
 
 #### **Step 2: Generate Replay Config**
 ```bash
-just replay-generate-desktop SESSION_12345 my-battle-scenario
+just replay-generate-editor SESSION_12345 my-battle-scenario
 # Creates: tests/debug_configs/my-battle-scenario.json
 ```
 
 #### **Step 3: Test Replay**
 ```bash
 just test-android-target my-battle-scenario  # Automated with validation
-just test-desktop-target my-battle-scenario  # Cross-platform testing
+just test-editor-target my-battle-scenario  # Cross-platform testing
 ```
 
 ### **Replay Config Structure**
@@ -154,7 +154,7 @@ just test-desktop-target my-battle-scenario  # Cross-platform testing
     "game.battle.load_replay",
     "game.battle.execute_replay"
   ],
-  "platforms": ["android", "desktop"],
+  "platforms": ["android", "editor"],
   "replay_data": {
     "session_id": "SESSION_12345",
     "actions": [...],  # Recorded player actions
@@ -170,7 +170,7 @@ just test-desktop-target my-battle-scenario  # Cross-platform testing
 **Benefits:**
 - **Bug reproduction** - Capture exact scenario that caused issue
 - **Regression testing** - Ensure bug fix doesn't break later
-- **Cross-platform validation** - Same replay on Android/desktop/iOS
+- **Cross-platform validation** - Same replay on Android/editor/iOS
 
 ---
 
@@ -179,7 +179,7 @@ just test-desktop-target my-battle-scenario  # Cross-platform testing
 ### **Purpose**
 Validates **deterministic execution** across:
 - Multiple runs on same platform
-- Different platforms (Android, iOS, desktop)
+- Different platforms (Android, iOS, editor)
 - Different build configurations
 
 ### **Automatic Validation Workflow**
@@ -261,7 +261,7 @@ var random_value: int = rng.randi_range(1, 100)
 ### **Purpose**
 Capture complete game state for:
 - **Scenario reproduction** - Load exact game state for debugging
-- **Cross-platform testing** - Capture on Android, test on desktop (90% faster)
+- **Cross-platform testing** - Capture on Android, test on editor (90% faster)
 - **Regression testing** - Verify game state consistency
 
 ### **Capture Gamestate Workflow**
@@ -276,8 +276,8 @@ Capture complete game state for:
 
 #### **Step 2: Extract to Host**
 ```bash
-# Desktop (already on host)
-just capture-gamestate-desktop "critical-bug-scenario"
+# Editor (already on host)
+just capture-gamestate-editor "critical-bug-scenario"
 
 # Android (extract from device)
 just capture-gamestate-android "critical-bug-scenario"
@@ -309,7 +309,7 @@ just clean-saved-states
 ### **Test Integration**
 ```bash
 # Automated gamestate validation
-just test-desktop-target gamestate-system-validation
+just test-editor-target gamestate-system-validation
 just test-android-target gamestate-system-validation
 
 # Complete test suite (includes gamestate)
@@ -319,7 +319,7 @@ just test
 ### **Cross-Platform Workflow (90% Faster)**
 
 **Problem:** Android testing is slow (build + deploy + run)
-**Solution:** Capture on Android, test on desktop
+**Solution:** Capture on Android, test on editor
 
 ```bash
 # 1. Capture interesting state on Android (real platform)
@@ -338,7 +338,7 @@ just test-android-target battle-bug-fix
 
 **Time savings:**
 - Android iteration: 2-5 minutes per test
-- Desktop iteration: 5-10 seconds per test
+- Editor iteration: 5-10 seconds per test
 - **90% time reduction**
 
 ### **Gamestate File Structure**
@@ -436,8 +436,8 @@ just test-android "system-testing"
 # Android automated with checksum validation
 just test-android-target CONFIG
 
-# Desktop automated with validation
-just test-desktop-target CONFIG
+# Editor automated with validation
+just test-editor-target CONFIG
 
 # macOS automated with validation
 just test-macos-target CONFIG
@@ -454,7 +454,7 @@ just test-macos-target CONFIG
 # Android manual (stays open for inspection)
 just test-android-manual CONFIG
 
-# Desktop manual (stays open)
+# Editor manual (stays open)
 just test-desktop-manual CONFIG
 
 # macOS manual (stays open)
@@ -546,7 +546,7 @@ just list-saved-states
 ```bash
 # ✅ CORRECT - Use test commands (enables debug coordinator)
 just test-android-target CONFIG
-just test-desktop-target CONFIG
+just test-editor-target CONFIG
 just test-macos-target CONFIG
 
 # ❌ FORBIDDEN - Don't use run commands for test actions
@@ -570,7 +570,7 @@ just run-macos      # Debug actions won't execute
 
 **Handled automatically** by test commands:
 - `just test-android-target` - Clears Android cache
-- `just test-desktop-target` - Clears desktop cache
+- `just test-editor-target` - Clears desktop cache
 
 **Manual clearing** (if needed):
 ```bash
@@ -586,7 +586,7 @@ just test-prepare-desktop  # Clear desktop cache only
 ```bash
 # Automated testing
 just test-android-target CONFIG
-just test-desktop-target CONFIG
+just test-editor-target CONFIG
 just test-macos-target CONFIG
 just test-all [CONFIG]
 
@@ -600,11 +600,11 @@ just validate                    # Complete validation
 just ci-validate                 # CI validation (MANDATORY)
 
 # Replay system
-just replay-generate-desktop SESSION_ID NAME
+just replay-generate-editor SESSION_ID NAME
 just replay-generate-android SESSION_ID NAME
 
 # Gamestate system
-just capture-gamestate-desktop NAME
+just capture-gamestate-editor NAME
 just capture-gamestate-android NAME
 just list-saved-states
 just clean-saved-states

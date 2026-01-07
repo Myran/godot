@@ -5,7 +5,7 @@
   ],
   "platforms": [
     "android",
-    "desktop",
+    "editor",
     "ios",
     "macos",
     "windows-physical"

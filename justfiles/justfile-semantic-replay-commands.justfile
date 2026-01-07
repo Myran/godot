@@ -1832,7 +1832,7 @@ replay-generate-from-last-session-android config_name:
     just replay-generate-android "${SESSION_ID}" "${CONFIG_NAME}"
 
 # Desktop-specific replay generation from session ID
-replay-generate-desktop session_id config_name="":
+replay-generate-editor session_id config_name="":
     #!/usr/bin/env bash
     set -euo pipefail
     
@@ -1967,7 +1967,7 @@ replay-generate-from-last-session-desktop config_name:
     echo "📝 Generating Desktop replay config with checksum validation..."
     
     # Call the Desktop-specific replay generation command
-    just replay-generate-desktop "${SESSION_ID}" "${CONFIG_NAME}"
+    just replay-generate-editor "${SESSION_ID}" "${CONFIG_NAME}"
 
 # ================================
 # INTERACTIVE SELECTION COMMANDS

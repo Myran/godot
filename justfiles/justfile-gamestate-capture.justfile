@@ -306,7 +306,7 @@ _capture-from-logs SEARCH_PATTERN FILE_PREFIX LOG_SOURCE_CMD NAME:
     fi
 
 # Extract captured gamestate from desktop logs and create debug save file
-capture-gamestate-desktop NAME:
+capture-gamestate-editor NAME:
     #!/usr/bin/env bash
     set -euo pipefail
     
@@ -493,7 +493,7 @@ list-saved-states:
     
     if [ ! -d "$SAVED_STATES_DIR" ]; then
         echo "📁 No saved states directory found"
-        echo "💡 Use 'just capture-gamestate-desktop NAME' to create saved states"
+        echo "💡 Use 'just capture-gamestate-editor NAME' to create saved states"
         exit 0
     fi
     
@@ -501,7 +501,7 @@ list-saved-states:
     
     if [ -z "$(ls -A . 2>/dev/null)" ]; then
         echo "📁 No saved states found"
-        echo "💡 Use debug menu 'Save State' + 'just capture-gamestate-desktop NAME'"
+        echo "💡 Use debug menu 'Save State' + 'just capture-gamestate-editor NAME'"
         exit 0
     fi
     
@@ -551,7 +551,7 @@ help-gamestate:
     @echo "  1. just run-editor                       # Start game"
     @echo "  2. Debug menu → 'Save State'              # Capture state during gameplay"  
     @echo "  3. Exit game"
-    @echo "  4. just capture-gamestate-desktop NAME    # Extract from desktop logs → JSON file"
+    @echo "  4. just capture-gamestate-editor NAME    # Extract from desktop logs → JSON file"
     @echo "  5. just run-editor                       # Start again"
     @echo "  6. Debug menu → 'Saved States'            # Navigate to saved states"
     @echo "  7. Click 'Load: NAME'                     # Load as recording starting point"
@@ -565,7 +565,7 @@ help-gamestate:
     @echo "  5. Load saved state in any platform       # Cross-platform compatibility"
     @echo ""
     @echo "🔧 Platform-Specific Commands:"
-    @echo "  just capture-gamestate-desktop NAME        # Desktop-specific extraction"
+    @echo "  just capture-gamestate-editor NAME        # Desktop-specific extraction"
     @echo "  just capture-gamestate-android NAME        # Android-specific extraction (auto-detects TEST_ID)"
     @echo "  just list-saved-states                     # Show all available saved states"
     @echo "  just clean-saved-states                    # Remove all saved state files"
@@ -574,7 +574,7 @@ help-gamestate:
     @echo "  just test-gamestate-system                 # Validate system files"
     @echo ""
     @echo "🧪 Save/Load Cycle Testing:"
-    @echo "  just test-save-load-cycle-desktop      # Standard test: create → save → load → compare"
+    @echo "  just test-save-load-cycle-editor      # Standard test: create → save → load → compare"
     @echo "  just test-save-load-cycle-with-state-desktop STATE_NAME  # Enhanced test: load STATE → save → load → compare"
     @echo "  just test-save-load-cycle-android       # Android: standard test: create → save → load → compare"
     @echo "  just test-save-load-cycle-with-state-android STATE_NAME  # Android: enhanced test: load STATE → save → load → compare"
@@ -694,7 +694,7 @@ gamestate-status:
 
 
 # 🧪 Save Consistency Test (Note: Load functionality has blocking issues)
-test-save-load-cycle-desktop:
+test-save-load-cycle-editor:
     #!/usr/bin/env bash
     set -euo pipefail
     
@@ -731,7 +731,7 @@ test-save-load-cycle-desktop:
     echo ""
     echo "📋 Step 2: Extract first saved state"
     echo "-----------------------------------"
-    just capture-gamestate-desktop cycle_test_first || {
+    just capture-gamestate-editor cycle_test_first || {
         echo "❌ Failed to extract first gamestate"
         exit 1
     }
@@ -763,7 +763,7 @@ test-save-load-cycle-desktop:
     echo ""
     echo "📋 Step 4: Extract second saved state"
     echo "------------------------------------"
-    just capture-gamestate-desktop cycle_test_second || {
+    just capture-gamestate-editor cycle_test_second || {
         echo "❌ Failed to extract second gamestate"
         exit 1
     }
@@ -813,7 +813,7 @@ test-save-load-cycle-desktop:
     fi
 
 # 🧪 Enhanced Save Consistency Test with Provided State
-test-save-load-cycle-with-state-desktop STATE_NAME:
+test-save-load-cycle-with-state-editor STATE_NAME:
     #!/usr/bin/env bash
     set -euo pipefail
     
@@ -873,7 +873,7 @@ test-save-load-cycle-with-state-desktop STATE_NAME:
     echo ""
     echo "📋 Step 2: Extract saved state"
     echo "-----------------------------"
-    just capture-gamestate-desktop cycle_test_second || {
+    just capture-gamestate-editor cycle_test_second || {
         echo "❌ Failed to extract second gamestate"
         exit 1
     }
@@ -1099,7 +1099,7 @@ test-save-load-cycle-with-state-android STATE_NAME:
     echo ""
     echo "📋 Step 2: Extract saved state"
     echo "-----------------------------"
-    just capture-gamestate-desktop cycle_test_second || {
+    just capture-gamestate-editor cycle_test_second || {
         echo "❌ Failed to extract second gamestate"
         exit 1
     }
@@ -1249,7 +1249,7 @@ help-lineup:
 # ================================
 
 # 🧪 Desktop save-load cycle with test-capture-50 state (for test list integration)
-test-save-load-cycle-with-test-capture-50-desktop:
+test-save-load-cycle-with-test-capture-50-editor:
     just test-save-load-cycle-with-state-desktop test-capture-50
 
 # 🧪 Android save-load cycle with test-capture-50 state (for test list integration)  

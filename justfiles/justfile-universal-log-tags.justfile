@@ -57,8 +57,8 @@ logs-android TEST_ID *TAGS:
         echo "$LOG_CONTENT" | head -50
     fi
 
-# Desktop log display with optional tag filtering
-logs-desktop TEST_ID *TAGS:
+# Editor log display with optional tag filtering
+logs-editor TEST_ID *TAGS:
     #!/usr/bin/env bash
     set -euo pipefail
     
@@ -67,7 +67,7 @@ logs-desktop TEST_ID *TAGS:
     
     LOG_CONTENT=$(just _find-editor-log-with-test-id "$TEST_ID")
     
-    echo "📋 Desktop Logs for Test: $TEST_ID"
+    echo "📋 Editor Logs for Test: $TEST_ID"
     
     if [ -n "$TAGS" ]; then
         echo "🏷️  Filtering by tags: $TAGS"
@@ -149,8 +149,8 @@ logs-android-errors TEST_ID *TAGS:
         echo "$LOG_CONTENT" | grep -E "ERROR:|FAILURE:|⚠️.*ERROR|❌|failed.*error.*true" | head -20 || echo "✅ No errors found"
     fi
 
-# Desktop errors with optional tag filtering
-logs-desktop-errors TEST_ID *TAGS:
+# Editor errors with optional tag filtering
+logs-editor-errors TEST_ID *TAGS:
     #!/usr/bin/env bash
     set -euo pipefail
 
@@ -159,7 +159,7 @@ logs-desktop-errors TEST_ID *TAGS:
 
     LOG_CONTENT=$(just _find-editor-log-with-test-id "$TEST_ID")
 
-    echo "🚨 Desktop Errors and Failures:"
+    echo "🚨 Editor Errors and Failures:"
     echo "==============================="
 
     if [ -n "$TAGS" ]; then

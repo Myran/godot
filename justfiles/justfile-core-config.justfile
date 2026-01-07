@@ -95,7 +95,7 @@ _get-editor-log-file:
     #!/usr/bin/env bash
     set -euo pipefail
     
-    # Desktop log directory (macOS standard location)
+    # Editor log directory (macOS standard location)
     EDITOR_LOG_DIR="{{EDITOR_LOG_DIR}}"
     
     # Function to find latest desktop log in a directory
@@ -125,7 +125,7 @@ _get-editor-log-file:
     
     # If no log found, provide helpful error
     if [ -z "$LATEST_LOG" ]; then
-        echo "❌ No desktop log files found in:" >&2
+        echo "❌ No editor log files found in:" >&2
         echo "   $EDITOR_LOG_DIR" >&2
         echo "" >&2
         echo "💡 Try running a test first to generate logs:" >&2
@@ -144,7 +144,7 @@ _find-editor-log-with-test-id TEST_ID:
     
     TEST_ID="{{TEST_ID}}"
     
-    # Desktop log directory
+    # Editor log directory
     EDITOR_LOG_DIR="{{EDITOR_LOG_DIR}}"
     
     # Function to search for test ID in log directory
@@ -187,13 +187,13 @@ _find-editor-log-with-test-id TEST_ID:
     echo "$LOG_FILE"
 
 
-_find-desktop-log-with-session-id SESSION_ID:
+_find-editor-log-with-session-id SESSION_ID:
     #!/usr/bin/env bash
     set -euo pipefail
     
     SESSION_ID="{{SESSION_ID}}"
     
-    # Desktop log directory
+    # Editor log directory
     EDITOR_LOG_DIR="{{EDITOR_LOG_DIR}}"
     
     # Function to search for session ID in log directory
@@ -264,7 +264,7 @@ _validate-session-logs SESSION_ID:
     echo "🔍 Validating session logs for: $SESSION_ID"
     
     # Try to find session in desktop logs first
-    if DESKTOP_LOG=$(just _find-desktop-log-with-session-id "$SESSION_ID" 2>/dev/null); then
+    if EDITOR_LOG=$(just _find-editor-log-with-session-id "$SESSION_ID" 2>/dev/null); then
         echo "✅ Found session in desktop logs: $DESKTOP_LOG"
         
         # Count semantic actions in this session
@@ -311,7 +311,7 @@ _get-logs-for-session SESSION_ID:
     SESSION_ID="{{SESSION_ID}}"
     
     # Try desktop logs first
-    if DESKTOP_LOG=$(just _find-desktop-log-with-session-id "$SESSION_ID" 2>/dev/null); then
+    if EDITOR_LOG=$(just _find-editor-log-with-session-id "$SESSION_ID" 2>/dev/null); then
         # Return the content of the specific log file
         cat "$DESKTOP_LOG"
         return 0

@@ -8,6 +8,6 @@
     "test.firestore.collection_query",
     "test.firestore.error_handling"
   ],
-  "platforms": ["android", "desktop", "editor", "macos", "ios", "windows-physical"],
+  "platforms": ["android", "editor", "editor", "macos", "ios", "windows-physical"],
   "tags": ["firebase", "firestore", "tdd", "crud"]
 }

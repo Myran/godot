@@ -7,6 +7,6 @@
     "cpp.firebase.auth.sign_out",
     "cpp.firebase.auth.state_listener"
   ],
-  "platforms": ["android", "ios", "macos", "desktop"],
+  "platforms": ["android", "ios", "macos", "editor"],
   "tags": ["firebase", "auth", "cpp"]
 }

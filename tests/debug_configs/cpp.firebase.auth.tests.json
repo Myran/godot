@@ -10,7 +10,7 @@
   "platforms": [
     "android",
     "ios",
-    "desktop",
+    "editor",
     "macos",
     "editor"
   ]

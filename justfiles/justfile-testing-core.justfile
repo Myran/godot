@@ -64,7 +64,7 @@ _test-check-android-device:
 # ================================
 
 # Common test setup for all Desktop test variants
-_test-setup-desktop CONFIG_NAME TEST_TYPE:
+_test-setup-editor CONFIG_NAME TEST_TYPE:
     #!/usr/bin/env bash
     set -euo pipefail
     
@@ -75,7 +75,7 @@ _test-setup-desktop CONFIG_NAME TEST_TYPE:
     echo "=================================================="
 
 # Common desktop test preparation (config validation)
-_test-prepare-desktop CONFIG_NAME:
+_test-prepare-editor CONFIG_NAME:
     #!/usr/bin/env bash
     set -euo pipefail
     
@@ -88,7 +88,7 @@ _test-prepare-desktop CONFIG_NAME:
     echo ""
 
 # Common desktop Godot editor check
-_test-check-desktop-godot:
+_test-check-editor-godot:
     #!/usr/bin/env bash
     set -euo pipefail
     
