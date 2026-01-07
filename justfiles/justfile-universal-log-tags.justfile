@@ -99,6 +99,11 @@ logs-android-errors TEST_ID *TAGS:
     TEST_ID="{{TEST_ID}}"
     TAGS="{{TAGS}}"
 
+    # ⚠️  DEPRECATION NOTICE
+    echo "⚠️  This command is deprecated. Use instead:"
+    echo "   just logs $TEST_ID --platform android"
+    echo ""
+
     # 🚨 CRITICAL: Buffer-aware error analysis for Android
     echo "🚨 Android Error Analysis with Buffer Context"
     echo "============================================="
@@ -156,6 +161,11 @@ logs-editor-errors TEST_ID *TAGS:
 
     TEST_ID="{{TEST_ID}}"
     TAGS="{{TAGS}}"
+
+    # ⚠️  DEPRECATION NOTICE
+    echo "⚠️  This command is deprecated. Use instead:"
+    echo "   just logs $TEST_ID --platform editor"
+    echo ""
 
     LOG_CONTENT=$(just _find-editor-log-with-test-id "$TEST_ID")
 
@@ -237,6 +247,11 @@ logs-ios-errors TEST_ID *TAGS:
     TEST_ID="{{TEST_ID}}"
     TAGS="{{TAGS}}"
     EDITOR_LOG_DIR="{{EDITOR_LOG_DIR}}"
+
+    # ⚠️  DEPRECATION NOTICE
+    echo "⚠️  This command is deprecated. Use instead:"
+    echo "   just logs $TEST_ID --platform ios"
+    echo ""
 
     # Find iOS log file by TEST_ID
     SAVED_LOGS_DIR="logs"
@@ -328,6 +343,11 @@ logs-macos-errors TEST_ID *TAGS:
     TEST_ID="{{TEST_ID}}"
     TAGS="{{TAGS}}"
     EDITOR_LOG_DIR="{{EDITOR_LOG_DIR}}"
+
+    # ⚠️  DEPRECATION NOTICE
+    echo "⚠️  This command is deprecated. Use instead:"
+    echo "   just logs $TEST_ID --platform macos"
+    echo ""
 
     # Find macOS log file by TEST_ID
     SAVED_LOGS_DIR="logs"

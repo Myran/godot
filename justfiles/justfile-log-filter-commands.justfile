@@ -2,6 +2,164 @@
 # TAG-BASED LOG FILTERING COMMANDS
 # ================================
 
+# ================================
+# UNIFIED LOG INTERFACE (Primary Command)
+# ================================
+# Smart defaults: Shows errors with auto-detected platform
+# Usage:
+#   just logs TEST_ID                          # Errors + auto-platform (default)
+#   just logs TEST_ID --platform android       # Explicit platform
+#   just logs TEST_ID --search "term"          # Search instead of errors
+#   just logs TEST_ID --full                   # All content, not just errors
+#   just logs TEST_ID --raw                    # No filtering, for piping
+logs TEST_ID *FLAGS:
+    #!/usr/bin/env bash
+    set -euo pipefail
+
+    TEST_ID="{{TEST_ID}}"
+    FLAGS="{{FLAGS}}"
+    EDITOR_LOG_DIR="{{EDITOR_LOG_DIR}}"
+
+    # Default values
+    MODE="errors"
+    PLATFORM="auto"
+    RAW=false
+    FULL=false
+    SEARCH_TERM=""
+
+    # Parse flags from FLAGS variable
+    # Convert FLAGS to array for parsing
+    set -- $FLAGS
+    while [[ $# -gt 0 ]]; do
+        case "$1" in
+            --raw)
+                RAW=true
+                shift
+                ;;
+            --full)
+                FULL=true
+                shift
+                ;;
+            --all-platforms)
+                PLATFORM="all"
+                shift
+                ;;
+            --platform)
+                PLATFORM="$2"
+                shift 2
+                ;;
+            --search)
+                MODE="search"
+                SEARCH_TERM="$2"
+                shift 2
+                ;;
+            *)
+                # Unknown flag, warn and skip
+                echo "⚠️  Unknown flag: $1 (ignoring)"
+                shift
+                ;;
+        esac
+    done
+
+    # Auto-detect platform from TEST_ID if platform is "auto"
+    if [ "$PLATFORM" = "auto" ]; then
+        if [[ "$TEST_ID" == android_* ]]; then
+            PLATFORM="android"
+        elif [[ "$TEST_ID" == editor_* ]]; then
+            PLATFORM="editor"
+        elif [[ "$TEST_ID" == desktop_* ]]; then
+            PLATFORM="editor"
+        elif [[ "$TEST_ID" == ios_* ]]; then
+            PLATFORM="ios"
+        elif [[ "$TEST_ID" == macos_* ]]; then
+            PLATFORM="macos"
+        elif [[ "$TEST_ID" == windows* ]]; then
+            PLATFORM="windows-physical"
+        else
+            # Default to editor for backwards compatibility
+            PLATFORM="editor"
+        fi
+    fi
+
+    # Find log file based on platform
+    SAVED_LOGS_DIR="logs"
+    LOG_FILE=""
+
+    # Handle "all" platform by redirecting to auto-detected
+    if [ "$PLATFORM" = "all" ]; then
+        echo "⚠️  --all-platforms not yet implemented, using auto-detected platform"
+        if [[ "$TEST_ID" == android_* ]]; then
+            PLATFORM="android"
+        elif [[ "$TEST_ID" == ios_* ]]; then
+            PLATFORM="ios"
+        elif [[ "$TEST_ID" == macos_* ]]; then
+            PLATFORM="macos"
+        elif [[ "$TEST_ID" == windows* ]]; then
+            PLATFORM="windows-physical"
+        else
+            PLATFORM="editor"
+        fi
+    fi
+
+    case "$PLATFORM" in
+        android|ios|macos|windows-physical)
+            # Search in saved test logs directory
+            LOG_FILE=$(find "$SAVED_LOGS_DIR" -name "*${TEST_ID}*.log" -type f 2>/dev/null | head -1)
+            ;;
+        editor)
+            # Use existing desktop infrastructure
+            LOG_FILE=$(just _find-editor-log-with-test-id "$TEST_ID")
+            ;;
+        *)
+            echo "❌ Invalid platform: $PLATFORM" >&2
+            exit 1
+            ;;
+    esac
+
+    if [ -z "$LOG_FILE" ]; then
+        echo "❌ No log file found for test ID: $TEST_ID" >&2
+        echo "💡 Try: just logs-last  # to see recent logs" >&2
+        exit 1
+    fi
+
+    # Output based on mode
+    if [ "$MODE" = "search" ]; then
+        # Search mode
+        echo "🔍 Searching for: $SEARCH_TERM"
+        echo "📋 Test ID: $TEST_ID"
+        echo "🖥️  Platform: $PLATFORM"
+        echo "📄 Log file: $LOG_FILE"
+        echo ""
+        if [ "$RAW" = true ]; then
+            grep -i "$SEARCH_TERM" "$LOG_FILE"
+        else
+            grep -i "$SEARCH_TERM" "$LOG_FILE" | head -50
+        fi
+    else
+        # Errors mode (default)
+        if [ "$FULL" = true ]; then
+            # Show all content
+            echo "📋 Full logs for test ID: $TEST_ID"
+            echo "🖥️  Platform: $PLATFORM"
+            echo "📄 Log file: $LOG_FILE"
+            echo ""
+            if [ "$RAW" = true ]; then
+                cat "$LOG_FILE"
+            else
+                head -100 "$LOG_FILE"
+            fi
+        else
+            # Show errors only (default behavior)
+            echo "🚨 Errors for test ID: $TEST_ID"
+            echo "🖥️  Platform: $PLATFORM"
+            echo "📄 Log file: $LOG_FILE"
+            echo ""
+            echo "💡 Pro tip: Use 'just logs $TEST_ID --full' for complete logs"
+            echo ""
+            grep -E "ERROR|FAILURE|WARNING.*⚠️|RESTART_NEEDED" "$LOG_FILE" | grep -v '"error": false' || echo "✅ No errors found"
+        fi
+    fi
+
 # Show only specific tags to save tokens
 logs-tags TEST_ID *TAGS:
     #!/usr/bin/env bash

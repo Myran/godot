@@ -9,11 +9,18 @@ GameTwo mobile game with custom Godot 4.3 engine, Firebase integration, and debu
 
 ## 🔍 Streamlined Logging System
 
-**Core Logging Commands (Platform-specific log retrieval)**
+**🆕 Unified Log Command (Primary Interface):**
+```bash
+just logs TEST_ID                         # Smart defaults: errors + auto-platform
+just logs TEST_ID --platform android      # Explicit platform
+just logs TEST_ID --search "term"         # Search instead of errors
+just logs TEST_ID --full                  # All content, not just errors
+just logs TEST_ID --raw                   # No filtering, for piping
+```
 
-**Essential Test Result Analysis:**
-- `just logs-search TEST_ID "pattern" [PLATFORM]` - Text search (98% savings, replaces logs-text)
+**Legacy Commands (still work, with deprecation notices):**
 - `just logs-errors TEST_ID [PLATFORM]` - Error-focused analysis (98% savings)
+- `just logs-search TEST_ID "pattern" [PLATFORM]` - Text search (98% savings)
 - `just logs-pattern TEST_ID "wildcard*" [PLATFORM]` - Wildcard pattern matching
 
 **Platform-Specific Log Retrieval:**
@@ -23,7 +30,7 @@ GameTwo mobile game with custom Godot 4.3 engine, Firebase integration, and debu
 - `just logs-macos TEST_ID [TAGS]` - macOS logs with optional tag filtering
 - `just logs-windows-physical TEST_ID` - Windows physical machine logs
 
-**Platform-Specific Error Analysis:**
+**Platform-Specific Error Analysis (⚠️ Deprecated - use `just logs TEST_ID --platform X`):**
 - `just logs-android-errors TEST_ID [TAGS]` - Android errors with optional tag filtering
 - `just logs-editor-errors TEST_ID [TAGS]` - Editor errors with optional tag filtering
 - `just logs-ios-errors TEST_ID [TAGS]` - iOS errors with optional tag filtering
@@ -42,8 +49,12 @@ GameTwo mobile game with custom Godot 4.3 engine, Firebase integration, and debu
 - Backwards compatible: defaults to "auto" if no platform specified
 
 **🚨 Migration Guide (Old → New):**
-- `logs-last*` commands → Removed (use platform-specific logs commands)
-- `logs-text TEST_ID "pattern"` → `logs-search TEST_ID "pattern"`
+- `logs-android-errors TEST_ID` → `just logs TEST_ID --platform android`
+- `logs-editor-errors TEST_ID` → `just logs TEST_ID --platform editor`
+- `logs-ios-errors TEST_ID` → `just logs TEST_ID --platform ios`
+- `logs-macos-errors TEST_ID` → `just logs TEST_ID --platform macos`
+- `logs-text TEST_ID "pattern"` → `just logs TEST_ID --search "pattern"`
+- `logs-last*` commands → Removed (use `just logs TEST_ID`)
 - `android-logs-search` → `logs-android-device`
 - `android-logs-clear-lightweight` → `logs-android-clear`
 - `android-logs-health-check` → `logs-android-health`

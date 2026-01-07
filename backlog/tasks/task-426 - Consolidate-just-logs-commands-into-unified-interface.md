@@ -1,10 +1,10 @@
 ---
 id: task-426
 title: Consolidate just logs-* commands into unified interface
-status: Consider
+status: Done
 assignee: []
 created_date: '2026-01-06 00:33'
-updated_date: '2026-01-06 10:47'
+updated_date: '2026-01-07 10:06'
 labels:
   - justfile
   - logging
@@ -73,3 +73,12 @@ Replaced by flags:
 - **Backward compatible** - Old commands still work during transition
 - **Power user escape** - --raw flag enables external tool integration
 <!-- SECTION:DESCRIPTION:END -->
+
+## Acceptance Criteria
+<!-- AC:BEGIN -->
+- [x] #1 Unified `just logs TEST_ID` command with smart defaults (errors + auto-platform)
+- [x] #2 Flag parsing: --raw, --full, --all-platforms, --platform, --search
+- [x] #3 Platform-specific commands work with deprecation warnings
+- [x] #4 Live device commands unchanged (logs-android-device, logs-android-clear, logs-android-health)
+- [x] #5 Documentation updated to primary `just logs` command
+<!-- AC:END -->
