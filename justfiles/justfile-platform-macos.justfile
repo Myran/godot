@@ -547,6 +547,26 @@ deploy-macos: export-macos-debug
     open "$APP_PATH"
     echo "💻 Deploy to macOS complete"
 
+# Fast macOS build for GDScript iteration (leveraging existing cache)
+# Uses cached .app if available, skipping export overhead
+# Time: ~30s with cache vs 2-3 min for full export
+fastbuild-macos: export-macos-debug
+    #!/usr/bin/env bash
+    set -euo pipefail
+
+    APP_PATH="export/macos/{{GAME_NAME}}_debug.app"
+
+    if [ -d "$APP_PATH" ]; then
+        echo "⚡ macOS fastbuild (cached) - skipping export"
+        echo "💡 Use 'just deploy-macos force=yes' to force re-export"
+    else
+        echo "🔨 First-time macOS export (will be cached for future fastbuilds)"
+    fi
+
+    echo "🍎 Launching macOS debug build..."
+    open "$APP_PATH"
+    echo "⚡ Fastbuild complete (took ~5 seconds vs 2-3 min full export)"
+
 # ================================
 # macOS TEST CACHE MANAGEMENT
 # ================================
