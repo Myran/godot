@@ -1009,6 +1009,12 @@ _extract-logs test_id platform temp_output_file="":
             RETRY_COUNT=0
             MAX_RETRIES=3
 
+            # Get app PID for Android buffer refresh (needed before the while loop)
+            APP_PID=""
+            if [[ "$PLATFORM" == "android" ]]; then
+                APP_PID=$(adb shell pidof com.primaryhive.gametwo 2>/dev/null || echo "")
+            fi
+
             while [[ ${COMPLETION_EVENTS:-0} -lt ${SEQUENTIAL_DISPATCHES:-0} && $WAIT_COUNT -lt $MAX_WAIT_SECONDS ]]; do
                 echo "⏳ Waiting for sequential action completion... ($WAIT_COUNT/$MAX_WAIT_SECONDS) - $COMPLETION_EVENTS/$SEQUENTIAL_DISPATCHES events"
                 sleep $WAIT_INTERVAL
