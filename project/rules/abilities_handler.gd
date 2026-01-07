@@ -73,6 +73,34 @@ static func create_ability_from_type(ability_type: String, params: PackedStringA
 			if params.size() > 0:
 				arrow_damage = int(params[0])
 			new_ability = ArcherAbility.new(arrow_damage)
+		"archer":
+			# Handle archer:arrow_damage format (Archer card ability string)
+			# Archer ability: fires arrows per unique forest unit, attacks before battle
+			var arrow_damage: int = 1
+			if params.size() > 0:
+				arrow_damage = int(params[0])
+			new_ability = ArcherAbility.new(arrow_damage)
+		"dwarf":
+			# Handle dwarf:health_per_dwarf;attack_per_dwarf format (Dwarf smithing synergy)
+			# Grants soldier allies bonuses per dwarf level in play
+			var health_bonus: int = 1
+			var attack_bonus: int = 1
+			if params.size() > 0:
+				health_bonus = int(params[0])
+			if params.size() > 1:
+				attack_bonus = int(params[1])
+			new_ability = DwarfSmithingAbility.new(health_bonus, attack_bonus)
+		"attacktarget":
+			# Handle attacktarget:row format (Targeting preference ability)
+			# Prefers targeting front or back row units
+			var target_row: int = 1  # TargetRow.BACK (1) by default for Rhino Man
+			if params.size() > 0:
+				var row_param: String = params[0]
+				if row_param == "frontrow":
+					target_row = 0  # TargetRow.FRONT
+				elif row_param == "backrow":
+					target_row = 1  # TargetRow.BACK
+			new_ability = TargetingPreferenceAbility.new(target_row)
 		_:
 			if not ability_type.is_empty():
 				Log.warning(

@@ -23,6 +23,10 @@ var effects_perm: Array[Variant] = []
 var abilities: Array[Ability] = []
 var battle_original_reference: UnitData = null
 
+## Targeting preference for combat (FRONT/BACK row preference)
+## Used by TargetingPreferenceAbility to influence target selection
+var targeting_preference: int = 0  # 0 = FRONT (default), 1 = BACK
+
 
 func get_active_abilities() -> Array[Ability]:
 	return abilities

@@ -537,6 +537,15 @@ static func _deserialize_ability(ability_data: Variant) -> Variant:
 			var arrow_damage: int = ability_dict.get("arrow_damage", 1)
 			ability = ArcherAbility.new(arrow_damage)
 
+		"DwarfSmithingAbility":
+			var health_per_dwarf: int = ability_dict.get("health_per_dwarf", 1)
+			var attack_per_dwarf: int = ability_dict.get("attack_per_dwarf", 1)
+			ability = DwarfSmithingAbility.new(health_per_dwarf, attack_per_dwarf)
+
+		"TargetingPreferenceAbility":
+			var target_row: int = ability_dict.get("target_row", 1)  # BACK by default
+			ability = TargetingPreferenceAbility.new(target_row)
+
 		"DamageShieldAbility":
 			ability = DamageShieldAbility.new()
 			if ability_dict.has("shield_used"):
