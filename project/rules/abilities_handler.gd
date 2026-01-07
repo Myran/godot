@@ -67,6 +67,12 @@ static func create_ability_from_type(ability_type: String, params: PackedStringA
 				if params.size() > 1:
 					breakthrough_damage = int(params[1])
 				new_ability = SpearmanAbility.new(breakthrough_damage)
+		"firststrike":
+			# Handle firststrike:arrow_damage format (Archer ability)
+			var arrow_damage: int = 1
+			if params.size() > 0:
+				arrow_damage = int(params[0])
+			new_ability = ArcherAbility.new(arrow_damage)
 		_:
 			if not ability_type.is_empty():
 				Log.warning(

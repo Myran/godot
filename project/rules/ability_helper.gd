@@ -480,6 +480,62 @@ static func get_units_with_tag_in_lineup(
 	return units
 
 
+# ===== BATTLE-SPECIFIC TAG COUNTING =====
+
+
+static func count_battle_units_with_tags(
+	unit: BattleAbilityEvent, tags: Array[String], exclude_self: bool = true
+) -> int:
+	"""
+	Count allied units in battle that have ANY of the specified tags.
+	This is the battle-specific version that works with UnitData lineup.
+
+	Args:
+		unit: The battle ability event with context access
+		tags: Array of tag strings to match (OR logic - unit needs ANY tag)
+		exclude_self: Whether to exclude the current unit from count (default: true)
+
+	Returns:
+		int: Count of allied units with matching tags
+	"""
+	var count: int = 0
+	var allied_side: Side = unit.battle_context.allied_side
+	var self_unit: UnitData = unit.get_self_unit()
+
+	for position: int in allied_side.lineup:
+		var battle_unit: UnitData = allied_side.lineup[position]
+		if exclude_self and battle_unit == self_unit:
+			continue
+
+		if _battle_unit_has_any_tag(battle_unit, tags):
+			count += 1
+
+	return count
+
+
+static func _battle_unit_has_any_tag(battle_unit: UnitData, tags: Array[String]) -> bool:
+	"""Check if a battle unit (UnitData) has any of the specified tags (includes tribe)"""
+	if not battle_unit or not battle_unit.card_definition:
+		return false
+
+	var card_tags: String = battle_unit.card_definition.tags
+	var card_tribe: String = battle_unit.card_definition.tribe
+
+	for tag: String in tags:
+		# Check explicit tags
+		if not card_tags.is_empty():
+			var tag_list: PackedStringArray = card_tags.split(",")
+			for card_tag: String in tag_list:
+				if card_tag.strip_edges() == tag:
+					return true
+
+		# Check tribe
+		if card_tribe == tag:
+			return true
+
+	return false
+
+
 # ===== UTILITY METHODS =====
 
 

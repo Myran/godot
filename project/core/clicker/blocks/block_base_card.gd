@@ -533,6 +533,10 @@ static func _deserialize_ability(ability_data: Variant) -> Variant:
 			var breakthrough_damage: int = ability_dict.get("breakthrough_damage", 1)
 			ability = SpearmanAbility.new(breakthrough_damage)
 
+		"ArcherAbility":
+			var arrow_damage: int = ability_dict.get("arrow_damage", 1)
+			ability = ArcherAbility.new(arrow_damage)
+
 		"DamageShieldAbility":
 			ability = DamageShieldAbility.new()
 			if ability_dict.has("shield_used"):

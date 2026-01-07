@@ -1,10 +1,10 @@
 ---
 id: task-034
 title: Archer ability with first strike and volley mechanics
-status: To Do
+status: Done
 assignee: []
 created_date: '2025-08-12 12:18'
-updated_date: '2025-11-11 20:25'
+updated_date: '2026-01-07 04:26'
 labels:
   - complex-abilities
   - archer
@@ -14,20 +14,9 @@ dependencies:
 priority: low
 ---
 
-## Assessment (2025-12-06)
-
-**Value: HIGH** - Core gameplay feature. BLOCKER for other abilities.
-
-**Recommendation: KEEP - INCREASE PRIORITY** - This task is a dependency for task-041 (Wizard), task-043 (Spearman), and task-044 (Barbarian). It should NOT be low priority if those abilities are needed. Consider promoting to Medium or High priority.
-
-**Effort**: Small-Medium (architecture ready)
-**Blocker**: Depends on task-032. BLOCKS: task-041, task-043, task-044
-**Note**: Priority should match the urgency of dependent card abilities
-
----
-
 ## Description
 
+<!-- SECTION:DESCRIPTION:BEGIN -->
 **Updated 2025-10-26**: Removed task-040 dependency (archived performance optimization) since event filtering system is already implemented and functional.
 
 ## Description
@@ -103,13 +92,28 @@ func handle_battle_event(unit: BattleAbilityEvent) -> void:
 - All randomness flows through centralized BattleRules system
 - Event-driven architecture ensures deterministic behavior across platforms
 - No platform-specific code required in ability implementation
-## Acceptance Criteria
+<!-- SECTION:DESCRIPTION:END -->
 
-- [ ] Archer first strike mechanic uses AbilityHelper.is_combat_pre() and revolutionary single-parameter API
-- [ ] Arrow volley system uses AbilityHelper.deal_damage_to_random_enemy() for multi-target attacks
-- [ ] Ability implements get_handled_event_classes() returning [BattleContext.CombatEvent BattleContext.BattleStartEvent]
-- [ ] Revolutionary handle_battle_event(unit: UnitContext) API demonstrates 80% code reduction
-- [ ] Event filtering optimization limits processing to relevant events only
-- [ ] Code achieves dramatic simplification: traditional 25+ lines reduced to 8 lines with crystal-clear intent
-- [ ] Cross-platform deterministic behavior maintained with proper RNG usage
-- [ ] Performance benchmarks validate <5% overhead vs baseline implementation
+## Assessment (2025-12-06)
+
+**Value: HIGH** - Core gameplay feature. BLOCKER for other abilities.
+
+**Recommendation: KEEP - INCREASE PRIORITY** - This task is a dependency for task-041 (Wizard), task-043 (Spearman), and task-044 (Barbarian). It should NOT be low priority if those abilities are needed. Consider promoting to Medium or High priority.
+
+**Effort**: Small-Medium (architecture ready)
+**Blocker**: Depends on task-032. BLOCKS: task-041, task-043, task-044
+**Note**: Priority should match the urgency of dependent card abilities
+
+---
+
+## Acceptance Criteria
+<!-- AC:BEGIN -->
+- [ ] #1 Archer first strike mechanic uses AbilityHelper.is_combat_pre() and revolutionary single-parameter API
+- [ ] #2 Arrow volley system uses AbilityHelper.deal_damage_to_random_enemy() for multi-target attacks
+- [ ] #3 Ability implements get_handled_event_classes() returning [BattleContext.CombatEvent BattleContext.BattleStartEvent]
+- [ ] #4 Revolutionary handle_battle_event(unit: UnitContext) API demonstrates 80% code reduction
+- [ ] #5 Event filtering optimization limits processing to relevant events only
+- [ ] #6 Code achieves dramatic simplification: traditional 25+ lines reduced to 8 lines with crystal-clear intent
+- [ ] #7 Cross-platform deterministic behavior maintained with proper RNG usage
+- [ ] #8 Performance benchmarks validate <5% overhead vs baseline implementation
+<!-- AC:END -->
