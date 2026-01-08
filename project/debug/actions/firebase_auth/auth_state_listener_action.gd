@@ -3,7 +3,8 @@ extends CPPAuthDebugAction
 
 ## Tests C++ AuthStateListener for Firebase Auth state changes (Task-420).
 ## Validates that auth_state_changed signal fires on sign in and sign out.
-## Uses NSRunLoop pumping for iOS/macOS callback execution.
+##
+## NOTE (task-429): CFRunLoop pumping is now handled globally by FirebaseService._process()
 
 
 # Signal emitter for auth state changes (must be a class to define signal)
@@ -72,9 +73,6 @@ func _execute_action_logic(_params: Dictionary = {}) -> DebugActionResult:
 			{}
 		)
 
-	# Start NSRunLoop pumping for iOS/macOS
-	_start_nsloop_pumping()
-
 	# Create signal emitter node and attach to scene tree
 	var signal_emitter: StateChangeEmitter = StateChangeEmitter.new(self)
 	var main_loop: MainLoop = Engine.get_main_loop()
@@ -90,10 +88,7 @@ func _execute_action_logic(_params: Dictionary = {}) -> DebugActionResult:
 			"Already signed in, signing out first", {}, ["debug", "cpp_auth", "state_listener"]
 		)
 		auth.sign_out()
-		# Give it a moment to process
-		for i in range(10):
-			if is_instance_valid(firebase_instance):
-				firebase_instance.process_notifications()
+		# task-429: FirebaseService._process() handles CFRunLoop pumping globally
 
 	# Connect to auth_state_changed signal
 	if not auth.has_signal("auth_state_changed"):
@@ -128,9 +123,6 @@ func _execute_action_logic(_params: Dictionary = {}) -> DebugActionResult:
 
 	Log.info("AuthStateListener started successfully", {}, ["debug", "cpp_auth", "state_listener"])
 
-	# Create NSRunLoop pump timer for iOS/macOS
-	var pump_timer: Timer = _create_pump_timer(scene_tree)
-
 	# Initial state change might fire immediately - wait briefly
 	await _wait_for_state_change(signal_emitter, 2.0)
 
@@ -146,7 +138,7 @@ func _execute_action_logic(_params: Dictionary = {}) -> DebugActionResult:
 	var sign_in_request_id: int = _get_next_request_id()
 
 	if not auth.has_method("sign_in_anonymously_async"):
-		_cleanup_all(pump_timer, signal_emitter, auth)
+		_cleanup_emitter(signal_emitter, auth)
 		return DebugActionResult.new_failure(
 			"FirebaseAuth C++ missing sign_in_anonymously_async method",
 			"AUTH_METHOD_MISSING",
@@ -164,7 +156,7 @@ func _execute_action_logic(_params: Dictionary = {}) -> DebugActionResult:
 
 	if not sign_in_state_received:
 		var duration: int = Time.get_ticks_msec() - start_time
-		_cleanup_all(pump_timer, signal_emitter, auth)
+		_cleanup_emitter(signal_emitter, auth)
 		return DebugActionResult.new_failure(
 			"Timeout waiting for auth_state_changed after sign in",
 			"STATE_CHANGE_TIMEOUT",
@@ -190,7 +182,7 @@ func _execute_action_logic(_params: Dictionary = {}) -> DebugActionResult:
 
 	if not sign_out_state_received:
 		var duration: int = Time.get_ticks_msec() - start_time
-		_cleanup_all(pump_timer, signal_emitter, auth)
+		_cleanup_emitter(signal_emitter, auth)
 		return DebugActionResult.new_failure(
 			"Timeout waiting for auth_state_changed after sign out",
 			"STATE_CHANGE_TIMEOUT",
@@ -217,7 +209,7 @@ func _execute_action_logic(_params: Dictionary = {}) -> DebugActionResult:
 		)
 
 	# Cleanup
-	_cleanup_all(pump_timer, signal_emitter, auth)
+	_cleanup_emitter(signal_emitter, auth)
 
 	# Validate results
 	var duration: int = Time.get_ticks_msec() - start_time
@@ -266,23 +258,6 @@ func _execute_action_logic(_params: Dictionary = {}) -> DebugActionResult:
 	)
 
 	return DebugActionResult.new_success(true, duration, action_name, metadata)
-
-
-func _create_pump_timer(scene_tree: SceneTree) -> Timer:
-	var pump_timer: Timer = Timer.new()
-	pump_timer.wait_time = 0.016  # ~60 FPS
-	pump_timer.one_shot = false
-	pump_timer.autostart = true
-	var pump_callback: Callable = func():
-		if (
-			is_instance_valid(firebase_instance)
-			and firebase_instance.has_method("process_notifications")
-		):
-			firebase_instance.process_notifications()
-	pump_timer.timeout.connect(pump_callback)
-	if scene_tree:
-		scene_tree.root.add_child(pump_timer)
-	return pump_timer
 
 
 func _wait_for_state_change(emitter: StateChangeEmitter, timeout_seconds: float) -> bool:
@@ -345,16 +320,9 @@ func _wait_for_signed_out_state(emitter: StateChangeEmitter, timeout_seconds: fl
 
 
 func _cleanup_emitter(emitter: StateChangeEmitter, auth: Object) -> void:
-	_stop_nsloop_pumping()
 	if is_instance_valid(emitter):
 		if auth.auth_state_changed.is_connected(emitter.handle_auth_state_changed):
 			auth.auth_state_changed.disconnect(emitter.handle_auth_state_changed)
 		emitter.queue_free()
 	if is_instance_valid(auth) and auth.is_auth_state_listener_active():
 		auth.stop_auth_state_listener()
-
-
-func _cleanup_all(pump_timer: Timer, emitter: StateChangeEmitter, auth: Object) -> void:
-	if is_instance_valid(pump_timer):
-		pump_timer.queue_free()
-	_cleanup_emitter(emitter, auth)

@@ -1,10 +1,12 @@
 class_name AuthSignInAnonymousAction
 extends CPPAuthDebugAction
 
-# Uses C++ FirebaseAuth directly with NSRunLoop pumping (task-414)
+# Uses C++ FirebaseAuth async API with signal-based completion (task-414)
 # Uses modern sign_in_anonymously_async() with signal-based completion
 # This uses MessageQueue for proper thread marshaling on iOS/macOS
 # Uses SignalAwaiter for proper timeout handling
+#
+# NOTE (task-429): CFRunLoop pumping is now handled globally by FirebaseService._process()
 
 
 # Signal emitter for Firebase completion (must be a class to define signal)
@@ -109,13 +111,7 @@ func _execute_action_logic(_params: Dictionary = {}) -> DebugActionResult:
 			["debug", "cpp_auth"]
 		)
 		auth.sign_out()
-		# Give it a moment to process
-		for i in range(10):
-			if is_instance_valid(firebase_instance):
-				firebase_instance.process_notifications()
-
-	# Start NSRunLoop pumping for iOS/macOS
-	_start_nsloop_pumping()
+		# task-429: FirebaseService._process() handles CFRunLoop pumping globally
 
 	# Create signal emitter node and attach to scene tree (critical for iOS/macOS)
 	var signal_emitter: SignInEmitter = SignInEmitter.new(self)
@@ -135,22 +131,6 @@ func _execute_action_logic(_params: Dictionary = {}) -> DebugActionResult:
 
 	# Call C++ sign_in_anonymously_async - this uses MessageQueue for thread marshaling
 	auth.sign_in_anonymously_async(_expected_request_id)
-
-	# Create NSRunLoop pump timer - calls process_notifications() repeatedly on iOS/macOS
-	var pump_timer: Timer = Timer.new()
-	pump_timer.wait_time = 0.016  # ~60 FPS
-	pump_timer.one_shot = false  # Repeating
-	pump_timer.autostart = true
-	var pump_callback: Callable = func():
-		if (
-			is_instance_valid(firebase_instance)
-			and firebase_instance.has_method("process_notifications")
-		):
-			firebase_instance.process_notifications()
-	pump_timer.timeout.connect(pump_callback)
-	if main_loop is SceneTree:
-		var scene_tree: SceneTree = main_loop as SceneTree
-		scene_tree.root.add_child(pump_timer)
 
 	# Use SignalAwaiter for timeout (attached to tree, works on iOS/macOS)
 	Log.info("Creating SignalAwaiter...", {}, ["debug", "cpp_auth"])
@@ -196,18 +176,11 @@ func _execute_action_logic(_params: Dictionary = {}) -> DebugActionResult:
 
 	var waited: float = float(Time.get_ticks_msec() - start_time) / 1000.0
 
-	# Cleanup pump timer
-	if is_instance_valid(pump_timer):
-		pump_timer.queue_free()
-
 	# Cleanup emitter and disconnect signal
 	if signal_emitter and is_instance_valid(signal_emitter):
 		if auth.sign_in_completed.is_connected(signal_emitter.handle_firebase_callback):
 			auth.sign_in_completed.disconnect(signal_emitter.handle_firebase_callback)
 		signal_emitter.queue_free()
-
-	# Stop NSRunLoop pumping
-	_stop_nsloop_pumping()
 
 	var duration: int = Time.get_ticks_msec() - start_time
 

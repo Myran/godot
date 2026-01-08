@@ -12,6 +12,12 @@ func _execute_action_logic(_params: Dictionary = {}) -> DebugActionResult:
 	var concurrent_count: int = _params.get("concurrent_count", 4)
 	var test_data: Array[Dictionary] = []
 
+	Log.info(
+		"concurrent_ops test starting",
+		{"concurrent_count": concurrent_count},
+		["debug", "cpp_firebase", "task-429"]
+	)
+
 	# Generate test data using utility functions
 	for i: int in range(concurrent_count):
 		test_data.append(
@@ -25,6 +31,12 @@ func _execute_action_logic(_params: Dictionary = {}) -> DebugActionResult:
 
 	var set_results: Array[Dictionary] = []
 	for data: Dictionary in test_data:
+		# task-429: Log each SET operation start
+		Log.debug(
+			"concurrent_ops: starting SET operation",
+			{"operation_id": data.operation_id, "path": data.path},
+			["debug", "cpp_firebase", "task-429"]
+		)
 		# Use timing helper for each set operation
 		var set_op: Dictionary = await TestUtils.time_operation(
 			"concurrent_set_" + str(data.operation_id),
@@ -54,6 +66,12 @@ func _execute_action_logic(_params: Dictionary = {}) -> DebugActionResult:
 
 	var get_results: Array[Dictionary] = []
 	for data: Dictionary in test_data:
+		# task-429: Log each GET operation start
+		Log.debug(
+			"concurrent_ops: starting GET operation",
+			{"operation_id": data.operation_id, "path": data.path},
+			["debug", "cpp_firebase", "task-429"]
+		)
 		# Use timing helper for each get operation
 		var get_op: Dictionary = await TestUtils.time_operation(
 			"concurrent_get_" + str(data.operation_id),
