@@ -4,6 +4,8 @@ extends CPPAuthDebugAction
 ## Regression test for Apple OAuth sign-in (Task-421).
 ## Validates C++ API surface and error handling without real OAuth credentials.
 ## Tests method existence, signal structure, and error reporting.
+##
+## NOTE (task-429): CFRunLoop pumping is now handled globally by FirebaseService._process()
 
 
 # Signal emitter for Firebase completion (must be a class to define signal)
@@ -85,8 +87,6 @@ func _execute_action_logic(_params: Dictionary = {}) -> DebugActionResult:
 			{}
 		)
 
-	_start_nsloop_pumping()
-
 	var signal_emitter: SignInEmitter = SignInEmitter.new(self)
 	var main_loop: MainLoop = Engine.get_main_loop()
 	if main_loop is SceneTree:
@@ -100,21 +100,6 @@ func _execute_action_logic(_params: Dictionary = {}) -> DebugActionResult:
 		{},
 		["debug", "cpp_auth", "apple"]
 	)
-
-	var pump_timer: Timer = Timer.new()
-	pump_timer.wait_time = 0.016
-	pump_timer.one_shot = false
-	pump_timer.autostart = true
-	var pump_callback: Callable = func():
-		if (
-			is_instance_valid(firebase_instance)
-			and firebase_instance.has_method("process_notifications")
-		):
-			firebase_instance.process_notifications()
-	pump_timer.timeout.connect(pump_callback)
-	if main_loop is SceneTree:
-		var scene_tree: SceneTree = main_loop as SceneTree
-		scene_tree.root.add_child(pump_timer)
 
 	var awaiter: SignalAwaiter.Any = SignalAwaiter.Any.new()
 	var timeout_awaiter: SignalAwaiter.Timeout = SignalAwaiter.Timeout.new(30.0)
@@ -148,15 +133,10 @@ func _execute_action_logic(_params: Dictionary = {}) -> DebugActionResult:
 
 	var waited: float = float(Time.get_ticks_msec() - start_time) / 1000.0
 
-	if is_instance_valid(pump_timer):
-		pump_timer.queue_free()
-
 	if signal_emitter and is_instance_valid(signal_emitter):
 		if auth.sign_in_completed.is_connected(signal_emitter.handle_firebase_callback):
 			auth.sign_in_completed.disconnect(signal_emitter.handle_firebase_callback)
 		signal_emitter.queue_free()
-
-	_stop_nsloop_pumping()
 
 	var duration: int = Time.get_ticks_msec() - start_time
 	var metadata: Dictionary = {

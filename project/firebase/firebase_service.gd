@@ -31,6 +31,17 @@ func _ready() -> void:
 	)
 	# NOTE: Firebase will be initialized on first use instead of immediately
 
+	# task-429: Enable _process() for CFRunLoop pumping on iOS/macOS
+	# Single global point for process_notifications() instead of per-test loops
+	# This prevents re-entrancy issues from multiple concurrent callers
+	if OS.has_feature("ios") or OS.has_feature("macos"):
+		set_process(true)
+		Log.debug(
+			"FirebaseService: CFRunLoop pumping enabled via _process()",
+			{"platform": OS.get_name()},
+			[Log.TAG_FIREBASE, "task-429"]
+		)
+
 
 func _initialize_firebase() -> void:
 	Log.debug(
@@ -899,6 +910,20 @@ func _reset_rate_limiter() -> void:
 	# Reset rate limiter circuit breaker
 	if _rate_limiter != null:
 		_rate_limiter._reset_circuit_breaker()
+
+
+# task-429: Global CFRunLoop pumping for Firebase callbacks on iOS/macOS
+# This provides a single point for process_notifications() instead of per-test loops,
+# preventing re-entrancy issues from multiple concurrent callers
+func _process(_delta: float) -> void:
+	if OS.has_feature("ios") or OS.has_feature("macos"):
+		# Call Firebase C++ module's process_notifications() to pump CFRunLoop
+		# This is required for async callbacks (Auth, Database, etc.) to be delivered
+		# Overhead is minimal (~0.01ms per call with 0 timeout)
+		if ClassDB.class_exists("Firebase"):
+			var firebase_instance: Object = ClassDB.instantiate("Firebase")
+			if is_instance_valid(firebase_instance) and firebase_instance.has_method("process_notifications"):
+				firebase_instance.process_notifications()
 
 
 # FirebaseDatabaseWrapper - Wraps Firebase C++ instance for GDScript

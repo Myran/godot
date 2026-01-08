@@ -36,29 +36,24 @@ func _execute_action_logic(_params: Dictionary = {}) -> DebugActionResult:
 		# Try anonymous sign in first
 		Log.info("Not signed in, attempting anonymous sign in first", {}, ["debug", "cpp_auth"])
 
-		# Start NSRunLoop pumping
-		_start_nsloop_pumping()
-
 		auth.sign_in_anonymously()
 
 		# Wait for sign-in completion (max 15 seconds)
+		# task-429: FirebaseService._process() now handles CFRunLoop pumping globally
 		var max_wait: float = 15.0
 		var waited: float = 0.0
-		var check_interval: float = 0.05
+		var check_interval: float = 0.1  # Slightly longer check interval
 
 		while waited < max_wait:
-			if (
-				is_instance_valid(firebase_instance)
-				and firebase_instance.has_method("process_notifications")
-			):
-				firebase_instance.process_notifications()
-
 			if auth.is_logged_in():
+				Log.info(
+					"auth_get_id_token: sign-in completed",
+					{"waited_seconds": waited},
+					["debug", "cpp_auth", "task-429"]
+				)
 				break
 			await Engine.get_main_loop().create_timer(check_interval).timeout
 			waited += check_interval
-
-		_stop_nsloop_pumping()
 
 		if not auth.is_logged_in():
 			return DebugActionResult.new_failure(
@@ -88,9 +83,6 @@ func _execute_action_logic(_params: Dictionary = {}) -> DebugActionResult:
 	_token_result = {}
 	auth.id_token_result.connect(_on_id_token_result)
 
-	# Start NSRunLoop pumping for token request
-	_start_nsloop_pumping()
-
 	# Request ID token with force refresh
 	# Use incremental request ID (sequential, easier to debug)
 	var request_id: int = _get_next_request_id()
@@ -101,24 +93,23 @@ func _execute_action_logic(_params: Dictionary = {}) -> DebugActionResult:
 	)
 	auth.get_id_token_async(request_id, true)
 
-	# Wait for signal with NSRunLoop pumping (max 15 seconds)
+	# Wait for signal (max 15 seconds)
+	# task-429: FirebaseService._process() now handles CFRunLoop pumping globally
 	var max_wait: float = 15.0
 	var waited: float = 0.0
-	var check_interval: float = 0.05
+	var check_interval: float = 0.1  # Slightly longer check interval
 
 	while waited < max_wait and not _token_received:
-		# Pump NSRunLoop to allow Firebase callbacks to execute
-		if (
-			is_instance_valid(firebase_instance)
-			and firebase_instance.has_method("process_notifications")
-		):
-			firebase_instance.process_notifications()
-
 		await Engine.get_main_loop().create_timer(check_interval).timeout
 		waited += check_interval
 
+	Log.info(
+		"auth_get_id_token: token wait loop ended",
+		{"token_received": _token_received, "waited_seconds": waited},
+		["debug", "cpp_auth", "task-429"]
+	)
+
 	# Cleanup
-	_stop_nsloop_pumping()
 	if auth.id_token_result.is_connected(_on_id_token_result):
 		auth.id_token_result.disconnect(_on_id_token_result)
 

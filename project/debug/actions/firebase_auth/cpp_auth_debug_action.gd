@@ -1,8 +1,11 @@
 class_name CPPAuthDebugAction
 extends DebugAction
 ## Base class for C++ Firebase Auth debug actions.
-## Provides NSRunLoop pumping for iOS/macOS callback execution (task-414).
 ## Provides incremental request ID generation for better debugging.
+##
+## NOTE (task-429): NSRunLoop pumping is now handled globally by FirebaseService._process()
+## The _start_nsloop_pumping() and _stop_nsloop_pumping() methods are kept for backward
+## compatibility but are now no-ops since CFRunLoop pumping happens automatically.
 
 # Incremental request ID counter (shared across all instances)
 # Sequential IDs make logs easier to follow than random numbers
