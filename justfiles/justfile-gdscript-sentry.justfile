@@ -294,6 +294,8 @@ sentry-gdscript-macos-clean:
     @echo "🧹 Cleaning GDScript Sentry macOS build artifacts..."
     @rm -f {{SENTRY_PATH}}/project/addons/sentry/bin/macos/libsentry.macos.*.framework/libsentry.macos.*
     @rm -rf {{SENTRY_PATH}}/project/addons/sentry/bin/macos/dSYMs/libsentry.macos.*.framework.dSYM
+    @rm -rf {{PROJECT_SENTRY_PATH}}/bin/macos/libsentry.dylib
+    @rm -rf {{PROJECT_SENTRY_PATH}}/bin/macos/libsentry.dylib.dSYM
     @echo "✅ GDScript Sentry macOS artifacts cleaned"
 
 sentry-gdscript-windows-clean:
@@ -363,13 +365,19 @@ sentry-sync-macos:
     else \
         echo "⚠️  Debug framework not found in {{SENTRY_ADDON_PATH}}/bin/macos/"; \
     fi
-    @if [ -d "{{SENTRY_ADDON_PATH}}/bin/macos/Sentry.framework" ]; then \
-        echo "📦 Copying native Sentry.framework..."; \
-        rm -rf {{PROJECT_SENTRY_PATH}}/bin/macos/Sentry.framework; \
-        cp -R {{SENTRY_ADDON_PATH}}/bin/macos/Sentry.framework {{PROJECT_SENTRY_PATH}}/bin/macos/; \
-        echo "✅ Copied Sentry.framework"; \
+    @if [ -f "{{SENTRY_ADDON_PATH}}/bin/macos/libsentry.dylib" ]; then \
+        echo "📦 Copying native Sentry dylib..."; \
+        rm -f {{PROJECT_SENTRY_PATH}}/bin/macos/libsentry.dylib; \
+        cp -f {{SENTRY_ADDON_PATH}}/bin/macos/libsentry.dylib {{PROJECT_SENTRY_PATH}}/bin/macos/; \
+        echo "✅ Copied libsentry.dylib"; \
     else \
-        echo "⚠️  Sentry.framework not found in {{SENTRY_ADDON_PATH}}/bin/macos/"; \
+        echo "⚠️  libsentry.dylib not found in {{SENTRY_ADDON_PATH}}/bin/macos/"; \
+    fi
+    @if [ -d "{{SENTRY_ADDON_PATH}}/bin/macos/libsentry.dylib.dSYM" ]; then \
+        echo "📦 Copying native Sentry dSYM..."; \
+        rm -rf {{PROJECT_SENTRY_PATH}}/bin/macos/libsentry.dylib.dSYM; \
+        cp -R {{SENTRY_ADDON_PATH}}/bin/macos/libsentry.dylib.dSYM {{PROJECT_SENTRY_PATH}}/bin/macos/; \
+        echo "✅ Copied libsentry.dylib.dSYM"; \
     fi
     @echo "✅ macOS Sentry sync complete"
 
@@ -407,6 +415,7 @@ sentry-sync-android:
 # Windows builds (via VM - cross-compilation from macOS)
 build-sentry-gdscript-windows force="no":
     @echo "🏗️  Building GDScript Sentry for Windows (via VM)..."
+    just win-vm-sync
     just build-sentry-native-windows-vm-build-all
     just build-sentry-native-windows-vm-package
     @echo "✅ GDScript Sentry Windows builds completed"

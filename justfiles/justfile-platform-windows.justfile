@@ -176,7 +176,7 @@ build-sentry-native-windows-vm-package:
     ls -la project/addons/sentry/bin/windows/x86_64/
 
 # Build and package Sentry from VM (complete workflow)
-build-sentry-native-windows-vm-complete: win-vm-verify build-sentry-native-windows-vm-build-all build-sentry-native-windows-vm-package
+build-sentry-native-windows-vm-complete: win-vm-sync build-sentry-native-windows-vm-build-all build-sentry-native-windows-vm-package
     @echo "✅ Windows Sentry build complete with crashpad backend"
 
 # Sync repository to Windows VM
