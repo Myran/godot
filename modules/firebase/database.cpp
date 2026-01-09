@@ -313,7 +313,9 @@ firebase::database::DatabaseReference FirebaseDatabase::get_reference_to_path(co
 			return firebase::database::DatabaseReference();
 		}
 
-		current_ref = current_ref.Child(key_str.utf8().get_data());
+		// FIX: Store CharString to extend lifetime (prevent dangling pointer, Task-432)
+		CharString key_cs = key_str.utf8();
+		current_ref = current_ref.Child(key_cs.get_data());
 	}
 	return current_ref;
 }
@@ -331,7 +333,9 @@ firebase::database::Query FirebaseDatabase::get_query_from_reference(const fireb
 		if (child_key.is_empty()) {
 			print_error("[RTDB C++] Query Error: orderByChild key cannot be empty.");
 		} else {
-			query = query.OrderByChild(child_key.utf8().get_data());
+			// FIX: Store CharString to extend lifetime (prevent dangling pointer, Task-432)
+			CharString child_key_cs = child_key.utf8();
+			query = query.OrderByChild(child_key_cs.get_data());
 			print_verbose("[RTDB C++] Query: OrderByChild('" + child_key + "')");
 		}
 	} else if (query_params.has("orderByKey")) {
@@ -402,11 +406,16 @@ firebase::database::Query FirebaseDatabase::get_query_from_reference(const fireb
 // --- Asynchronous Methods ---
 
 void FirebaseDatabase::get_value_async(int p_request_id, const Array &keys) {
+	// Task-432: Enhanced validation with diagnostic logging
+	print_line(String("[RTDB C++] get_value_async START - ReqID:") + itos(p_request_id));
+	print_line(String("[RTDB C++] inited=") + (inited.load() ? "true" : "false") + " database_instance=" + (database_instance ? "valid" : "NULL"));
+
 	if (!inited || !database_instance) {
 		print_error("[RTDB C++] GetValue failed: RTDB not initialized.");
 		call_deferred(SNAME("emit_signal"), SNAME("get_value_error"), p_request_id, String(Variant(keys)), "DB_NOT_INITIALIZED", "Database not initialized.");
 		return;
 	}
+
 	firebase::database::DatabaseReference ref = get_reference_to_path(keys);
 	if (!ref.is_valid()) {
 		print_error("[RTDB C++] GetValue failed: Could not get valid reference for path: " + String(Variant(keys)));
@@ -416,6 +425,9 @@ void FirebaseDatabase::get_value_async(int p_request_id, const Array &keys) {
 
 	String path_str_for_logging = String(Variant(keys));
 	print_line(String("[RTDB C++] GetValue ReqID:") + itos(p_request_id) + " Path (GDScript Array): " + path_str_for_logging + " -> URL: " + String(ref.url().c_str()));
+
+	// Task-432: Additional diagnostic check before calling GetValue
+	print_line(String("[RTDB C++] Calling ref.GetValue() - DatabaseReference appears valid"));
 
 	firebase::Future<firebase::database::DataSnapshot> future = ref.GetValue();
 	future.OnCompletion([this, p_request_id, path_str_for_logging](const firebase::Future<firebase::database::DataSnapshot> &result) {
