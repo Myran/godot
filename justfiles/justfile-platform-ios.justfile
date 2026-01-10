@@ -103,12 +103,21 @@ _ios-build-app BUILD_TYPE: pre-build
         exit 1
     fi
 
+    # Validate and install CocoaPods dependencies
+    cd export/ios
+    if [[ ! -d "Pods" ]] || [[ "Podfile" -nt "Podfile.lock" ]] || [[ "Podfile.lock" -nt "Pods/Manifest.lock" ]]; then
+        echo "📦 Installing CocoaPods dependencies..."
+        pod install
+    else
+        echo "✅ CocoaPods dependencies up to date"
+    fi
+
     echo "🔨 Building iOS app ({{BUILD_TYPE}}) with Xcode..."
-    cd export/ios && xcodebuild -workspace {{GAME_NAME}}.xcworkspace \
-                                -scheme {{GAME_NAME}} \
-                                -configuration {{BUILD_TYPE}} \
-                                -destination "generic/platform=iOS" \
-                                -allowProvisioningUpdates
+    xcodebuild -workspace {{GAME_NAME}}.xcworkspace \
+               -scheme {{GAME_NAME}} \
+               -configuration {{BUILD_TYPE}} \
+               -destination "generic/platform=iOS" \
+               -allowProvisioningUpdates
 
 # Build iOS debug app with Xcode (creates .app file)
 build-ios-app-debug: (_ios-build-app "Debug")
