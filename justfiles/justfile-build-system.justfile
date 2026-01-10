@@ -458,7 +458,7 @@ firebase-sdk-setup force="no":
 
     # Download with progress
     if command -v curl &> /dev/null; then
-        curl -L --progress-bar -o "$TEMP_ZIP" "$DOWNLOAD_URL"
+        curl -4 -L --progress-bar -o "$TEMP_ZIP" "$DOWNLOAD_URL"
     elif command -v wget &> /dev/null; then
         wget --progress=bar:force -O "$TEMP_ZIP" "$DOWNLOAD_URL"
     else
