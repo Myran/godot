@@ -193,8 +193,16 @@ win-vm-sync:
     echo "   Commit: ${LOCAL_COMMIT}"
     echo ""
 
-    # Fetch and hard reset to match origin (avoids merge commits)
-    ssh {{WIN_VM_USER}}@{{WIN_VM_HOST}} "cd {{WIN_VM_REPO}} && git fetch origin && git checkout ${LOCAL_BRANCH} && git reset --hard origin/${LOCAL_BRANCH}"
+    # Check if in detached HEAD state (bisect, rebase, etc.)
+    if [ "${LOCAL_BRANCH}" = "HEAD" ]; then
+        echo "⚠️  Detached HEAD detected (bisect/rebase mode)"
+        echo "   Syncing VM to specific commit: ${LOCAL_COMMIT}"
+        # Direct checkout of the commit without fetch/reset
+        ssh {{WIN_VM_USER}}@{{WIN_VM_HOST}} "cd {{WIN_VM_REPO}} && git checkout ${LOCAL_COMMIT}"
+    else
+        # Fetch and hard reset to match origin (avoids merge commits)
+        ssh {{WIN_VM_USER}}@{{WIN_VM_HOST}} "cd {{WIN_VM_REPO}} && git fetch origin && git checkout ${LOCAL_BRANCH} && git reset --hard origin/${LOCAL_BRANCH}"
+    fi
 
     # Sync essential submodules for Windows builds (godot is required, others optional)
     echo "📦 Syncing submodules..."
@@ -211,7 +219,9 @@ win-vm-sync:
         echo "✅ VM synced to ${VM_COMMIT} (matches local)"
     else
         echo "⚠️  WARNING: VM at ${VM_COMMIT}, local at ${LOCAL_COMMIT}"
-        echo "   Push local changes first: git push origin ${LOCAL_BRANCH}"
+        if [ "${LOCAL_BRANCH}" != "HEAD" ]; then
+            echo "   Push local changes first: git push origin ${LOCAL_BRANCH}"
+        fi
         exit 1
     fi
 
