@@ -119,7 +119,11 @@
       "Bash(git tag:*)",
       "Bash(git describe:*)",
       "Bash(git -C extras/sentry-godot show 019c0e1:src/sentry/native/native_sdk.cpp)",
-      "Bash(git ls-tree:*)"
+      "Bash(git ls-tree:*)",
+      "Bash(# Search for .env file in Time Machine backups find \"\"/Volumes/Backups of MyranMBP 1\"\" -name \"\".env\"\" -path \"\"*/gametwo/*\"\")",
+      "Bash(# Try the other backup volume find \"\"/Volumes/Backups of MyranMBP\"\" -name \"\".env\"\" -path \"\"*/gametwo/*\"\")",
+      "Bash(# List backup directories to see what''s available ls -la \"\"/Volumes/Backups of MyranMBP 1/\"\")",
+      "Bash(# Search in the latest backup find \"\"/Volumes/Backups of MyranMBP 1/2026-01-10-214919.previous\"\" -name \"\".env\"\")"
     ],
     "deny": [],
     "ask": [
