@@ -29,10 +29,30 @@ const CPPDatabaseAvailabilityActionClass = preload(
 	"res://debug/actions/firebase_cpp/cpp_database_availability_action.gd"
 )
 
+# Analytics C++ test actions
+const CPPAnalyticsLogEventActionClass = preload(
+	"res://debug/actions/firebase_cpp/cpp_analytics_log_event_action.gd"
+)
+const CPPAnalyticsUserPropertiesActionClass = preload(
+	"res://debug/actions/firebase_cpp/cpp_analytics_user_properties_action.gd"
+)
+const CPPAnalyticsConfigActionClass = preload(
+	"res://debug/actions/firebase_cpp/cpp_analytics_config_action.gd"
+)
+
+# Remote Config C++ test actions
+const CPPRemoteConfigFetchActionClass = preload(
+	"res://debug/actions/firebase_cpp/cpp_remote_config_fetch_action.gd"
+)
+const CPPRemoteConfigGetValuesActionClass = preload(
+	"res://debug/actions/firebase_cpp/cpp_remote_config_get_values_action.gd"
+)
+
 
 static func register_all(registry: DebugActionRegistry) -> void:
 	var helper: RegistrationHelper = RegistrationHelper.new(registry, "C++ Firebase")
 
+	# Database tests
 	helper.register(CPPSetValueTestActionClass.new())
 	helper.register(CPPGetValueTestActionClass.new())
 	helper.register(CPPRemoveValueTestActionClass.new())
@@ -42,5 +62,14 @@ static func register_all(registry: DebugActionRegistry) -> void:
 	helper.register(CPPLargeDataTestActionClass.new())
 	helper.register(CPPTimeoutBehaviorTestActionClass.new())
 	helper.register(CPPDatabaseAvailabilityActionClass.new())
+
+	# Analytics tests
+	helper.register(CPPAnalyticsLogEventActionClass.new())
+	helper.register(CPPAnalyticsUserPropertiesActionClass.new())
+	helper.register(CPPAnalyticsConfigActionClass.new())
+
+	# Remote Config tests
+	helper.register(CPPRemoteConfigFetchActionClass.new())
+	helper.register(CPPRemoteConfigGetValuesActionClass.new())
 
 	helper.complete()
