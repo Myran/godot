@@ -829,6 +829,18 @@ func shutdown_firebase_connections() -> void:
 	if OS.get_name() != "Android" and OS.get_name() != "macOS":
 		return  # Only needed on Android and macOS where resource accumulation occurs
 
+	# CRITICAL FIX (task-429): Stop _process() callback during shutdown
+	# This prevents _process() from creating new Firebase instances and calling
+	# process_notifications() after cleanup_firebase() has set app_ptr = NULL
+	# Without this, Firebase SDK warns "App __FIRAPP_DEFAULT already created"
+	if OS.has_feature("ios") or OS.has_feature("macos"):
+		set_process(false)
+		Log.debug(
+			"FirebaseService: CFRunLoop pumping disabled during shutdown",
+			{"platform": OS.get_name()},
+			[Log.TAG_FIREBASE, "task-429", "shutdown"]
+		)
+
 	Log.info("🔧 Starting Firebase cleanup (" + OS.get_name() + ")", {}, [Log.TAG_FIREBASE])
 
 	# CRITICAL FIX: Flush CallQueue BEFORE cleanup to prevent callbacks during shutdown
