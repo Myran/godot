@@ -167,10 +167,10 @@ windows-native-sentry-release:
     @echo.
     @echo "Copying Sentry GDExtension to addon directory..."
     if not exist {{WIN_PROJECT_PATH}}\addons\sentry\bin\windows\x86_64 mkdir {{WIN_PROJECT_PATH}}\addons\sentry\bin\windows\x86_64
-    copy /Y "{{WIN_SENTRY_PATH}}\project\addons\sentry\bin\windows\x86_64\libsentry.windows.release.x86_64.dll" "{{WIN_PROJECT_PATH}}\addons\sentry\bin\windows\x86_64\"
-    copy /Y "{{WIN_SENTRY_PATH}}\project\addons\sentry\bin\windows\x86_64\libsentry.windows.release.x86_64.pdb" "{{WIN_PROJECT_PATH}}\addons\sentry\bin\windows\x86_64\"
-    copy /Y "{{WIN_SENTRY_PATH}}\modules\sentry-native\install\bin\crashpad_handler.exe" "{{WIN_PROJECT_PATH}}\addons\sentry\bin\windows\x86_64\"
-    if exist "{{WIN_SENTRY_PATH}}\modules\sentry-native\install\bin\crashpad_wer.dll" copy /Y "{{WIN_SENTRY_PATH}}\modules\sentry-native\install\bin\crashpad_wer.dll" "{{WIN_PROJECT_PATH}}\addons\sentry\bin\windows\x86_64\"
+    copy /Y {{WIN_SENTRY_PATH}}\project\addons\sentry\bin\windows\x86_64\libsentry.windows.release.x86_64.dll {{WIN_PROJECT_PATH}}\addons\sentry\bin\windows\x86_64\
+    copy /Y {{WIN_SENTRY_PATH}}\project\addons\sentry\bin\windows\x86_64\libsentry.windows.release.x86_64.pdb {{WIN_PROJECT_PATH}}\addons\sentry\bin\windows\x86_64\
+    copy /Y {{WIN_SENTRY_PATH}}\modules\sentry-native\install\bin\crashpad_handler.exe {{WIN_PROJECT_PATH}}\addons\sentry\bin\windows\x86_64\
+    if exist {{WIN_SENTRY_PATH}}\modules\sentry-native\install\bin\crashpad_wer.dll copy /Y {{WIN_SENTRY_PATH}}\modules\sentry-native\install\bin\crashpad_wer.dll {{WIN_PROJECT_PATH}}\addons\sentry\bin\windows\x86_64\
     @echo [OK] Sentry Release GDExtension built and installed
 
 # Build Sentry GDExtension for Windows (Debug) using SCons + MSVC
@@ -181,8 +181,8 @@ windows-native-sentry-debug:
     @echo.
     @echo "Copying Sentry Debug GDExtension to addon directory..."
     if not exist {{WIN_PROJECT_PATH}}\addons\sentry\bin\windows\x86_64 mkdir {{WIN_PROJECT_PATH}}\addons\sentry\bin\windows\x86_64
-    copy /Y "{{WIN_SENTRY_PATH}}\project\addons\sentry\bin\windows\x86_64\libsentry.windows.debug.x86_64.dll" "{{WIN_PROJECT_PATH}}\addons\sentry\bin\windows\x86_64\"
-    copy /Y "{{WIN_SENTRY_PATH}}\project\addons\sentry\bin\windows\x86_64\libsentry.windows.debug.x86_64.pdb" "{{WIN_PROJECT_PATH}}\addons\sentry\bin\windows\x86_64\"
+    copy /Y {{WIN_SENTRY_PATH}}\project\addons\sentry\bin\windows\x86_64\libsentry.windows.debug.x86_64.dll {{WIN_PROJECT_PATH}}\addons\sentry\bin\windows\x86_64\
+    copy /Y {{WIN_SENTRY_PATH}}\project\addons\sentry\bin\windows\x86_64\libsentry.windows.debug.x86_64.pdb {{WIN_PROJECT_PATH}}\addons\sentry\bin\windows\x86_64\
     @echo [OK] Sentry Debug GDExtension built and installed
 
 # Build both Sentry variants
