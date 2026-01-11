@@ -35,7 +35,7 @@ func _execute_action_logic(_params: Dictionary = {}) -> DebugActionResult:
 	if not auth.is_logged_in():
 		# Try anonymous sign in first
 		Log.info("Not signed in, attempting anonymous sign in first", {}, ["debug", "cpp_auth"])
-	auth.sign_in_anonymously()
+		auth.sign_in_anonymously()
 
 		# Wait for sign-in completion (max 15 seconds)
 		# task-429: FirebaseService._process() now handles CFRunLoop pumping globally
