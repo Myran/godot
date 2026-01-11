@@ -1,0 +1,10 @@
+{
+  "description": "C++ Firebase Analytics comprehensive test suite (Task-XXX)",
+  "actions": [
+    "cpp.firebase.analytics.log_event",
+    "cpp.firebase.analytics.user_properties",
+    "cpp.firebase.analytics.config"
+  ],
+  "platforms": ["android", "ios", "macos", "desktop", "editor"],
+  "tags": ["firebase", "analytics", "cpp", "tdd", "comprehensive"]
+}

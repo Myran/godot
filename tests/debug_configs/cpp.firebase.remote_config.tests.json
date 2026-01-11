@@ -1,0 +1,9 @@
+{
+  "description": "C++ Firebase Remote Config comprehensive test suite (Task-XXX)",
+  "actions": [
+    "cpp.firebase.remote_config.get_values",
+    "cpp.firebase.remote_config.fetch_and_activate"
+  ],
+  "platforms": ["android", "ios", "macos", "desktop", "editor"],
+  "tags": ["firebase", "remote_config", "cpp", "tdd", "comprehensive"]
+}
