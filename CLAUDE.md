@@ -233,7 +233,7 @@ just ship-ios              # Ship to App Store
 just clear-test-android          # Clear Android device config
 just clear-test-ios              # Clear iOS export bundle config
 just clear-test-macos            # Clear macOS user data config
-just clear-test-editor          # Clear desktop/editor config
+just clear-test-editor          # Clear editor test config
 just clear-test-windows-physical # Clear Windows physical machine config
 ```
 

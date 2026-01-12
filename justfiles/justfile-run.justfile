@@ -161,7 +161,7 @@ run-editor: _validate-godot-editor
     #!/usr/bin/env bash
     set -euo pipefail
     
-    echo "Running project on desktop..."
+    echo "Running project in editor..."
     
     # Clear any leftover debug config to ensure clean startup
     USER_DIR="${HOME}/Library/Application Support/Godot/app_userdata/gametwo"
@@ -271,15 +271,15 @@ install-ios-ipad-debug: (_ios-launch-app "ipad" "debug")
 install-ios-ipad-release: (_ios-launch-app "ipad" "release")
 
 # ================================
-# DESKTOP/EDITOR TEST CACHE
+# EDITOR TEST CACHE
 # ================================
 
-# Clear debug_startup_actions.json from desktop/editor
+# Clear debug_startup_actions.json from editor
 # This removes stale test configs that would auto-run on startup
-clear-test-desktop:
+clear-test-editor:
     #!/usr/bin/env bash
     set -euo pipefail
-    echo "🧹 Clearing desktop/editor test configuration..."
+    echo "🧹 Clearing editor test configuration..."
 
     USER_DIR="${HOME}/Library/Application Support/Godot/app_userdata/gametwo"
     CONFIG_FILE="${USER_DIR}/debug_startup_actions.json"
@@ -291,14 +291,11 @@ clear-test-desktop:
         echo "ℹ️  No test config found - already clean"
     fi
 
-    echo "✅ Desktop test config cleared"
+    echo "✅ Editor test config cleared"
     echo "💡 run-editor will now start without debug actions"
 
-# Clear desktop test cache (alias for consistency with other platforms)
-clear-desktop-test-cache: clear-test-desktop
-
-# Alias for editor users
-clear-test-editor: clear-test-desktop
+# Clear editor test cache (alias for consistency with other platforms)
+clear-editor-test-cache: clear-test-editor
 
 # LEVEL 1: Launch existing app in debug mode (1-2 sec, no install/build)  
 run-android:
@@ -321,7 +318,7 @@ run-android:
     sleep 5
     
     # Check for new session ID in Android logs
-    # Note: Android logs come through adb logcat, but for semantic sessions we need the desktop logs
+    # Note: Android logs come through adb logcat, but for semantic sessions we need the editor logs
     STANDARD_LOGS_DIR="$HOME/Library/Application Support/Godot/app_userdata/gametwo/logs"
     PROJECT_LOGS_DIR="./logs"
     # Initialize SESSION_ID only if not already set (prevents unbound variable error)

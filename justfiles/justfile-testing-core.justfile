@@ -74,20 +74,20 @@ _test-setup-editor CONFIG_NAME TEST_TYPE:
     echo "🖥️  Testing target ($TEST_TYPE mode): $CONFIG_NAME"
     echo "=================================================="
 
-# Common desktop test preparation (config validation)
+# Common editor test preparation (config validation)
 _test-prepare-editor CONFIG_NAME:
     #!/usr/bin/env bash
     set -euo pipefail
-    
+
     CONFIG_NAME="{{CONFIG_NAME}}"
-    
-    echo "🧹 Preparing desktop test environment..."
-    
+
+    echo "🧹 Preparing editor test environment..."
+
     # Validate configuration exists
     just _validate-config-exists "$CONFIG_NAME"
     echo ""
 
-# Common desktop Godot editor check
+# Common editor Godot editor check
 _test-check-editor-godot:
     #!/usr/bin/env bash
     set -euo pipefail

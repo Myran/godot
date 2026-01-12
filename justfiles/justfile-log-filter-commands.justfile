@@ -44,14 +44,14 @@ logs-errors TEST_ID PLATFORM="auto":
     if [ "$PLATFORM" = "auto" ]; then
         if [[ "$TEST_ID" == android_* ]]; then
             PLATFORM="android"
-        elif [[ "$TEST_ID" == desktop_* ]]; then
+        elif [[ "$TEST_ID" == editor_* ]]; then
             PLATFORM="editor"
         elif [[ "$TEST_ID" == ios_* ]]; then
             PLATFORM="ios"
         elif [[ "$TEST_ID" == macos_* ]]; then
             PLATFORM="macos"
         else
-            # Default to desktop for backwards compatibility
+            # Default to editor when platform cannot be auto-detected from TEST_ID
             PLATFORM="editor"
         fi
     fi
@@ -236,14 +236,14 @@ logs-search TEST_ID SEARCH_TERM PLATFORM="auto":
     if [ "$PLATFORM" = "auto" ]; then
         if [[ "$TEST_ID" == android_* ]]; then
             PLATFORM="android"
-        elif [[ "$TEST_ID" == desktop_* ]]; then
+        elif [[ "$TEST_ID" == editor_* ]]; then
             PLATFORM="editor"
         elif [[ "$TEST_ID" == ios_* ]]; then
             PLATFORM="ios"
         elif [[ "$TEST_ID" == macos_* ]]; then
             PLATFORM="macos"
         else
-            # Default to desktop for backwards compatibility with logs-text
+            # Default to editor when platform cannot be auto-detected from TEST_ID
             PLATFORM="editor"
         fi
     fi
@@ -333,12 +333,12 @@ logs-search TEST_ID SEARCH_TERM PLATFORM="auto":
 
         *)
             echo "❌ Invalid platform: $PLATFORM"
-            echo "Valid options: auto, android, desktop, ios, macos"
+            echo "Valid options: auto, android, editor, ios, macos"
             echo ""
             echo "Usage:"
             echo "  just logs-search TEST_ID \"term\"          # Auto-detect platform from TEST_ID"
             echo "  just logs-search TEST_ID \"term\" android  # Explicit Android"
-            echo "  just logs-search TEST_ID \"term\" desktop  # Explicit Desktop"
+            echo "  just logs-search TEST_ID \"term\" editor   # Explicit Editor"
             echo "  just logs-search TEST_ID \"term\" ios      # Explicit iOS"
             echo "  just logs-search TEST_ID \"term\" macos    # Explicit macOS"
             exit 1

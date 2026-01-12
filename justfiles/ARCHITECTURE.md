@@ -147,7 +147,7 @@ This document ensures correct recipe selection during development, testing, and 
   - Config deployment to `~/Library/Application Support/Godot/app_userdata/gametwo/`
 - **When to Use**:
   - macOS-specific testing with exported app
-  - Cross-platform validation alongside Android/desktop
+  - Cross-platform validation alongside Android/editor
 
 #### `justfile-build-export-test.justfile`
 - **Purpose**: Unified build-export-test workflows across all platforms
@@ -221,7 +221,7 @@ This document ensures correct recipe selection during development, testing, and 
 - **Purpose**: CI/CD pipeline integration
 - **Critical Recipes**:
   - `ci-validate` 🚨 **MANDATORY before commits**
-  - `ci-validate-desktop` - Desktop platform validation
+  - `ci-validate-editor` - Editor platform validation
   - `ci-validate-android` - Android platform validation
 - **Validation Steps**:
   1. Code formatting (`just format`)

@@ -162,8 +162,8 @@ _fzf-select-config CONTEXT="generic" FILTER="all":
     # Set context-specific prompt and header
     case "$CONTEXT" in
         "editor")
-            prompt="Select desktop test: "
-            header="🖥️  Desktop Testing | ⚙️ Debug Configs | 📝 Test Lists | Use fuzzy search to filter"
+            prompt="Select editor test: "
+            header="🖥️  Editor Testing | ⚙️ Debug Configs | 📝 Test Lists | Use fuzzy search to filter"
             ;;
         "android") 
             prompt="Select test target (manual mode): "
@@ -433,7 +433,7 @@ create-demo-interactive:
         
         # Read the most recent log file
         if [ -n "$LATEST_LOG" ]; then
-            echo "📄 Reading desktop log: $(basename "$LATEST_LOG")"
+            echo "📄 Reading editor log: $(basename "$LATEST_LOG")"
             RECENT_LOGS=$(cat "$LATEST_LOG" 2>/dev/null || echo "")
         fi
     fi
@@ -665,7 +665,7 @@ demo-to-test demo_name:
         echo ""
         echo "🎮 To run the test:"
         echo "   just test-android-target ${DEMO_NAME}-test    # Creates baseline on first run"
-        echo "   just test-editor-target ${DEMO_NAME}-test    # Test on desktop"
+        echo "   just test-editor-target ${DEMO_NAME}-test    # Test on editor"
         echo ""
         echo "🔄 Baseline management:"
         echo "   just test-android-update ${DEMO_NAME}-test   # Update baseline (after changes)"
@@ -761,7 +761,7 @@ demo-to-test-custom demo_name state_type:
 # CROSS-PLATFORM DEMO TESTING
 # ================================
 
-# Test demo on both desktop and Android, compare results
+# Test demo on both editor and Android, compare results
 demo-test-cross-platform demo_name:
     #!/usr/bin/env bash
     set -euo pipefail
@@ -1112,14 +1112,14 @@ _generate-debug-actions-inline OUTPUT_CONFIG SESSION_ID CLEAN_CONFIG_NAME ACTION
         echo "   Using Android logs (logs-last command)"
         SEMANTIC_ACTIONS=$(just logs-latest 2>/dev/null | grep "SEMANTIC_ACTION" | grep "\"session_id\": \"${SESSION_ID}\"" || echo "")
     else
-        # Desktop: get from desktop logs using unified retrieval
+        # Editor: get from editor logs using unified retrieval
         echo "   Using Desktop logs"
         LOG_FILE=$(just _get-editor-log-file 2>/dev/null || echo "")
         if [ -n "$LOG_FILE" ]; then
             echo "   Desktop log file: $(basename "$LOG_FILE")"
             SEMANTIC_ACTIONS=$(grep "SEMANTIC_ACTION" "$LOG_FILE" | grep "\"session_id\": \"${SESSION_ID}\"" || echo "")
         else
-            echo "   ❌ No desktop log file found"
+            echo "   ❌ No editor log file found"
             SEMANTIC_ACTIONS=""
         fi
     fi
@@ -1411,8 +1411,8 @@ _extract-checksums-to-android-config SESSION_ID CONFIG_NAME:
     # Add checksum validation using the existing logic (adapted for Android)
     just _add-checksum-config-to-android-file "$CONFIG_FILE" "$SESSION_ID" "$INITIAL_SEED"
 
-# Extract checksums for Desktop config
-_extract-checksums-to-desktop-config SESSION_ID CONFIG_NAME LOG_FILE:
+# Extract checksums for Editor config
+_extract-checksums-to-editor-config SESSION_ID CONFIG_NAME LOG_FILE:
     #!/usr/bin/env bash
     set -euo pipefail
     
@@ -1421,7 +1421,7 @@ _extract-checksums-to-desktop-config SESSION_ID CONFIG_NAME LOG_FILE:
     LOG_FILE="{{LOG_FILE}}"
     CONFIG_FILE="{{DEBUG_CONFIG_DIR}}/${CONFIG_NAME}.json"
     
-    echo "📸 Extracting checksums from Desktop logs for session: ${SESSION_ID}"
+    echo "📸 Extracting checksums from Editor logs for session: ${SESSION_ID}"
     echo "   Config: ${CONFIG_NAME}"
     echo "   File: ${CONFIG_FILE}"
     echo "   Log: $(basename "$LOG_FILE")"
@@ -1464,7 +1464,7 @@ _extract-checksums-to-desktop-config SESSION_ID CONFIG_NAME LOG_FILE:
     echo "✅ Found ${ACTION_COUNT} semantic actions with checksums"
     
     # Add checksum validation using the existing logic
-    just _add-checksum-config-to-desktop-file "$CONFIG_FILE" "$SESSION_ID" "$INITIAL_SEED" "$LOG_FILE"
+    just _add-checksum-config-to-editor-file "$CONFIG_FILE" "$SESSION_ID" "$INITIAL_SEED" "$LOG_FILE"
 
 # Add checksum config to Android file
 _add-checksum-config-to-android-file CONFIG_FILE SESSION_ID INITIAL_SEED:
@@ -1549,17 +1549,17 @@ _add-checksum-config-to-android-file CONFIG_FILE SESSION_ID INITIAL_SEED:
         exit 1
     fi
 
-# Add checksum config to Desktop file
-_add-checksum-config-to-desktop-file CONFIG_FILE SESSION_ID INITIAL_SEED LOG_FILE:
+# Add checksum config to Editor file
+_add-checksum-config-to-editor-file CONFIG_FILE SESSION_ID INITIAL_SEED LOG_FILE:
     #!/usr/bin/env bash
     set -euo pipefail
-    
+
     CONFIG_FILE="{{CONFIG_FILE}}"
     SESSION_ID="{{SESSION_ID}}"
     INITIAL_SEED="{{INITIAL_SEED}}"
     LOG_FILE="{{LOG_FILE}}"
-    
-    # Get Desktop semantic actions from log file
+
+    # Get Editor semantic actions from log file
     SEMANTIC_ACTIONS=$(grep "SEMANTIC_ACTION" "$LOG_FILE" | grep "\"session_id\": \"${SESSION_ID}\"" || echo "")
     
     if [ -z "$SEMANTIC_ACTIONS" ]; then
@@ -1842,7 +1842,7 @@ replay-generate-editor session_id config_name="":
     
     # Use session ID as config name if not provided
     if [ -z "$CONFIG_NAME" ]; then
-        CONFIG_NAME="replay-desktop-${SESSION_ID}"
+        CONFIG_NAME="replay-editor-${SESSION_ID}"
     fi
     
     # Clean config name for filename
@@ -1857,18 +1857,18 @@ replay-generate-editor session_id config_name="":
     
     echo "1️⃣ Generating base replay configuration from Desktop logs..."
     
-    # Use unified desktop log retrieval
+    # Use unified editor log retrieval
     LOG_FILE=$(just _find-editor-log-with-test-id "${SESSION_ID}" 2>/dev/null || echo "")
     
     if [ -z "$LOG_FILE" ]; then
-        # Fallback to searching for session in latest desktop log
-        echo "📋 Session not found by test ID, searching latest desktop logs..."
+        # Fallback to searching for session in latest editor log
+        echo "📋 Session not found by test ID, searching latest editor logs..."
         LOG_FILE=$(just _get-editor-log-file 2>/dev/null || echo "")
         
         if [ -z "$LOG_FILE" ]; then
-            echo "❌ No desktop log files found"
+            echo "❌ No editor log files found"
             echo ""
-            echo "💡 Make sure you've run a desktop session first:"
+            echo "💡 Make sure you've run an editor session first:"
             echo "   just test-editor development-workflow"
             echo "   just run-editor"
             exit 1
@@ -1876,24 +1876,24 @@ replay-generate-editor session_id config_name="":
         
         # Check if session exists in this log file
         if ! grep -q "\"session_id\": \"${SESSION_ID}\"" "$LOG_FILE"; then
-            echo "❌ Session ${SESSION_ID} not found in desktop logs"
+            echo "❌ Session ${SESSION_ID} not found in editor logs"
             echo ""
-            echo "💡 Available session IDs in recent desktop logs:"
+            echo "💡 Available session IDs in recent editor logs:"
             grep -o '"session_id": "[^"]*"' "$LOG_FILE" 2>/dev/null | sort -u | head -5 || echo "   No session IDs found"
             exit 1
         fi
     fi
     
-    echo "📁 Using desktop log file: $(basename "$LOG_FILE")"
-    echo "📋 Searching for semantic actions in desktop logs..."
-    
-    # Extract semantic actions from desktop logs for the specified session
+    echo "📁 Using editor log file: $(basename "$LOG_FILE")"
+    echo "📋 Searching for semantic actions in editor logs..."
+
+    # Extract semantic actions from editor logs for the specified session
     SEMANTIC_ACTIONS=$(grep "SEMANTIC_ACTION" "$LOG_FILE" | grep "\"session_id\": \"${SESSION_ID}\"" || echo "")
-    
+
     if [ -z "$SEMANTIC_ACTIONS" ]; then
         echo "❌ No semantic actions found for session: ${SESSION_ID}"
         echo ""
-        echo "💡 Available session IDs in desktop logs:"
+        echo "💡 Available session IDs in editor logs:"
         grep -o '"session_id": "[^"]*"' "$LOG_FILE" 2>/dev/null | sort -u | head -5 || echo "   No session IDs found"
         exit 1
     fi
@@ -1907,7 +1907,7 @@ replay-generate-editor session_id config_name="":
     
     echo ""
     echo "2️⃣ Adding automated checksum validation..."
-    just _extract-checksums-to-desktop-config "${SESSION_ID}" "${CLEAN_CONFIG_NAME}" "$LOG_FILE"
+    just _extract-checksums-to-editor-config "${SESSION_ID}" "${CLEAN_CONFIG_NAME}" "$LOG_FILE"
     
     if [ $? -eq 0 ]; then
         echo ""
@@ -1926,47 +1926,47 @@ replay-generate-editor session_id config_name="":
         exit 1
     fi
 
-# Desktop-specific replay generation from most recent session
-replay-generate-from-last-session-desktop config_name:
+# Editor-specific replay generation from most recent session
+replay-generate-from-last-session-editor config_name:
     #!/usr/bin/env bash
     set -euo pipefail
-    
+
     CONFIG_NAME="{{config_name}}"
-    
-    echo "🎬 Creating Desktop replay config from most recent session..."
+
+    echo "🎬 Creating Editor replay config from most recent session..."
     echo "   Config Name: ${CONFIG_NAME}"
     echo ""
+
+    echo "📋 Getting most recent session from Editor logs..."
     
-    echo "📋 Getting most recent session from Desktop logs..."
-    
-    # Use unified desktop log retrieval
+    # Use unified editor log retrieval
     LATEST_LOG=$(just _get-editor-log-file 2>/dev/null || echo "")
     
     if [ -z "$LATEST_LOG" ]; then
-        echo "❌ No desktop log files found"
+        echo "❌ No editor log files found"
         echo ""
-        echo "💡 Make sure you've run a desktop session first:"
+        echo "💡 Make sure you've run an editor session first:"
         echo "   just test-editor development-workflow"
         echo "   just run-editor"
         exit 1
     fi
-    
+
     SESSION_ID=$(grep "SESSION_START" "$LATEST_LOG" 2>/dev/null | tail -1 | grep -o '"session_id": *"[^"]*"' | sed 's/"session_id": *"//' | sed 's/"//' || echo "")
-    
+
     if [ -z "$SESSION_ID" ]; then
-        echo "❌ No recent session found in desktop logs"
+        echo "❌ No recent session found in editor logs"
         echo ""
         echo "💡 Make sure you've run a game session first:"
         echo "   just test-editor development-workflow"
         echo "   just run-editor"
         exit 1
     fi
-    
+
     echo "✅ Found most recent session: ${SESSION_ID}"
     echo ""
-    echo "📝 Generating Desktop replay config with checksum validation..."
-    
-    # Call the Desktop-specific replay generation command
+    echo "📝 Generating Editor replay config with checksum validation..."
+
+    # Call the Editor-specific replay generation command
     just replay-generate-editor "${SESSION_ID}" "${CONFIG_NAME}"
 
 # ================================

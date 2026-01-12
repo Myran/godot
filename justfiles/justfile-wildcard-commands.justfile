@@ -18,14 +18,14 @@ logs-pattern TEST_ID PATTERN PLATFORM="auto":
     if [ "$PLATFORM" = "auto" ]; then
         if [[ "$TEST_ID" == android_* ]]; then
             PLATFORM="android"
-        elif [[ "$TEST_ID" == desktop_* ]]; then
+        elif [[ "$TEST_ID" == editor_* ]]; then
             PLATFORM="editor"
         elif [[ "$TEST_ID" == ios_* ]]; then
             PLATFORM="ios"
         elif [[ "$TEST_ID" == macos_* ]]; then
             PLATFORM="macos"
         else
-            # Default to desktop for backwards compatibility
+            # Default to editor when platform cannot be auto-detected from TEST_ID
             PLATFORM="editor"
         fi
     fi

@@ -5,6 +5,6 @@
     "cpp.firebase.analytics.user_properties",
     "cpp.firebase.analytics.config"
   ],
-  "platforms": ["android", "ios", "macos", "desktop", "editor"],
+  "platforms": ["android", "ios", "macos", "editor"],
   "tags": ["firebase", "analytics", "cpp", "tdd", "comprehensive"]
 }

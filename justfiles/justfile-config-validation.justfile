@@ -82,7 +82,7 @@ validate-semantic-config CONFIG:
             # Unknown actions - require manual review
             *)
                 echo "⚠️  Unknown action (manual review needed): $action"
-                echo "   💡 Verify this action works on both Android and desktop"
+                echo "   💡 Verify this action works on both Android and editor"
                 ;;
         esac
     done <<< "$ACTIONS"
@@ -102,7 +102,7 @@ validate-semantic-config CONFIG:
     
     echo ""
     echo "✅ Config validated as platform-agnostic semantic replay"
-    echo "💡 This config should work identically on Android and desktop"
+    echo "💡 This config should work identically on Android and editor"
 
 # Validate all configs in debug_configs directory
 validate-all-semantic-configs:
@@ -178,13 +178,13 @@ check-action-platform-agnostic ACTION:
         # Platform-agnostic actions
         "game."*|"system.debug.registry_stats"|"system.debug.quit_application"|"system.debug.hide_menu"|"system.debug.replay_complete"|"system.network."*|"rtdb."*|"cpp.firebase."*|"backend.firebase."*)
             echo "✅ Platform-agnostic action"
-            echo "💡 Safe for semantic replays on both Android and desktop"
+            echo "💡 Safe for semantic replays on both Android and editor"
             ;;
         
         # Unknown actions
         *)
             echo "⚠️  Unknown action - manual review needed"
-            echo "💡 Verify this action works on both Android and desktop"
+            echo "💡 Verify this action works on both Android and editor"
             exit 2
             ;;
     esac

@@ -326,7 +326,7 @@ just test
 just test-android-target capture-battle-state
 just capture-gamestate-android "battle-bug"
 
-# 2. Iterate rapidly on desktop (instant iteration)
+# 2. Iterate rapidly on editor (instant iteration)
 just run-editor
 # Load state: Debug menu → Saved States → battle-bug
 # Test fix
@@ -455,7 +455,7 @@ just test-macos-target CONFIG
 just test-android-manual CONFIG
 
 # Editor manual (stays open)
-just test-desktop-manual CONFIG
+just test-editor-manual CONFIG
 
 # macOS manual (stays open)
 just test-macos-manual CONFIG
@@ -474,7 +474,7 @@ just test-all [CONFIG]
 
 # Platform-specific
 just test-android CONFIG
-just test-desktop CONFIG
+just test-editor CONFIG
 
 # Benefits (test-all):
 # - Single unified report
@@ -570,12 +570,12 @@ just run-macos      # Debug actions won't execute
 
 **Handled automatically** by test commands:
 - `just test-android-target` - Clears Android cache
-- `just test-editor-target` - Clears desktop cache
+- `just test-editor-target` - Clears editor cache
 
 **Manual clearing** (if needed):
 ```bash
 just test-prepare-android  # Clear Android cache only
-just test-prepare-desktop  # Clear desktop cache only
+just test-prepare-editor   # Clear editor cache only
 ```
 
 ---
@@ -592,7 +592,7 @@ just test-all [CONFIG]
 
 # Manual testing
 just test-android-manual CONFIG
-just test-desktop-manual CONFIG
+just test-editor-manual CONFIG
 just test-macos-manual CONFIG
 
 # Validation
@@ -629,6 +629,6 @@ just logs-checksum-detail TEST_ID
 - ✅ **Cross-platform consistency** - Test on multiple platforms
 - ✅ **Automated validation** - Use `test-*-target` commands
 - ✅ **Replay-driven debugging** - Capture and reproduce exact scenarios
-- ✅ **Gamestate reproduction** - 90% faster iteration (capture Android, test desktop)
+- ✅ **Gamestate reproduction** - 90% faster iteration (capture Android, test editor)
 
 *This testing infrastructure ensures GameTwo's quality, determinism, and cross-platform consistency.*

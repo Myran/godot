@@ -208,7 +208,7 @@ _get-supported-platforms config_path:
         # Extract the base name from the path (remove directory and .json extension)
         BASE_NAME=$(basename "$CONFIG_PATH" .json)
         if [[ "$BASE_NAME" =~ ^[a-z]+\.[a-z_]+\.[a-z_]+$ ]]; then
-            echo "desktop, android, ios"  # Actions are cross-platform by design
+            echo "editor, android, ios"  # Actions are cross-platform by design
             exit 0
         fi
     fi
@@ -226,7 +226,7 @@ _get-supported-platforms config_path:
         echo "$PLATFORMS"
     else
         # No platforms field - assume cross-platform
-        echo "android, desktop"
+        echo "android, editor"
     fi
 
 # Show platform compatibility for a config
@@ -331,7 +331,7 @@ show-platform-matrix target="":
 # CHECKSUM VALIDATION FUNCTIONS
 # ================================
 
-# Unified checksum extraction function for both desktop and Android logs
+# Unified checksum extraction function for both editor and Android logs
 _extract-checksums-unified log_file test_id:
     #!/usr/bin/env bash
     set -euo pipefail
@@ -357,7 +357,7 @@ _extract-checksums-unified log_file test_id:
     fi
     
     # Unified extraction: Look for SEMANTIC_ACTION logs with pre_action_checksum
-    # This works for both desktop ALogger format and Android logcat format
+    # This works for both editor ALogger format and Android logcat format
     # For Android: get the most recent session to avoid picking up old test checksums
     if [[ "$LOG_FILE" == "logcat" && -n "$TEST_ID" && "$TEST_ID" != "test_id" ]]; then
         # Extract timestamp from test ID (format: config_platform_timestamp)
@@ -556,18 +556,18 @@ _handle-checksum-validation config_path platform test_id:
         "editor")
             USER_DATA_DIR="$HOME/Library/Application Support/Godot/app_userdata/gametwo"
             LOGS_DIR="$USER_DATA_DIR/logs"
-            DESKTOP_LOG_FILE="$LOGS_DIR/desktop_${TEST_ID}.log"
+            EDITOR_LOG_FILE="$LOGS_DIR/editor_${TEST_ID}.log"
 
-            if [[ -f "$DESKTOP_LOG_FILE" ]]; then
-                if just _extract-checksums-unified "$DESKTOP_LOG_FILE" "$TEST_ID" > /tmp/checksum_extraction.log 2>&1; then
+            if [[ -f "$EDITOR_LOG_FILE" ]]; then
+                if just _extract-checksums-unified "$EDITOR_LOG_FILE" "$TEST_ID" > /tmp/checksum_extraction.log 2>&1; then
                     EXTRACTED_CHECKSUMS=$(cat /tmp/checksum_extraction.log)
                 else
-                    echo "⚠️  Checksum extraction failed from desktop test log:"
+                    echo "⚠️  Checksum extraction failed from editor test log:"
                     cat /tmp/checksum_extraction.log | sed 's/^/  /'
                 fi
             else
-                echo "⚠️  Desktop test log file not found: $DESKTOP_LOG_FILE"
-                echo "💡 Expected file name pattern: desktop_\${TEST_ID}.log"
+                echo "⚠️  Editor test log file not found: $EDITOR_LOG_FILE"
+                echo "💡 Expected file name pattern: editor_\${TEST_ID}.log"
             fi
             ;;
         "ios")
@@ -654,7 +654,7 @@ _handle-checksum-validation config_path platform test_id:
         if [[ "$PLATFORM" == "android" ]]; then
             echo "   just test-android $(basename "$CONFIG_PATH" .json)"
         else
-            echo "   just test-desktop $(basename "$CONFIG_PATH" .json)"
+            echo "   just test-editor $(basename "$CONFIG_PATH" .json)"
         fi
         exit 0
     fi
@@ -835,14 +835,14 @@ _extract-logs test_id platform temp_output_file="":
             fi
             ;;
         "editor")
-            echo "🖥️  Extracting desktop logs for test: $TEST_ID"
+            echo "🖥️  Extracting editor logs for test: $TEST_ID"
             
-            # Temp output file is required for desktop logs
+            # Temp output file is required for editor logs
             if [[ -n "$TEMP_OUTPUT_FILE" && -f "$TEMP_OUTPUT_FILE" ]]; then
                 echo "🖥️  Using provided temp output file: $TEMP_OUTPUT_FILE"
                 cp "$TEMP_OUTPUT_FILE" "$LOG_FILE"
             else
-                echo "❌ No temp output file provided for desktop log extraction"
+                echo "❌ No temp output file provided for editor log extraction"
                 echo "💡 Desktop logs must be extracted from test execution output"
                 exit 1
             fi
@@ -1098,8 +1098,8 @@ _extract-logs-android test_id:
 _extract-logs-editor test_id:
     just _extract-logs "{{test_id}}" "editor"
 
-# Desktop log filtering with error-safe suppression (Android-style clean output)
-_filter-desktop-logs-safely temp_file_path:
+# Editor log filtering with error-safe suppression (Android-style clean output)
+_filter-editor-logs-safely temp_file_path:
     #!/usr/bin/env bash
     set -euo pipefail
     
@@ -1560,11 +1560,11 @@ _collect-action-results test_id platform config_name="unknown" session="":
             fi
             ;;
         "editor")
-            # For desktop, the extraction should have happened in _execute-test-editor
+            # For editor, the extraction should have happened in _execute-test-editor
             # Here we just read the file that should already exist
             if [[ -f "$PLATFORM_LOG_FILE" ]]; then
                 LOGS=$(cat "$PLATFORM_LOG_FILE")
-                echo "📄 Read $(echo "$LOGS" | wc -l) lines from desktop log file"
+                echo "📄 Read $(echo "$LOGS" | wc -l) lines from editor log file"
             else
                 echo "⚠️  Desktop log file not found: $PLATFORM_LOG_FILE"
                 echo "💡 Desktop logs should be extracted by _execute-test-editor"
@@ -2917,8 +2917,8 @@ _execute-test-with-analysis config_name platform session="":
             fi
             ;;
         "editor")
-            # Deploy and execute Desktop test
-            just _deploy-config-desktop "$TEMP_CONFIG_PATH" || TEST_RESULT=$?
+            # Deploy and execute Editor test
+            just _deploy-config-editor "$TEMP_CONFIG_PATH" || TEST_RESULT=$?
             if [[ $TEST_RESULT -eq 0 ]]; then
                 just _execute-test-editor "$CONFIG_NAME" || TEST_RESULT=$?
             fi
@@ -3061,20 +3061,20 @@ _stop-app-android:
     just clear-android-test-cache
     echo "✅ Android app stopped"
 
-_stop-app-desktop:
+_stop-app-editor:
     #!/usr/bin/env bash
     set -euo pipefail
-    
-    echo "🛑 Stopping desktop test instances (preserving editor)..."
-    
+
+    echo "🛑 Stopping editor test instances (preserving editor)..."
+
     # Only kill test processes (--test-mode), preserve editor processes (--editor)
     # This prevents terminating the editor when running tests
     pkill -f "{{GODOT_EXECUTABLE}}.*{{PROJECT_PATH}}.*--test-mode" 2>/dev/null || true
-    
+
     # Also kill any headless instances that might be running tests
     pkill -f "{{GODOT_EXECUTABLE}}.*{{PROJECT_PATH}}.*--headless" 2>/dev/null || true
-    
-    echo "✅ Desktop test instances stopped (editor preserved)"
+
+    echo "✅ Editor test instances stopped (editor preserved)"
 
 _stop-app-macos:
     #!/usr/bin/env bash
@@ -3132,34 +3132,34 @@ _deploy-config-android temp_config_path:
     just config-push-android "$TEMP_CONFIG_NAME"
     echo "✅ Configuration deployed successfully - app stopped and ready for fresh launch"
 
-_deploy-config-desktop temp_config_path:
+_deploy-config-editor temp_config_path:
     #!/usr/bin/env bash
     set -euo pipefail
-    
+
     TEMP_CONFIG_PATH="{{temp_config_path}}"
-    
-    echo "🖥️  Deploying configuration to desktop..."
-    
-    # Stop any running desktop instances for consistent state
-    just _stop-app-desktop
-    
-    # Ensure logs directory exists for desktop
+
+    echo "🖥️  Deploying configuration to editor..."
+
+    # Stop any running editor instances for consistent state
+    just _stop-app-editor
+
+    # Ensure logs directory exists for editor
     USER_DATA_DIR="$HOME/Library/Application Support/Godot/app_userdata/gametwo"
     LOGS_DIR="$USER_DATA_DIR/logs"
     mkdir -p "$LOGS_DIR"
-    
-    echo "📂 Desktop logs will be saved to: $LOGS_DIR"
-    
-    # Copy config to the expected location for desktop startup
+
+    echo "📂 Editor logs will be saved to: $LOGS_DIR"
+
+    # Copy config to the expected location for editor startup
     STARTUP_CONFIG="$USER_DATA_DIR/debug_startup_actions.json"
-    
+
     # Remove old config file if it exists to prevent stale data
     if [ -f "$STARTUP_CONFIG" ]; then
         echo "🧹 Removing old config file: $STARTUP_CONFIG"
         rm "$STARTUP_CONFIG"
     fi
-    
-    echo "📋 Copying config for desktop startup..."
+
+    echo "📋 Copying config for editor startup..."
     cp "$TEMP_CONFIG_PATH" "$STARTUP_CONFIG"
     
     # Verify the copy was successful
@@ -3181,7 +3181,7 @@ _deploy-config-macos temp_config_path:
     # Stop any running macOS exported app instances for consistent state
     just _stop-app-macos
 
-    # macOS exported app uses the same app_userdata location as desktop
+    # macOS exported app uses the same app_userdata location as editor
     USER_DATA_DIR="$HOME/Library/Application Support/Godot/app_userdata/gametwo"
     LOGS_DIR="$USER_DATA_DIR/logs"
     mkdir -p "$LOGS_DIR"
@@ -3502,15 +3502,15 @@ _execute-test-editor config_name:
 
     CONFIG_NAME="{{config_name}}"
 
-    echo "🖥️  Starting desktop test execution..."
+    echo "🖥️  Starting editor test execution..."
 
-    # Configurable timeout for desktop tests (default: 120 seconds)
+    # Configurable timeout for editor tests (default: 120 seconds)
     # Can be overridden via environment variable DESKTOP_TEST_MAX_TIMEOUT
     MAX_TIMEOUT="${DESKTOP_TEST_MAX_TIMEOUT:-120}"
 
-    # Run desktop Godot with debug actions (automated mode with quit)
+    # Run editor Godot with debug actions (automated mode with quit)
     # CRITICAL: --test-mode flag enables debug coordinator (without it, debug actions are skipped)
-    echo "🚀 Starting desktop test in automated mode with --test-mode flag (timeout: ${MAX_TIMEOUT}s)..."
+    echo "🚀 Starting editor test in automated mode with --test-mode flag (timeout: ${MAX_TIMEOUT}s)..."
 
     echo ""
 
@@ -3524,7 +3524,7 @@ _execute-test-editor config_name:
         TEST_EXIT_CODE=$?
     } > "$TEMP_OUTPUT" || TEST_EXIT_CODE=$?
     
-    # Show minimal, clean output for desktop testing
+    # Show minimal, clean output for editor testing
     echo "📊 Desktop Test Execution Summary"
     echo "================================="
     echo ""
@@ -3571,8 +3571,8 @@ _execute-test-editor config_name:
         echo ""
         echo "❌ Desktop test timed out after ${MAX_TIMEOUT} seconds"
         # Extract logs before cleanup on timeout
-        echo "📄 Extracting desktop logs for analysis..."
-        just _extract-logs "$TEST_ID" "editor" "$TEMP_OUTPUT" || echo "⚠️  Failed to extract desktop logs"
+        echo "📄 Extracting editor logs for analysis..."
+        just _extract-logs "$TEST_ID" "editor" "$TEMP_OUTPUT" || echo "⚠️  Failed to extract editor logs"
         rm -f "$TEMP_OUTPUT"
         exit 1
     elif [[ ${TEST_EXIT_CODE:-0} -ne 0 ]]; then
@@ -3591,8 +3591,8 @@ _execute-test-editor config_name:
             echo "❌ CRASH DETECTED during test execution!"
             echo "🔍 Crash indicators found in output:"
             grep -E "$CRASH_PATTERNS" "$TEMP_OUTPUT" | head -5 | sed 's/^/   /'
-            echo "📄 Extracting desktop logs for analysis..."
-            just _extract-logs "$TEST_ID" "editor" "$TEMP_OUTPUT" || echo "⚠️  Failed to extract desktop logs"
+            echo "📄 Extracting editor logs for analysis..."
+            just _extract-logs "$TEST_ID" "editor" "$TEMP_OUTPUT" || echo "⚠️  Failed to extract editor logs"
             rm -f "$TEMP_OUTPUT"
             echo ""
             echo "❌ Desktop test FAILED due to crash"
@@ -3602,8 +3602,8 @@ _execute-test-editor config_name:
             echo "✅ Test logically successful despite Godot exit code ${TEST_EXIT_CODE}"
             echo "💡 All actions completed successfully with proper completion signals"
             # Extract logs before exiting successfully
-            echo "📄 Extracting desktop logs for analysis..."
-            just _extract-logs "$TEST_ID" "editor" "$TEMP_OUTPUT" || echo "⚠️  Failed to extract desktop logs"
+            echo "📄 Extracting editor logs for analysis..."
+            just _extract-logs "$TEST_ID" "editor" "$TEMP_OUTPUT" || echo "⚠️  Failed to extract editor logs"
             rm -f "$TEMP_OUTPUT"
             echo ""
             echo "✅ Desktop test execution completed"
@@ -3612,8 +3612,8 @@ _execute-test-editor config_name:
             echo ""
             echo "⚠️  Desktop test completed with exit code ${TEST_EXIT_CODE}"
             # Extract logs before cleanup on failure
-            echo "📄 Extracting desktop logs for analysis..."
-            just _extract-logs "$TEST_ID" "editor" "$TEMP_OUTPUT" || echo "⚠️  Failed to extract desktop logs"
+            echo "📄 Extracting editor logs for analysis..."
+            just _extract-logs "$TEST_ID" "editor" "$TEMP_OUTPUT" || echo "⚠️  Failed to extract editor logs"
             rm -f "$TEMP_OUTPUT"
             if [[ ${TEST_EXIT_CODE} -ne 0 ]]; then
                 exit ${TEST_EXIT_CODE}
@@ -3621,15 +3621,15 @@ _execute-test-editor config_name:
         fi
     fi
     
-    # Extract and save desktop logs using unified function before cleanup (for successful exit path)
-    echo "📄 Extracting desktop logs for analysis..."
-    just _extract-logs "$TEST_ID" "editor" "$TEMP_OUTPUT" || echo "⚠️  Failed to extract desktop logs"
-    
+    # Extract and save editor logs using unified function before cleanup (for successful exit path)
+    echo "📄 Extracting editor logs for analysis..."
+    just _extract-logs "$TEST_ID" "editor" "$TEMP_OUTPUT" || echo "⚠️  Failed to extract editor logs"
+
     # Cleanup temp file
     rm -f "$TEMP_OUTPUT"
-    
+
     echo ""
-    echo "✅ Desktop test execution completed"
+    echo "✅ Editor test execution completed"
 
 _execute-test-macos config_name:
     #!/usr/bin/env bash
@@ -4061,20 +4061,20 @@ test-editor-manual config_name:
     
     # Create temporary config with auto_quit=false for manual mode
     echo "🖥️  Creating temporary config with auto_quit=false for manual mode..."
-    TEMP_CONFIG_NAME="${CONFIG_NAME}_desktop_manual"
+    TEMP_CONFIG_NAME="${CONFIG_NAME}_editor_manual"
     TEMP_CONFIG_PATH="{{DEBUG_CONFIG_DIR}}/${TEMP_CONFIG_NAME}.json"
     just _inject-auto-quit-metadata "$CONFIG_PATH" "$TEMP_CONFIG_PATH" "false"
     
-    # Deploy config to desktop (this stops any running instances)
-    echo "🖥️  Deploying configuration to desktop..."
-    just _deploy-config-desktop "$TEMP_CONFIG_PATH"
+    # Deploy config to editor (this stops any running instances)
+    echo "🖥️  Deploying configuration to editor..."
+    just _deploy-config-editor "$TEMP_CONFIG_PATH"
     rm -f "$TEMP_CONFIG_PATH"
-    
-    # Start desktop app in manual mode with --test-mode flag (reads debug config but doesn't quit due to auto_quit: false)
-    echo "🚀 Starting desktop app in manual mode with --test-mode flag..."
+
+    # Start editor app in manual mode with --test-mode flag (reads debug config but doesn't quit due to auto_quit: false)
+    echo "🚀 Starting editor app in manual mode with --test-mode flag..."
     ./editor/{{GODOT_EXECUTABLE}} --path {{PROJECT_PATH}} --test-mode &
-    
-    echo "✅ Desktop test started in manual mode (app will stay open for verification)"
+
+    echo "✅ Editor test started in manual mode (app will stay open for verification)"
 
 # Enhanced version of test-editor-target that includes automatic error analysis  
 test-editor-target config_name="":
@@ -4692,51 +4692,51 @@ _test-editor-target-original config_name:
         exit 1
     fi
     
-    echo "🖥️  Running desktop test: {{config_name}} (automated mode - quits automatically)"
+    echo "🖥️  Running editor test: {{config_name}} (automated mode - quits automatically)"
     echo "   Config: $CONFIG_FILE"
     echo ""
-    
-    # Ensure logs directory exists for desktop
+
+    # Ensure logs directory exists for editor
     USER_DATA_DIR="$HOME/Library/Application Support/Godot/app_userdata/gametwo"
     LOGS_DIR="$USER_DATA_DIR/logs"
     mkdir -p "$LOGS_DIR"
-    
-    echo "📂 Desktop logs will be saved to: $LOGS_DIR"
-    
-    # Copy config to the expected location for desktop startup (user directory)
+
+    echo "📂 Editor logs will be saved to: $LOGS_DIR"
+
+    # Copy config to the expected location for editor startup (user directory)
     USER_DIR="${HOME}/Library/Application Support/Godot/app_userdata/gametwo"
     mkdir -p "$USER_DIR"
     STARTUP_CONFIG="$USER_DIR/debug_startup_actions.json"
-    
+
     # Remove old config file if it exists to prevent stale data
     if [ -f "$STARTUP_CONFIG" ]; then
         echo "🧹 Removing old config file: $STARTUP_CONFIG"
         rm "$STARTUP_CONFIG"
     fi
-    
-    echo "📋 Injecting auto_quit metadata and copying config for desktop startup: $STARTUP_CONFIG"
+
+    echo "📋 Injecting auto_quit metadata and copying config for editor startup: $STARTUP_CONFIG"
     just _inject-auto-quit-metadata "$CONFIG_FILE" "$STARTUP_CONFIG" "true"
-    
+
     # Verify the copy was successful
     if [ ! -f "$STARTUP_CONFIG" ]; then
         echo "❌ Failed to create config file: $STARTUP_CONFIG"
         exit 1
     fi
-    
+
     # Verify the file has content
     if [ ! -s "$STARTUP_CONFIG" ]; then
         echo "❌ Created config file is empty: $STARTUP_CONFIG"
         exit 1
     fi
-    
+
     echo "✅ Config file created with auto_quit=true ($(wc -c < "$STARTUP_CONFIG") bytes)"
-    
-    # Run desktop Godot with debug actions (automated mode with quit)
+
+    # Run editor Godot with debug actions (automated mode with quit)
     # CRITICAL: --test-mode flag enables debug coordinator (without it, debug actions are skipped)
-    echo "🚀 Starting desktop test in automated mode with --test-mode flag..."
+    echo "🚀 Starting editor test in automated mode with --test-mode flag..."
     ./editor/{{GODOT_EXECUTABLE}} --path {{PROJECT_PATH}} --test-mode --minimized \
-        && echo "✅ Desktop test completed successfully" \
-        || echo "⚠️  Desktop test completed with exit code $?"
+        && echo "✅ Editor test completed successfully" \
+        || echo "⚠️  Editor test completed with exit code $?"
     
     echo ""
     
@@ -5495,7 +5495,7 @@ _get-all-platforms:
     
     # Fallback to known platforms if auto-discovery fails
     if [[ -z "$PLATFORMS" ]]; then
-        PLATFORMS="android desktop"
+        PLATFORMS="android editor"
     fi
     
     echo "$PLATFORMS"

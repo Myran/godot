@@ -24,7 +24,7 @@ test-gamestate-cycle:
     echo ""
     echo "🎯 Step 2: Extract gamestate using command line tool"
     echo "===================================================="
-    just capture-gamestate-desktop "$TEST_NAME"
+    just capture-gamestate-editor "$TEST_NAME"
     
     if [ $? -ne 0 ]; then
         echo "❌ Extract step failed"
@@ -71,7 +71,7 @@ test-gamestate-cycle:
     echo "============================================="
     
     # Get the latest test ID
-    LATEST_TEST_ID=$(ls -t /Users/mattiasmyhrman/Library/Application\ Support/Godot/app_userdata/gametwo/logs/desktop_gamestate-load-user-workflow-test_desktop_*.log | head -1 | xargs basename | sed 's/desktop_//' | sed 's/.log$//')
+    LATEST_TEST_ID=$(ls -t /Users/mattiasmyhrman/Library/Application\ Support/Godot/app_userdata/gametwo/logs/editor_gamestate-load-user-workflow-test_editor_*.log | head -1 | xargs basename | sed 's/editor_//' | sed 's/.log$//')
     
     echo "📄 Checking restoration logs for: $LATEST_TEST_ID"
     
@@ -137,7 +137,7 @@ test-gamestate-quick:
     # Extract gamestate
     echo "2. Extracting gamestate..."
     TEST_NAME="quick-$(date +%s)"
-    just capture-gamestate-desktop "$TEST_NAME" > /tmp/extract_result.log 2>&1
+    just capture-gamestate-editor "$TEST_NAME" > /tmp/extract_result.log 2>&1
     
     if grep -q "✅ Gamestate saved successfully" /tmp/extract_result.log; then
         echo "✅ Extract successful"

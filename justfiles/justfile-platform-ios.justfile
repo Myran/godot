@@ -1199,14 +1199,14 @@ clean-godot-logs-by-age days="7":
             echo "  ℹ️  No old Android logs to clean"
         fi
 
-        echo "🖥️  Cleaning Desktop logs..."
-        DESKTOP_FILES_DELETED=$(find "$GODOT_LOG_DIR" -name "desktop_*.log" -mtime +${DAYS} -print -delete 2>/dev/null | wc -l)
-        FILES_DELETED=$((FILES_DELETED + DESKTOP_FILES_DELETED))
+        echo "🖥️  Cleaning Editor logs..."
+        EDITOR_FILES_DELETED=$(find "$GODOT_LOG_DIR" -name "editor_*.log" -mtime +${DAYS} -print -delete 2>/dev/null | wc -l)
+        FILES_DELETED=$((FILES_DELETED + EDITOR_FILES_DELETED))
 
-        if [[ $DESKTOP_FILES_DELETED -gt 0 ]]; then
-            echo "  🗑️  Deleted $DESKTOP_FILES_DELETED Desktop log files"
+        if [[ $EDITOR_FILES_DELETED -gt 0 ]]; then
+            echo "  🗑️  Deleted $EDITOR_FILES_DELETED Editor log files"
         else
-            echo "  ℹ️  No old Desktop logs to clean"
+            echo "  ℹ️  No old Editor logs to clean"
         fi
 
         echo "📊 Cleaning test action results..."
@@ -1224,7 +1224,7 @@ clean-godot-logs-by-age days="7":
 
     # Clean temporary Godot logs from /tmp
     echo "🗂️  Cleaning temporary Godot logs..."
-    TMP_FILES_DELETED=$(find /tmp -name "*ios*.log" -o -name "*android*.log" -o -name "*desktop*.log" -mtime +${DAYS} -print -delete 2>/dev/null | wc -l)
+    TMP_FILES_DELETED=$(find /tmp -name "*ios*.log" -o -name "*android*.log" -o -name "*editor*.log" -mtime +${DAYS} -print -delete 2>/dev/null | wc -l)
     TMP_JSON_DELETED=$(find /tmp -name "test_action_results_*.json" -mtime +${DAYS} -print -delete 2>/dev/null | wc -l)
     TMP_TOTAL=$((TMP_FILES_DELETED + TMP_JSON_DELETED))
     FILES_DELETED=$((FILES_DELETED + TMP_TOTAL))
@@ -1257,15 +1257,15 @@ clean-godot-logs:
         ANDROID_FILES_DELETED=$(find "$GODOT_LOG_DIR" -name "android_*.log" -print -delete 2>/dev/null | wc -l)
         FILES_DELETED=$((FILES_DELETED + ANDROID_FILES_DELETED))
 
-        echo "🖥️  Removing all Desktop logs..."
-        DESKTOP_FILES_DELETED=$(find "$GODOT_LOG_DIR" -name "desktop_*.log" -print -delete 2>/dev/null | wc -l)
-        FILES_DELETED=$((FILES_DELETED + DESKTOP_FILES_DELETED))
+        echo "🖥️  Removing all Editor logs..."
+        EDITOR_FILES_DELETED=$(find "$GODOT_LOG_DIR" -name "editor_*.log" -print -delete 2>/dev/null | wc -l)
+        FILES_DELETED=$((FILES_DELETED + EDITOR_FILES_DELETED))
 
         echo "📊 Removing all test action results..."
         ACTION_FILES_DELETED=$(find "$GODOT_LOG_DIR" -name "test_action_results_*.json" -print -delete 2>/dev/null | wc -l)
         FILES_DELETED=$((FILES_DELETED + ACTION_FILES_DELETED))
 
-        PLATFORM_TOTAL=$((IOS_FILES_DELETED + ANDROID_FILES_DELETED + DESKTOP_FILES_DELETED + ACTION_FILES_DELETED))
+        PLATFORM_TOTAL=$((IOS_FILES_DELETED + ANDROID_FILES_DELETED + EDITOR_FILES_DELETED + ACTION_FILES_DELETED))
         echo "  🗑️  Deleted $PLATFORM_TOTAL Godot log files from app directory"
     else
         echo "ℹ️  Godot log directory not found: $GODOT_LOG_DIR"
@@ -1273,7 +1273,7 @@ clean-godot-logs:
 
     # Clean all temporary Godot logs
     echo "🗂️  Removing all temporary Godot logs..."
-    TMP_FILES_DELETED=$(find /tmp -name "*ios*.log" -o -name "*android*.log" -o -name "*desktop*.log" -print -delete 2>/dev/null | wc -l)
+    TMP_FILES_DELETED=$(find /tmp -name "*ios*.log" -o -name "*android*.log" -o -name "*editor*.log" -print -delete 2>/dev/null | wc -l)
     TMP_JSON_DELETED=$(find /tmp -name "test_action_results_*.json" -print -delete 2>/dev/null | wc -l)
     TMP_TOTAL=$((TMP_FILES_DELETED + TMP_JSON_DELETED))
     FILES_DELETED=$((FILES_DELETED + TMP_TOTAL))

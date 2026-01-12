@@ -557,7 +557,7 @@ just show-warnings         # GDScript warnings
 
 **Testing:**
 ```bash
-just test-desktop-target CONFIG   # Desktop testing
+just test-editor-target CONFIG    # Editor testing
 just test-android-target CONFIG   # Android testing
 just run-editor-debug [verbose]  # Debug mode with leak detection
 ```

@@ -31,7 +31,7 @@ Complete reference for GameTwo justfile commands, patterns, and workflows.
 # Card/Balance Changes
 just test-android-update battle-animated      # After card stat changes
 just test-android-update battle-logic-only    # After ability changes
-just test-desktop-update battle-animated       # Cross-platform consistency
+just test-editor-update battle-animated       # Cross-platform consistency
 
 # System Changes
 just test-android-update firebase-backend-layer  # After Firebase changes
@@ -106,7 +106,7 @@ just ship-ios                              # Ship to App Store
 just clear-test-android                    # Clear Android device config
 just clear-test-ios                        # Clear iOS export bundle config
 just clear-test-macos                      # Clear macOS user data config
-just clear-test-desktop                    # Clear desktop/editor config
+just clear-test-editor                    # Clear editor test config
 just clear-test-windows-physical           # Clear Windows physical machine config
 
 # Command Logging (Long-Running)
@@ -334,7 +334,7 @@ just log-run-silent test-android-target CONFIG  # Automated testing
 ```
 
 **Usage:**
-- `just test-editor-target my-test` - Runs configs + desktop commands
+- `just test-editor-target my-test` - Runs configs + editor commands
 - `just test-android-target my-test` - Runs configs + android commands
 - Platform filtering: Only compatible commands execute
 - Context inheritance: Commands receive TEST_ID and session data

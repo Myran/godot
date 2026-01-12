@@ -181,15 +181,15 @@ _place-gamestate-for-loading PLATFORM GAMESTATE_FILE:
     else
         # Desktop: Copy to local USER_DATA_DIR immediately
         cp "{{GAMESTATE_FILE}}" "{{USER_DATA_DIR}}/pending_gamestate_load.json"
-        echo "✅ Gamestate copied to desktop location"
+        echo "✅ Gamestate copied to editor location"
     fi
 
 
 # Shared log source functions for DRY compliance
-_get-desktop-logs:
+_get-editor-logs:
     #!/usr/bin/env bash
     set -euo pipefail
-    just logs-latest desktop 2>/dev/null || echo ""
+    just logs-latest editor 2>/dev/null || echo ""
 
 _get-android-logs:
     #!/usr/bin/env bash
@@ -212,7 +212,7 @@ _capture-from-logs SEARCH_PATTERN FILE_PREFIX LOG_SOURCE_CMD NAME:
     # Get logs from specified source
     echo "1️⃣ Searching for {{SEARCH_PATTERN}} in logs..."
 
-    # Get logs and strip ANSI color codes (desktop logs contain color sequences)
+    # Get logs and strip ANSI color codes (editor logs contain color sequences)
     # Using $'...' syntax for proper escape sequence handling
     LOG_CONTENT=$(just {{LOG_SOURCE_CMD}} | sed $'s/\x1b\[[0-9;]*m//g' || echo "")
     CAPTURE_OUTPUT=$(echo "$LOG_CONTENT" | grep "{{SEARCH_PATTERN}}" || echo "")
@@ -221,7 +221,7 @@ _capture-from-logs SEARCH_PATTERN FILE_PREFIX LOG_SOURCE_CMD NAME:
         echo "❌ No {{SEARCH_PATTERN}} found in recent logs"
         echo ""
         echo "💡 To capture:"
-        if [ "{{LOG_SOURCE_CMD}}" = "_get-desktop-logs" ]; then
+        if [ "{{LOG_SOURCE_CMD}}" = "_get-editor-logs" ]; then
             echo "   1. Start game: just run-editor"
             echo "   2. Open debug menu (press D key)"
             if [ "{{SEARCH_PATTERN}}" = "DEBUG_GAMESTATE_CAPTURE" ]; then
@@ -305,13 +305,13 @@ _capture-from-logs SEARCH_PATTERN FILE_PREFIX LOG_SOURCE_CMD NAME:
         exit 1
     fi
 
-# Extract captured gamestate from desktop logs and create debug save file
+# Extract captured gamestate from editor logs and create debug save file
 capture-gamestate-editor NAME:
     #!/usr/bin/env bash
     set -euo pipefail
     
     # Use shared capture infrastructure
-    just _capture-from-logs "DEBUG_GAMESTATE_CAPTURE" "game-" "_get-desktop-logs" "{{NAME}}"
+    just _capture-from-logs "DEBUG_GAMESTATE_CAPTURE" "game-" "_get-editor-logs" "{{NAME}}"
     
     # Add gamestate-specific post-processing
     SAVED_STATES_DIR="{{SAVED_STATES_DIR}}"
@@ -329,7 +329,7 @@ capture-gamestate-editor NAME:
         echo "🔄 Integration with existing recording system:"
         echo "   • Load this state and perform actions"
         echo "   • Exit game to get NEW session ID (don't use the captured one)"
-        echo "   • Generate replay config: just replay-generate-desktop NEW_SESSION_ID replay-from-{{NAME}}"
+        echo "   • Generate replay config: just replay-generate-editor NEW_SESSION_ID replay-from-{{NAME}}"
         echo ""
         echo "💡 The captured session ID ($SESSION_ID) is from when this state was originally saved."
         echo "   After loading and performing new actions, you'll get a fresh session ID for replay generation."
@@ -425,7 +425,7 @@ _capture-from-android-logs SEARCH_PATTERN FILE_PREFIX NAME:
             echo "   Large gamestate JSON gets truncated by Android logcat"
             echo ""
             echo "💡 Recommended Solutions:"
-            echo "   1. 🥇 Use desktop platform for gamestate captures"
+            echo "   1. 🥇 Use editor platform for gamestate captures"
             echo "   2. Capture simpler gamestates on Android"
             echo "   3. Use Android captures only for small test scenarios"
         fi
@@ -469,7 +469,7 @@ capture-gamestate-android NAME:
         echo "📏 Size: ${FILE_SIZE} bytes"
         echo ""
         echo "🎮 Next steps:"
-        echo "   1. Start test: just test-android-manual CONFIG (or desktop: just run-editor)"
+        echo "   1. Start test: just test-android-manual CONFIG (or editor: just run-editor)"
         echo "   2. Open debug menu"
         echo "   3. Navigate to 'Saved States'"
         echo "   4. Click 'Load: {{NAME}}'"
@@ -551,7 +551,7 @@ help-gamestate:
     @echo "  1. just run-editor                       # Start game"
     @echo "  2. Debug menu → 'Save State'              # Capture state during gameplay"  
     @echo "  3. Exit game"
-    @echo "  4. just capture-gamestate-editor NAME    # Extract from desktop logs → JSON file"
+    @echo "  4. just capture-gamestate-editor NAME    # Extract from editor logs → JSON file"
     @echo "  5. just run-editor                       # Start again"
     @echo "  6. Debug menu → 'Saved States'            # Navigate to saved states"
     @echo "  7. Click 'Load: NAME'                     # Load as recording starting point"
@@ -575,12 +575,12 @@ help-gamestate:
     @echo ""
     @echo "🧪 Save/Load Cycle Testing:"
     @echo "  just test-save-load-cycle-editor      # Standard test: create → save → load → compare"
-    @echo "  just test-save-load-cycle-with-state-desktop STATE_NAME  # Enhanced test: load STATE → save → load → compare"
+    @echo "  just test-save-load-cycle-with-state-editor STATE_NAME  # Enhanced test: load STATE → save → load → compare"
     @echo "  just test-save-load-cycle-android       # Android: standard test: create → save → load → compare"
     @echo "  just test-save-load-cycle-with-state-android STATE_NAME  # Android: enhanced test: load STATE → save → load → compare"
     @echo ""
     @echo "🚀 Test List Integration (NEW):"
-    @echo "  just test-save-load-cycle-with-test-capture-50-desktop   # Wrapper for test list integration"
+    @echo "  just test-save-load-cycle-with-test-capture-50-editor   # Wrapper for test list integration"
     @echo "  just test-save-load-cycle-with-test-capture-50-android   # Wrapper for test list integration"
     @echo "  just test-editor-target gamestate-system-validation     # Run gamestate validation via test list"
     @echo "  just test-android-target gamestate-system-validation     # Run gamestate validation via test list"
@@ -661,8 +661,8 @@ gamestate-status:
     echo ""
     echo "🔍 Recent gamestate captures in logs:"
     
-    # Use existing logs-desktop-last command to search for captures
-    CAPTURE_OUTPUT=$(just logs-latest desktop 2>/dev/null | grep "DEBUG_GAMESTATE_CAPTURE" || echo "")
+    # Use existing logs-editor-last command to search for captures
+    CAPTURE_OUTPUT=$(just logs-latest editor 2>/dev/null | grep "DEBUG_GAMESTATE_CAPTURE" || echo "")
     
     if [ -n "$CAPTURE_OUTPUT" ]; then
         RECENT_CAPTURES=$(echo "$CAPTURE_OUTPUT" | grep -c "DEBUG_GAMESTATE_CAPTURE" || echo "0")
@@ -684,8 +684,8 @@ gamestate-status:
         # Check if Save State action has been used recently
         echo ""
         echo "🔍 Save State action usage:"
-        if just logs-latest desktop 2>/dev/null | grep -q "Save State"; then
-            SAVE_STATE_COUNT=$(just logs-latest desktop 2>/dev/null | grep -c "Save State" 2>/dev/null || echo "0")
+        if just logs-latest editor 2>/dev/null | grep -q "Save State"; then
+            SAVE_STATE_COUNT=$(just logs-latest editor 2>/dev/null | grep -c "Save State" 2>/dev/null || echo "0")
             echo "   ✅ Save State found in recent logs ($SAVE_STATE_COUNT times)"
         else
             echo "   ❌ No Save State action found"
@@ -1149,21 +1149,21 @@ test-save-load-cycle-with-state-android STATE_NAME:
 # LINEUP-SPECIFIC CAPTURE COMMANDS  
 # ================================
 
-# Extract captured allied lineup from desktop logs and create debug save file
-capture-lineup-allied-desktop NAME:
+# Extract captured allied lineup from editor logs and create debug save file
+capture-lineup-allied-editor NAME:
     #!/usr/bin/env bash
     set -euo pipefail
     
     # Use shared capture infrastructure
-    just _capture-from-logs "DEBUG_LINEUP_ALLIED_CAPTURE" "line-" "_get-desktop-logs" "{{NAME}}"
+    just _capture-from-logs "DEBUG_LINEUP_ALLIED_CAPTURE" "line-" "_get-editor-logs" "{{NAME}}"
 
-# Extract captured enemy lineup from desktop logs and create debug save file
-capture-lineup-enemy-desktop NAME:
+# Extract captured enemy lineup from editor logs and create debug save file
+capture-lineup-enemy-editor NAME:
     #!/usr/bin/env bash
     set -euo pipefail
     
     # Use shared capture infrastructure
-    just _capture-from-logs "DEBUG_LINEUP_ENEMY_CAPTURE" "line-" "_get-desktop-logs" "{{NAME}}"
+    just _capture-from-logs "DEBUG_LINEUP_ENEMY_CAPTURE" "line-" "_get-editor-logs" "{{NAME}}"
 
 # Extract captured allied lineup from Android logs and create debug save file
 capture-lineup-allied-android NAME:
@@ -1229,14 +1229,14 @@ help-lineup:
     @echo "  1. just run-editor                    # Start game"
     @echo "  2. Debug menu → Save Allied/Enemy Lineup"
     @echo "  3. Exit game"
-    @echo "  4. just capture-lineup-allied-desktop NAME     # Extract allied lineup"
-    @echo "  5. just capture-lineup-enemy-desktop NAME      # Extract enemy lineup"
+    @echo "  4. just capture-lineup-allied-editor NAME     # Extract allied lineup"
+    @echo "  5. just capture-lineup-enemy-editor NAME      # Extract enemy lineup"
     @echo "  6. just run-editor                    # Start for testing"
     @echo "  7. Debug menu → Load lineups in either slot"
     @echo ""
     @echo "🎯 Commands:"
-    @echo "  just capture-lineup-allied-desktop NAME # Extract allied lineup (editor)"
-    @echo "  just capture-lineup-enemy-desktop NAME  # Extract enemy lineup (editor)"
+    @echo "  just capture-lineup-allied-editor NAME # Extract allied lineup (editor)"
+    @echo "  just capture-lineup-enemy-editor NAME  # Extract enemy lineup (editor)"
     @echo "  just capture-lineup-allied-android NAME # Extract allied lineup (Android)"
     @echo "  just capture-lineup-enemy-android NAME  # Extract enemy lineup (Android)"
     @echo "  just list-lineup-saves                 # Show all lineup saves"
@@ -1248,10 +1248,10 @@ help-lineup:
 # TEST LIST INTEGRATION WRAPPERS
 # ================================
 
-# 🧪 Desktop save-load cycle with test-capture-50 state (for test list integration)
+# 🧪 Editor save-load cycle with test-capture-50 state (for test list integration)
 test-save-load-cycle-with-test-capture-50-editor:
-    just test-save-load-cycle-with-state-desktop test-capture-50
+    just test-save-load-cycle-with-state-editor test-capture-50
 
-# 🧪 Android save-load cycle with test-capture-50 state (for test list integration)  
+# 🧪 Android save-load cycle with test-capture-50 state (for test list integration)
 test-save-load-cycle-with-test-capture-50-android:
     just test-save-load-cycle-with-state-android test-capture-50

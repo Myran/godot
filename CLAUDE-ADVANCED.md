@@ -165,7 +165,7 @@ Co-Authored-By: Claude <noreply@anthropic.com>
 - **Built-in Error Analysis**: Automatic log parsing and failure detection (98% token savings)
 - **Automatic Checksum Management**: Baseline creation and validation
 - **Progressive Debugging**: Token-efficient error analysis workflow
-- **Manual Test Modes**: Both Android and desktop support manual inspection modes
+- **Manual Test Modes**: Both Android and editor support manual inspection modes
 
 **Core Systems:**
 - **DataSource Pattern**: Unified Firebase RTDB + local storage backends
@@ -315,14 +315,14 @@ Provide specific optimizations with before/after code examples.
 **Testing Commands:**
 ```bash
 just test-android TARGET                   # Main interface - AUTOMATIC MODE
-just test-desktop TARGET                   # Desktop interface - AUTOMATIC MODE
+just test-editor TARGET                    # Editor interface - AUTOMATIC MODE
 just test-android-target CONFIG            # Enhanced automated mode with built-in validation
-just test-desktop-target CONFIG            # Enhanced desktop automated testing
+just test-editor-target CONFIG             # Enhanced editor automated testing
 just test-android-enhanced TARGET          # Enhanced error analysis
 
 # Manual testing (stays open for inspection)
 just test-android-manual CONFIG            # Android manual mode
-just test-desktop-manual CONFIG            # Desktop manual mode
+just test-editor-manual CONFIG             # Editor manual mode
 
 # Standard workflows
 just test-android development-workflow     # Daily development
@@ -331,12 +331,12 @@ just test-android pre-commit               # Pre-commit validation
 # Enhanced Timeout Support
 just test-android TARGET DURATION          # Custom timeout
 just test-android-target CONFIG DURATION   # Custom timeout for automated tests
-just test-desktop-target CONFIG DURATION   # Custom timeout for desktop tests
+just test-editor-target CONFIG DURATION    # Custom timeout for editor tests
 
 # Environment Variables for Timeout Control
 # ANDROID_TEST_MAX_TIMEOUT=300              # Max timeout (default: 120s)
 # ANDROID_TEST_ACTIVITY_TIMEOUT=90          # Activity timeout (default: 60s)
-# DESKTOP_TEST_MAX_TIMEOUT=180              # Desktop max timeout (default: 120s)
+# EDITOR_TEST_MAX_TIMEOUT=180               # Editor max timeout (default: 120s)
 ```
 
 **Real-Time Android Device Log Commands:**
@@ -387,21 +387,21 @@ just logs-exclude TEST_ID "firebase.*" "firebase.debug" # Firebase without debug
 just logs-errors TEST_ID                   # Error-focused (98% savings)
 just logs-search TEST_ID "search_term"     # Simple text search (replaced logs-text)
 just logs-android TEST_ID [component]      # Component analysis (87-95% savings)
-just logs-desktop TEST_ID [component]      # Desktop component analysis
+just logs-editor TEST_ID [component]       # Editor component analysis
 just logs-ios TEST_ID [component]          # iOS component analysis (NEW)
 just logs-macos TEST_ID [component]        # macOS component analysis (NEW)
 
 # Performance & Specialized
 just logs-performance TEST_ID              # Performance data
 just logs-android-errors TEST_ID           # Android errors only
-just logs-desktop-errors TEST_ID           # Desktop errors only
+just logs-editor-errors TEST_ID             # Editor errors only
 just logs-ios-errors TEST_ID                # iOS errors only (NEW)
 just logs-macos-errors TEST_ID              # macOS errors only (NEW)
 just logs-lifecycle TEST_ID                # App lifecycle events
 
 # Full logs (avoid unless necessary)
 just logs-android TEST_ID                  # Complete logs (high token cost)
-just logs-desktop TEST_ID                  # Complete logs (high token cost)
+just logs-editor TEST_ID                   # Complete logs (high token cost)
 just logs-ios TEST_ID                      # Complete logs (high token cost) (NEW)
 just logs-macos TEST_ID                    # Complete logs (high token cost) (NEW)
 ```
@@ -518,7 +518,7 @@ just test-android '*.*.performance'       # All performance tests
 
 ### Android Checksum Validation
 
-Resolved critical environment variable propagation issue that was causing Android checksum validation to silently fail. Tests now properly validate all checksums on both Android and desktop platforms.
+Resolved critical environment variable propagation issue that was causing Android checksum validation to silently fail. Tests now properly validate all checksums on both Android and editor platforms.
 
 ### Complete Debug Configs & Test Lists
 
@@ -577,11 +577,11 @@ just run-editor → configure lineup → save state → capture-gamestate "battl
 
 ### Key Benefits for Development
 - **90% faster scenario reproduction** (minutes → seconds)
-- **Cross-platform support** - capture from Android, load on desktop or vice versa
+- **Cross-platform support** - capture from Android, load on editor or vice versa
 - **Instant access** to any captured game state from any platform
 - **Perfect replay integration** - loaded states work as recording starting points
 - **Zero setup** - leverages existing StateExtractor + DeterministicRNG systems
-- **Platform-specific commands** - explicit control over desktop vs Android workflows
+- **Platform-specific commands** - explicit control over editor vs Android workflows
 
 ## 🎮 Godot MCP Integration for GameTwo
 

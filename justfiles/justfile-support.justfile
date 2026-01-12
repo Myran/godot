@@ -236,7 +236,7 @@ _test-multi-platform TARGET_CONFIG:
     SUPPORTED_PLATFORMS=$(just _get-all-platforms)
     echo "🎯 Auto-detected platforms: $SUPPORTED_PLATFORMS"
 
-    # Define the platforms and configs to test (desktop first as requested)
+    # Define the platforms and configs to test (editor first as requested)
     TEST_PLATFORMS="$SUPPORTED_PLATFORMS"
 
     # Initialize tracking arrays (bash 3.2 compatible)
@@ -726,7 +726,7 @@ test-all target="":
     # Handle target selection (argument or fzf)
     TARGET_CONFIG="{{target}}"
     if [ -z "$TARGET_CONFIG" ]; then
-        # Use fzf selection like test-android/test-desktop
+        # Use fzf selection like test-android/test-editor
         selected=$(just _fzf-select-config "android" "all")
         if [ "$?" -eq 0 ] && [ -n "$selected" ]; then
             TARGET_CONFIG="$selected"

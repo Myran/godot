@@ -89,8 +89,8 @@ TEMP_DIR := "/tmp"
 # SHARED UTILITY FUNCTIONS
 # ================================
 
-# Unified desktop log retrieval function
-# Returns path to latest desktop log file, with fallback logic
+# Unified editor log retrieval function
+# Returns path to latest editor log file, with fallback logic
 _get-editor-log-file:
     #!/usr/bin/env bash
     set -euo pipefail
@@ -98,18 +98,18 @@ _get-editor-log-file:
     # Editor log directory (macOS standard location)
     EDITOR_LOG_DIR="{{EDITOR_LOG_DIR}}"
     
-    # Function to find latest desktop log in a directory
+    # Function to find latest editor log in a directory
     find_latest_log() {
         local log_dir="$1"
         if [ -d "$log_dir" ]; then
-            # Get the most recent file from both desktop_*.log and godot*.log
+            # Get the most recent file from both editor_*.log and godot*.log
             local latest_log=""
-            
+
             # Combine both types and sort by modification time
-            if ls "$log_dir"/desktop_*.log "$log_dir"/godot*.log &>/dev/null; then
-                latest_log=$(ls -t "$log_dir"/desktop_*.log "$log_dir"/godot*.log 2>/dev/null | head -1)
-            elif ls "$log_dir"/desktop_*.log &>/dev/null; then
-                latest_log=$(ls -t "$log_dir"/desktop_*.log 2>/dev/null | head -1)
+            if ls "$log_dir"/editor_*.log "$log_dir"/godot*.log &>/dev/null; then
+                latest_log=$(ls -t "$log_dir"/editor_*.log "$log_dir"/godot*.log 2>/dev/null | head -1)
+            elif ls "$log_dir"/editor_*.log &>/dev/null; then
+                latest_log=$(ls -t "$log_dir"/editor_*.log 2>/dev/null | head -1)
             elif ls "$log_dir"/godot*.log &>/dev/null; then
                 latest_log=$(ls -t "$log_dir"/godot*.log 2>/dev/null | head -1)
             fi
@@ -136,7 +136,7 @@ _get-editor-log-file:
     # Return the log file path
     echo "$LATEST_LOG"
 
-# Find desktop log file containing specific test ID
+# Find editor log file containing specific test ID
 # Usage: _find-editor-log-with-test-id TEST_ID
 _find-editor-log-with-test-id TEST_ID:
     #!/usr/bin/env bash
@@ -158,7 +158,7 @@ _find-editor-log-with-test-id TEST_ID:
                 return 0
             fi
             
-            # Fall back to searching file contents (for desktop logs)
+            # Fall back to searching file contents (for editor logs)
             find "$log_dir" -name "*.log" -type f -exec grep -l "$TEST_ID" {} \; 2>/dev/null | head -1
         fi
     }
@@ -263,25 +263,25 @@ _validate-session-logs SESSION_ID:
     
     echo "🔍 Validating session logs for: $SESSION_ID"
     
-    # Try to find session in desktop logs first
+    # Try to find session in editor logs first
     if EDITOR_LOG=$(just _find-editor-log-with-session-id "$SESSION_ID" 2>/dev/null); then
-        echo "✅ Found session in desktop logs: $DESKTOP_LOG"
-        
+        echo "✅ Found session in editor logs: $EDITOR_LOG"
+
         # Count semantic actions in this session
-        SEMANTIC_COUNT=$(grep "SEMANTIC_ACTION.*\"session_id\": \"$SESSION_ID\"" "$DESKTOP_LOG" 2>/dev/null | wc -l | tr -d ' ')
+        SEMANTIC_COUNT=$(grep "SEMANTIC_ACTION.*\"session_id\": \"$SESSION_ID\"" "$EDITOR_LOG" 2>/dev/null | wc -l | tr -d ' ')
         echo "📊 Semantic actions found: $SEMANTIC_COUNT"
-        
+
         # Check for session start
-        if grep -q "SESSION_START.*\"session_id\": \"$SESSION_ID\"" "$DESKTOP_LOG" 2>/dev/null; then
+        if grep -q "SESSION_START.*\"session_id\": \"$SESSION_ID\"" "$EDITOR_LOG" 2>/dev/null; then
             echo "✅ Session has proper SESSION_START marker"
         else
             echo "⚠️  Warning: No SESSION_START marker found for session"
         fi
-        
+
         return 0
     fi
-    
-    # Try Android logs if desktop not found
+
+    # Try Android logs if editor not found
     if just _find-android-log-with-session-id "$SESSION_ID" >/dev/null 2>&1; then
         echo "✅ Found session in Android logs"
         
@@ -310,10 +310,10 @@ _get-logs-for-session SESSION_ID:
     
     SESSION_ID="{{SESSION_ID}}"
     
-    # Try desktop logs first
+    # Try editor logs first
     if EDITOR_LOG=$(just _find-editor-log-with-session-id "$SESSION_ID" 2>/dev/null); then
         # Return the content of the specific log file
-        cat "$DESKTOP_LOG"
+        cat "$EDITOR_LOG"
         return 0
     fi
     

@@ -245,7 +245,7 @@ show-warnings-android:
     rm -f "$temp_export"
     
     echo ""
-    echo "💡 Use 'just show-warnings' for desktop-only warnings"
+    echo "💡 Use 'just show-warnings' for editor-only warnings"
 
 # Save warnings to markdown file
 save-warnings: (warnings "file") 

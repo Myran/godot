@@ -1,56 +1,56 @@
 # Cross-Platform Testing Commands
-# Tests semantic replay configs work identically on Android and desktop
+# Tests semantic replay configs work identically on Android and editor
 
 # Test that the same semantic session generates identical configs for both platforms
 test-cross-platform-config-generation SESSION CONFIG:
     #!/usr/bin/env bash
     set -euo pipefail
-    
+
     SESSION_ID="{{SESSION}}"
     CONFIG_NAME="{{CONFIG}}"
-    
+
     echo "🎯 Testing cross-platform config generation"
     echo "   Session: $SESSION_ID"
     echo "   Config base name: $CONFIG_NAME"
     echo ""
-    
+
     # Generate configs for both platforms from same session
-    echo "🖥️  Generating desktop config..."
-    if ! just replay-generate "$SESSION_ID" "${CONFIG_NAME}_desktop"; then
-        echo "❌ Failed to generate desktop config"
+    echo "🖥️  Generating editor config..."
+    if ! just replay-generate "$SESSION_ID" "${CONFIG_NAME}_editor"; then
+        echo "❌ Failed to generate editor config"
         exit 1
     fi
-    
-    echo "📱 Generating Android config..."  
+
+    echo "📱 Generating Android config..."
     if ! just replay-generate "$SESSION_ID" "${CONFIG_NAME}_android"; then
         echo "❌ Failed to generate Android config"
         exit 1
     fi
-    
+
     # Validate both configs exist
-    DESKTOP_CONFIG="{{DEBUG_CONFIG_DIR}}/${CONFIG_NAME}_desktop.json"
+    EDITOR_CONFIG="{{DEBUG_CONFIG_DIR}}/${CONFIG_NAME}_editor.json"
     ANDROID_CONFIG="{{DEBUG_CONFIG_DIR}}/${CONFIG_NAME}_android.json"
-    
-    if [[ ! -f "$DESKTOP_CONFIG" ]]; then
-        echo "❌ Desktop config not generated: $DESKTOP_CONFIG"
+
+    if [[ ! -f "$EDITOR_CONFIG" ]]; then
+        echo "❌ Editor config not generated: $EDITOR_CONFIG"
         exit 1
     fi
-    
+
     if [[ ! -f "$ANDROID_CONFIG" ]]; then
         echo "❌ Android config not generated: $ANDROID_CONFIG"
         exit 1
     fi
-    
+
     # Extract and compare action arrays
     echo "🔍 Comparing action arrays..."
-    DESKTOP_ACTIONS=$(jq -c '.actions' "$DESKTOP_CONFIG")
+    EDITOR_ACTIONS=$(jq -c '.actions' "$EDITOR_CONFIG")
     ANDROID_ACTIONS=$(jq -c '.actions' "$ANDROID_CONFIG")
-    
-    if [[ "$DESKTOP_ACTIONS" != "$ANDROID_ACTIONS" ]]; then
+
+    if [[ "$EDITOR_ACTIONS" != "$ANDROID_ACTIONS" ]]; then
         echo "❌ Cross-platform config mismatch!"
         echo ""
-        echo "Desktop actions:"
-        echo "$DESKTOP_ACTIONS" | jq .
+        echo "Editor actions:"
+        echo "$EDITOR_ACTIONS" | jq .
         echo ""
         echo "Android actions:"
         echo "$ANDROID_ACTIONS" | jq .
@@ -58,25 +58,25 @@ test-cross-platform-config-generation SESSION CONFIG:
         echo "💡 Semantic replays should generate identical action sequences"
         exit 1
     fi
-    
+
     # Validate both configs are semantic-replay safe
     echo "🔍 Validating configs are platform-agnostic..."
-    if ! just validate-semantic-config "${CONFIG_NAME}_desktop"; then
-        echo "❌ Desktop config failed semantic validation"
+    if ! just validate-semantic-config "${CONFIG_NAME}_editor"; then
+        echo "❌ Editor config failed semantic validation"
         exit 1
     fi
-    
+
     if ! just validate-semantic-config "${CONFIG_NAME}_android"; then
         echo "❌ Android config failed semantic validation"
         exit 1
     fi
-    
+
     echo ""
     echo "✅ Cross-platform config generation PASSED"
     echo "💡 Both platforms generated identical platform-agnostic configs"
     echo ""
     echo "📊 Config summary:"
-    ACTION_COUNT=$(echo "$DESKTOP_ACTIONS" | jq 'length')
+    ACTION_COUNT=$(echo "$EDITOR_ACTIONS" | jq 'length')
     echo "   Actions: $ACTION_COUNT"
     echo "   Session: $SESSION_ID"
     echo "   Platform compatibility: ✅ Verified"
@@ -112,36 +112,36 @@ test-cross-platform-execution CONFIG:
     fi
     ANDROID_TEST_DURATION=$(($(date +%s) - ANDROID_TEST_START))
     
-    # Test desktop execution  
-    echo "🖥️  Testing desktop execution..."
-    DESKTOP_TEST_START=$(date +%s)
+    # Test editor execution
+    echo "🖥️  Testing editor execution..."
+    EDITOR_TEST_START=$(date +%s)
     if just run-editor >/dev/null 2>&1; then
-        # For desktop, we just check if it can start
-        # TODO: Add proper desktop test execution
-        DESKTOP_RESULT="✅ PASSED (startup)"
+        # For editor, we just check if it can start
+        # TODO: Add proper editor test execution
+        EDITOR_RESULT="✅ PASSED (startup)"
     else
-        DESKTOP_RESULT="❌ FAILED"
+        EDITOR_RESULT="❌ FAILED"
     fi
-    DESKTOP_TEST_DURATION=$(($(date +%s) - DESKTOP_TEST_START))
-    
+    EDITOR_TEST_DURATION=$(($(date +%s) - EDITOR_TEST_START))
+
     echo ""
     echo "📊 Cross-platform execution results:"
     echo "   Android: $ANDROID_RESULT ($ANDROID_TEST_DURATION seconds)"
-    echo "   Desktop: $DESKTOP_RESULT ($DESKTOP_TEST_DURATION seconds)"
+    echo "   Editor: $EDITOR_RESULT ($EDITOR_TEST_DURATION seconds)"
     echo ""
-    
+
     if [[ "$ANDROID_RESULT" == *"FAILED"* ]]; then
         echo "❌ Android execution failed"
         echo "💡 Check Android logs: just logs-last"
         exit 1
     fi
-    
-    if [[ "$DESKTOP_RESULT" == *"FAILED"* ]]; then
-        echo "❌ Desktop execution failed"
-        echo "💡 Check desktop logs or run: just run-editor"
+
+    if [[ "$EDITOR_RESULT" == *"FAILED"* ]]; then
+        echo "❌ Editor execution failed"
+        echo "💡 Check editor logs or run: just run-editor"
         exit 1
     fi
-    
+
     echo "✅ Cross-platform execution PASSED"
     echo "💡 Config executes successfully on both platforms"
 
@@ -163,7 +163,7 @@ create-test-config-with-platform-specific-actions CONFIG:
     printf '  "type": "test_invalid_config",\n' >> "$CONFIG_FILE"
     printf '  "actions": [\n' >> "$CONFIG_FILE"
     printf '    "system.debug.registry_stats",\n' >> "$CONFIG_FILE"
-    printf '    "system.debug.test_desktop_functionality",\n' >> "$CONFIG_FILE"
+    printf '    "system.debug.test_editor_functionality",\n' >> "$CONFIG_FILE"
     printf '    "game.draft.upgrade_player",\n' >> "$CONFIG_FILE"
     printf '    "system.debug.quit_application"\n' >> "$CONFIG_FILE"
     printf '  ],\n' >> "$CONFIG_FILE"
