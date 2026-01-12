@@ -2782,18 +2782,21 @@ _generate-comprehensive-breakdown hierarchy_file test_session:
 _execute-test-with-analysis config_name platform session="":
     #!/usr/bin/env bash
     set -euo pipefail
-    
+
     CONFIG_NAME="{{config_name}}"
     PLATFORM="{{platform}}"
     SESSION="{{session}}"
-    
+
+    # Strip @ prefix if present (auto-detection works with or without @)
+    CONFIG_LOOKUP="${CONFIG_NAME#@}"
+
     echo "🎯 $PLATFORM Testing with Error Analysis: $CONFIG_NAME"
     echo "$(printf '=%.0s' {1..50})"
     echo ""
-    
+
     # Phase 1: Auto-detect between test list and debug config
-    TEST_LIST_PATH="{{TEST_LIST_DIR}}/${CONFIG_NAME}.json"
-    CONFIG_PATH="{{DEBUG_CONFIG_DIR}}/${CONFIG_NAME}.json"
+    TEST_LIST_PATH="{{TEST_LIST_DIR}}/${CONFIG_LOOKUP}.json"
+    CONFIG_PATH="{{DEBUG_CONFIG_DIR}}/${CONFIG_LOOKUP}.json"
     
     # Check if it's a test list first (but skip if we're already inside test list execution)
     if [[ -f "$TEST_LIST_PATH" && "${INSIDE_TEST_LIST_EXECUTION:-false}" != "true" ]]; then
@@ -2804,10 +2807,10 @@ _execute-test-with-analysis config_name platform session="":
     
     # Check if it's a debug config, or try to create wildcard pattern config
     if [[ ! -f "$CONFIG_PATH" ]]; then
-        echo "🔍 Config not found, checking for wildcard pattern: $CONFIG_NAME"
+        echo "🔍 Config not found, checking for wildcard pattern: $CONFIG_LOOKUP"
 
         # NEW: Search recursively in subdirectories first (for archive/generated-replays configs)
-        RECURSIVE_FOUND=$(find "{{DEBUG_CONFIG_DIR}}" -name "${CONFIG_NAME}.json" -type f 2>/dev/null | head -1)
+        RECURSIVE_FOUND=$(find "{{DEBUG_CONFIG_DIR}}" -name "${CONFIG_LOOKUP}.json" -type f 2>/dev/null | head -1)
         if [[ -n "$RECURSIVE_FOUND" ]]; then
             echo "✅ Found config in subdirectory: $(basename "$(dirname "$RECURSIVE_FOUND")")/${CONFIG_NAME}.json"
             CONFIG_PATH="$RECURSIVE_FOUND"
