@@ -1,10 +1,10 @@
 ---
 id: task-429
 title: 'Fix Firebase macOS crash: Mutex::Acquire() during RTDB operations'
-status: In Progress
+status: Done
 assignee: []
 created_date: '2026-01-07 17:42'
-updated_date: '2026-01-07 18:09'
+updated_date: '2026-01-12 10:50'
 labels:
   - cpp
 dependencies: []
@@ -25,64 +25,31 @@ Firebase C++ SDK crashes on macOS in Mutex::Acquire() during RTDB operations. Th
 ## Implementation Notes
 
 <!-- SECTION:NOTES:BEGIN -->
-ROOT CAUNE ANALYSIS:
+ROOT CAUSE FOUND (2026-01-12):
 
-Real crash is in Firebase C++ SDK Mutex::Acquire(), NOT Sentry RenderingServer.
+The crash was NOT caused by Mutex::Acquire() in Firebase SDK RTDB operations.
 
-Stack trace:
-- firebase::Mutex::Acquire() + 12
-- firebase::scheduler::Scheduler::Schedule(...)
-- firebase::database::internal::QueryInternal::GetValue()
-- FirebaseDatabase::get_value_async()
+Real root cause: The Firestore commit (a3ee581d) added a fixed app name parameter 
+to firebase::App::Create() calls in firebase_platform.mm:
 
-This is a Firebase RTDB threading issue on macOS, not Sentry-related.
+BEFORE (working):
+  app_ptr = firebase::App::Create();
 
-The Sentry RenderingServer ERROR was a red herring - just a warning log.
+AFTER (crashing):
+  app_ptr = firebase::App::Create(firebase::AppOptions(), "__FIRAPP_DEFAULT");
 
-The macOS SDK version fix (task-427) resolved linker issues but exposed this deeper Firebase threading bug.
+The App::Create(AppOptions, app_name) overload expects different initialization 
+conditions that weren't met during early Firebase initialization on macOS, causing 
+a null pointer dereference at offset 0x38 (56 bytes into an object).
 
-MACOS CRASH REPORT ANALYSIS (from ~/Library/Logs/DiagnosticReports/):
+FIX APPLIED:
+- Reverted to firebase::App::Create() without app name parameter
+- macOS tests now pass: 8/8 actions (100% success rate)
+- Firebase backend tests: PASSED
+- System error handling tests: PASSED
 
-File: gametwo-2026-01-07-185719.ips
-Exception: EXC_BAD_ACCESS (SIGABRT)
-Address: 0x38 (NULL pointer dereference)
-Termination: Abort trap: 6
+The Firestore module itself was NOT the direct cause. The app_name parameter was 
+intended to fix keychain prompt issues on iOS but broke macOS initialization.
 
-CRITICAL FINDING:
-firebase::Mutex::Acquire() + 12 appears TWICE consecutively in stack trace!
-
-This suggests:
-1. Double-acquisition bug (same mutex locked twice)
-2. Recursive locking issue (thread trying to lock mutex it already holds)
-3. Invalid pthread_mutex_t (NULL or corrupted mutex pointer)
-
-The crash happens during RTDB get_value_async() when:
-- firebase::database::internal::QueryInternal::GetValue()
-- firebase::scheduler::Scheduler::Schedule()
-- firebase::Mutex::Acquire() ← CRASH HERE
-
-Threading context:
-- Multiple Firebase worker threads active
-- Firebase REST Curl thread active
-- Main thread crashes during scheduler mutex lock
-
-This is a Firebase C++ SDK bug in mutex handling, NOT a Sentry issue.
-
-**ROOT CAUSE ANALYSIS (2026-01-07)**
-
-Sentry: EXC_BAD_ACCESS at 0x38 in firebase::Mutex::Acquire()
-
-Stack: FirebaseDatabase::get_value_async → QueryInternal::GetValue → Scheduler::Schedule → Mutex::Acquire CRASH
-
-CRITICAL: Mutex::Acquire appears TWICE at same address - recursive locking/re-entrancy
-
-Root Cause: Firebase SDK internal bug - scheduler mutex is NULL (0x38 = offset into NULL pointer)
-
-Hypothesis: Uninitialized scheduler mutex on macOS OR recursive locking (CFRunLoop re-entering)
-
-Test: firebase-cpp-layer runs concurrent_operations_test
-
-Workaround: Add sequential delays between Firebase calls
-
-Next: File bug with Firebase SDK team, verify scheduler initialization
+Commit: godot submodule 9c0b6ae0ef
 <!-- SECTION:NOTES:END -->
