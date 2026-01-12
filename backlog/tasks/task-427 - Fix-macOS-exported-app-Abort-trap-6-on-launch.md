@@ -57,30 +57,45 @@ Blocks cross-platform Firebase validation on macOS (task-403 criterion #9).
 ## Implementation Notes
 
 <!-- SECTION:NOTES:BEGIN -->
-**ROOT CAUNE ANALYSIS COMPLETE - OODA Loop**
+**ROOT CAUSE ANALYSIS COMPLETE - OODA Loop**
 
 **OBSERVE:**
 - App crashed immediately with 'Abort trap: 6'
 - Linker warnings: Firebase SDK built for macOS 13.6, but linking against 11.0
 - export_presets.cfg set min_macos_version_arm64='11.00'
 
-**ORIENT:**
-- Firebase C++ SDK requires macOS 13.6+ runtime features
-- Export preset targeting 11.0 caused incompatibility
-- Expert panel confirmed: SDK version mismatch is fatal
+**INITIAL INCORRECT DIAGNOSIS:**
+- Thought the issue was macOS version mismatch
+- Updated min_macos_version_arm64 from '11.00' to '13.0' in export_presets.cfg
+- This did NOT fix the crash
 
-**DECIDE:**
-- Update min_macos_version_arm64 from '11.00' to '13.0' in export_presets.cfg
+**CORRECT ROOT CAUSE (discovered later):**
+The Firestore commit (a3ee581d) added a fixed app name parameter to
+firebase::App::Create() calls in firebase_platform.mm:
 
-**ACT:**
-- Changed export_presets.cfg line 815: min_macos_version_arm64='13.0'
-- Verified: Info.plist shows LSMinimumSystemVersionByArchitecture arm64='13.0'
-- Tested: Firebase C++ SDK now loads successfully (9 C++ actions registered)
+BEFORE (working):
+  app_ptr = firebase::App::Create();
+
+AFTER (crashing):
+  app_ptr = firebase::App::Create(firebase::AppOptions(), "__FIRAPP_DEFAULT");
+
+The App::Create(AppOptions, app_name) overload caused macOS to crash with
+Abort trap: 6 at startup due to null pointer dereference.
+
+**ACTUAL FIX:**
+- Reverted to firebase::App::Create() without app name parameter
+- Commit: godot submodule 9c0b6ae0ef
+- macOS tests now pass: 8/8 actions (100% success rate)
 
 **RESOLUTION:**
-Firebase SDK issue resolved. App now initializes Firebase properly.
-Remaining crash is in Sentry GDExtension (RenderingServer singleton access during early init) - separate issue not related to Firebase.
+Firebase SDK crash resolved. App now initializes Firebase properly.
+The macOS minimum version change (13.0) remains for SDK compatibility but was
+not the primary fix for the Abort trap: 6 crash.
+
+See task-429 (Firebase macOS crash) for full details.
+See task-430 (Cherry-pick Firebase commits) for complete fix history.
 
 **Files Changed:**
-- project/export_presets.cfg:815
+- godot/modules/firebase/firebase_platform.mm: Reverted __FIRAPP_DEFAULT
+- project/export_presets.cfg:815 (min version 13.0 for SDK compatibility)
 <!-- SECTION:NOTES:END -->
