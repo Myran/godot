@@ -2334,11 +2334,23 @@ _test-list-generic test_list platform:
     
     # Cleanup session-specific test result files after summary generation
     # Skip cleanup if we're in multi-platform mode (files will be preserved for final summary)
+    # Skip cleanup if there are any failures (preserve logs for debugging)
+    TESTLIST_FAILED_COUNT=0
+    if [[ -f "$HIERARCHY_FILE" ]]; then
+        TESTLIST_FAILED_COUNT=$(jq '[.config_results[] | select(.status == "failed")] | length' "$HIERARCHY_FILE" 2>/dev/null || echo "0")
+    fi
+
     if [[ "${MULTI_PLATFORM_MODE:-false}" != "true" ]]; then
-        echo "🧹 Cleaning up session test result files..."
-        # Clean up action results files from the standardized locations
-        rm -f "{{STANDARD_LOGS_DIR}}/test_action_results_*_${TEST_SESSION}.json" 2>/dev/null || true
-        rm -f "$HIERARCHY_FILE" 2>/dev/null || true
+        if [[ "${TESTLIST_FAILED_COUNT:-0}" -gt 0 ]]; then
+            echo "🔒 Preserving session files for debugging ($TESTLIST_FAILED_COUNT failed configs)"
+            echo "   Action results: {{STANDARD_LOGS_DIR}}/test_action_results_*_${TEST_SESSION}.json"
+            echo "   Hierarchy: $HIERARCHY_FILE"
+        else
+            echo "🧹 Cleaning up session test result files..."
+            # Clean up action results files from the standardized locations
+            rm -f "{{STANDARD_LOGS_DIR}}/test_action_results_*_${TEST_SESSION}.json" 2>/dev/null || true
+            rm -f "$HIERARCHY_FILE" 2>/dev/null || true
+        fi
     else
         echo "🔄 Preserving action results and hierarchy files for multi-platform final summary..."
     fi
@@ -2992,10 +3004,15 @@ _execute-test-with-analysis config_name platform session="":
     fi
     
     # Cleanup session-specific test result files after individual test
-    # Skip cleanup if we're in multi-platform mode
+    # Skip cleanup if we're in multi-platform mode or if test failed (preserve for debugging)
     if [[ -n "$SESSION" && "${DISABLE_TEST_CLEANUP:-false}" != "true" ]]; then
-        echo "🧹 Cleaning up session test result files..."
-        rm -f /tmp/test_action_results_*_${SESSION}.json 2>/dev/null || true
+        if [[ $TEST_RESULT -ne 0 ]]; then
+            echo "🔒 Preserving session files for debugging (test failed)"
+            echo "   Action results: /tmp/test_action_results_*_${SESSION}.json"
+        else
+            echo "🧹 Cleaning up session test result files..."
+            rm -f /tmp/test_action_results_*_${SESSION}.json 2>/dev/null || true
+        fi
     elif [[ "${DISABLE_TEST_CLEANUP:-false}" == "true" ]]; then
         echo "🔄 Preserving session files for multi-platform summary..."
     fi
