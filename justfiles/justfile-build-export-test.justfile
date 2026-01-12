@@ -438,6 +438,7 @@ _all-platforms-impl CONFIG MODE:
 
 # All platforms: Export + deploy + test (uses existing templates)
 # Defaults to 'main' test list if no CONFIG provided
+# Auto-detects test list vs config (same logic as test-*-target)
 export-test-all CONFIG="":
     #!/usr/bin/env bash
     set -euo pipefail
@@ -447,10 +448,36 @@ export-test-all CONFIG="":
         CONFIG="main"
     fi
 
-    just _all-platforms-impl "$CONFIG" "export-test"
+    # Resolve test input: auto-detects test list vs config (with or without @ prefix)
+    RESOLVED=$(just _resolve-test-input "$CONFIG")
+
+    # Check if resolved output contains multiple lines (test list expansion)
+    LINE_COUNT=$(echo "$RESOLVED" | wc -l | tr -d ' ')
+    if [[ $LINE_COUNT -gt 1 ]]; then
+        # It's a test list - iterate through configs
+        echo "🔄 Detected test list: $CONFIG"
+        echo "📋 Found $LINE_COUNT config(s)"
+        echo ""
+
+        INDEX=0
+        while IFS= read -r config; do
+            if [[ -n "$config" ]]; then
+                INDEX=$((INDEX + 1))
+                echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+                echo "📋 Config $INDEX/$LINE_COUNT: $config"
+                echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+                echo ""
+                just _all-platforms-impl "$config" "export-test"
+            fi
+        done <<< "$RESOLVED"
+    else
+        # Single config
+        just _all-platforms-impl "$RESOLVED" "export-test"
+    fi
 
 # All platforms: Full rebuild + export + deploy + test (full suite or specific config)
 # Defaults to 'main' test list if no CONFIG provided
+# Auto-detects test list vs config (same logic as test-*-target)
 build-export-test-all CONFIG="":
     #!/usr/bin/env bash
     set -euo pipefail
@@ -460,4 +487,36 @@ build-export-test-all CONFIG="":
         CONFIG="main"
     fi
 
-    just _all-platforms-impl "$CONFIG" "build-export-test"
+    # Resolve test input: auto-detects test list vs config (with or without @ prefix)
+    RESOLVED=$(just _resolve-test-input "$CONFIG")
+
+    # Check if resolved output contains multiple lines (test list expansion)
+    LINE_COUNT=$(echo "$RESOLVED" | wc -l | tr -d ' ')
+    if [[ $LINE_COUNT -gt 1 ]]; then
+        # It's a test list - iterate through configs
+        echo "🔄 Detected test list: $CONFIG"
+        echo "📋 Found $LINE_COUNT config(s)"
+        echo ""
+        echo "💡 First config will rebuild templates, remaining configs will use cached templates"
+        echo ""
+
+        INDEX=0
+        while IFS= read -r config; do
+            if [[ -n "$config" ]]; then
+                INDEX=$((INDEX + 1))
+                echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+                echo "📋 Config $INDEX/$LINE_COUNT: $config"
+                if [[ $INDEX -eq 1 ]]; then
+                    echo "🔧 Full rebuild + test"
+                else
+                    echo "⚡ Using cached templates"
+                fi
+                echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+                echo ""
+                just _all-platforms-impl "$config" "build-export-test"
+            fi
+        done <<< "$RESOLVED"
+    else
+        # Single config
+        just _all-platforms-impl "$RESOLVED" "build-export-test"
+    fi
