@@ -285,11 +285,19 @@ logs-macos TEST_ID *TAGS:
     EDITOR_LOG_DIR="{{EDITOR_LOG_DIR}}"
 
     # Find macOS log file by TEST_ID
+    # Search in both project logs/ and Godot user data logs directory
     SAVED_LOGS_DIR="logs"
+    USER_DATA_LOGS_DIR="$HOME/Library/Application Support/Godot/app_userdata/gametwo/logs"
+
     LOG_FILE=$(find "$SAVED_LOGS_DIR" -name "*${TEST_ID}*.log" -type f 2>/dev/null | head -1)
+    if [ -z "$LOG_FILE" ]; then
+        # Try Godot user data logs directory
+        LOG_FILE=$(find "$USER_DATA_LOGS_DIR" -name "*${TEST_ID}*.log" -type f 2>/dev/null | head -1)
+    fi
     if [ -z "$LOG_FILE" ]; then
         echo "❌ No macOS log file found for test ID: $TEST_ID" >&2
         echo "💡 Try running a macOS test first: just test-macos-target CONFIG" >&2
+        echo "🔍 Searched in: $SAVED_LOGS_DIR, $USER_DATA_LOGS_DIR" >&2
         exit 1
     fi
 
@@ -330,11 +338,19 @@ logs-macos-errors TEST_ID *TAGS:
     EDITOR_LOG_DIR="{{EDITOR_LOG_DIR}}"
 
     # Find macOS log file by TEST_ID
+    # Search in both project logs/ and Godot user data logs directory
     SAVED_LOGS_DIR="logs"
+    USER_DATA_LOGS_DIR="$HOME/Library/Application Support/Godot/app_userdata/gametwo/logs"
+
     LOG_FILE=$(find "$SAVED_LOGS_DIR" -name "*${TEST_ID}*.log" -type f 2>/dev/null | head -1)
+    if [ -z "$LOG_FILE" ]; then
+        # Try Godot user data logs directory
+        LOG_FILE=$(find "$USER_DATA_LOGS_DIR" -name "*${TEST_ID}*.log" -type f 2>/dev/null | head -1)
+    fi
     if [ -z "$LOG_FILE" ]; then
         echo "❌ No macOS log file found for test ID: $TEST_ID" >&2
         echo "💡 Try running a macOS test first: just test-macos-target CONFIG" >&2
+        echo "🔍 Searched in: $SAVED_LOGS_DIR, $USER_DATA_LOGS_DIR" >&2
         exit 1
     fi
 
