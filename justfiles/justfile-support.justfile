@@ -300,7 +300,8 @@ _test-multi-platform TARGET_CONFIG:
                 echo "🔧 Creating hierarchy file from action results for ${PLATFORM}"
 
                 # Look for action results file from this platform test (prioritize most recent)
-                ACTION_RESULTS_FILE=$(find "{{USER_DATA_DIR}}/logs" -name "test_action_results_${TARGET_CONFIG}_*_${PLATFORM}_*.json" -type f -exec ls -t {} + 2>/dev/null | head -n1 || echo "")
+                # File naming: test_action_results_CONFIG_PLATFORM_SESSION.json
+                ACTION_RESULTS_FILE=$(find "{{USER_DATA_DIR}}/logs" -name "test_action_results_${TARGET_CONFIG}_${PLATFORM}_*.json" -type f -exec ls -t {} + 2>/dev/null | head -n1 || echo "")
 
                 if [[ -n "$ACTION_RESULTS_FILE" && -f "$ACTION_RESULTS_FILE" ]]; then
                     # Create hierarchy file from action results
@@ -700,7 +701,8 @@ _test-multi-platform TARGET_CONFIG:
     # Cleanup session files - do this LAST after all analysis and summaries
     echo ""
     echo "🧹 Cleaning up multi-platform session files..."
-    rm -f /tmp/test_action_results_*_${MULTI_SESSION}_*.json 2>/dev/null || true
+    # File naming: test_action_results_CONFIG_PLATFORM_SESSION.json (session at END)
+    rm -f /tmp/test_action_results_*_${MULTI_SESSION}.json 2>/dev/null || true
     for HIERARCHY_FILE in $HIERARCHY_FILES; do
         [[ -n "$HIERARCHY_FILE" ]] && rm -f "$HIERARCHY_FILE" 2>/dev/null || true
     done
