@@ -2337,7 +2337,7 @@ _test-list-generic test_list platform:
     if [[ "${MULTI_PLATFORM_MODE:-false}" != "true" ]]; then
         echo "🧹 Cleaning up session test result files..."
         # Clean up action results files from the standardized locations
-        rm -f "{{STANDARD_LOGS_DIR}}/test_action_results_*_${TEST_SESSION}_*.json" 2>/dev/null || true
+        rm -f "{{STANDARD_LOGS_DIR}}/test_action_results_*_${TEST_SESSION}.json" 2>/dev/null || true
         rm -f "$HIERARCHY_FILE" 2>/dev/null || true
     else
         echo "🔄 Preserving action results and hierarchy files for multi-platform final summary..."
@@ -2416,7 +2416,8 @@ _generate-comprehensive-breakdown hierarchy_file test_session:
     TEST_LIST=$(jq -r '.test_list // "unknown"' "$HIERARCHY_FILE" 2>/dev/null || echo "unknown")
     
     # Get all platforms from action results for current session only (avoid stale results)
-    PLATFORMS_FROM_RESULTS=$(ls /tmp/test_action_results_*_${TEST_SESSION}_*.json 2>/dev/null | sed 's/.*_\([^_]*\)_[^_]*\.json$/\1/' | sort | uniq | paste -sd ', ' - || echo "unknown")
+    # Note: Files are named test_action_results_CONFIG_PLATFORM_SESSION.json (session at END)
+    PLATFORMS_FROM_RESULTS=$(ls /tmp/test_action_results_*_${TEST_SESSION}.json 2>/dev/null | sed 's/.*_\([^_]*\)_[^_]*\.json$/\1/' | sort | uniq | paste -sd ', ' - || echo "unknown")
     TOTAL_CONFIGS=$(jq '.config_results | length' "$HIERARCHY_FILE" 2>/dev/null || echo "0")
     
     echo "Test List: $TEST_LIST ($PLATFORMS_FROM_RESULTS) - $TOTAL_CONFIGS configs executed"
@@ -2426,7 +2427,7 @@ _generate-comprehensive-breakdown hierarchy_file test_session:
     set +e  # Disable exit on error for this section to handle jq failures gracefully
     
     # Get all platforms that ran tests for current session only
-    ALL_PLATFORMS=$(ls /tmp/test_action_results_*_${TEST_SESSION}_*.json 2>/dev/null | sed 's/.*_\([^_]*\)_[^_]*\.json$/\1/' | sort | uniq)
+    ALL_PLATFORMS=$(ls /tmp/test_action_results_*_${TEST_SESSION}.json 2>/dev/null | sed 's/.*_\([^_]*\)_[^_]*\.json$/\1/' | sort | uniq)
     
     if [[ -n "$ALL_PLATFORMS" ]]; then
         # Process each platform separately
@@ -2676,14 +2677,15 @@ _generate-comprehensive-breakdown hierarchy_file test_session:
     fi
     
     # Action-level analysis (only process files from current test session)
-    SESSION_PATTERN="_${TEST_SESSION}_"
+    # Note: Files are named test_action_results_CONFIG_PLATFORM_SESSION.json (session at END)
+    SESSION_PATTERN="_${TEST_SESSION}.json"
 
     PROCESSED_FILES=0
     FILTERED_FILES=0
-    for results_file in /tmp/test_action_results_*_${TEST_SESSION}_*.json "{{STANDARD_LOGS_DIR}}"/test_action_results_*_${TEST_SESSION}_*.json; do
+    for results_file in /tmp/test_action_results_*_${TEST_SESSION}.json "{{STANDARD_LOGS_DIR}}"/test_action_results_*_${TEST_SESSION}.json; do
         if [[ -f "$results_file" ]] && jq -e . "$results_file" >/dev/null 2>&1; then
             # Skip files that don't belong to current session
-            if [[ -n "$SESSION_PATTERN" && "$results_file" != *"$SESSION_PATTERN"* ]]; then
+            if [[ -n "$SESSION_PATTERN" && "$results_file" != *"$SESSION_PATTERN" ]]; then
                 FILTERED_FILES=$((FILTERED_FILES + 1))
                 continue
             fi
@@ -2946,12 +2948,12 @@ _execute-test-with-analysis config_name platform session="":
     echo ""
     echo "📊 Test Execution: $(if [[ $TEST_RESULT -eq 0 ]]; then echo "✅ PASSED"; else echo "❌ FAILED"; fi)"
 
+    # Track validation results separately (initialize before validation phase)
+    ERROR_ANALYSIS_RESULT=0
+    CHECKSUM_VALIDATION_RESULT=0
+
     # Phase 3: Unified post-test validation (shared logic)
     if [[ $TEST_RESULT -eq 0 ]]; then
-        # Track validation results separately
-        ERROR_ANALYSIS_RESULT=0
-        CHECKSUM_VALIDATION_RESULT=0
-
         # Run error analysis
         just _post-test-validation "$TEST_ID" "$PLATFORM" "$CONFIG_NAME" "$SESSION" "$CONFIG_PATH" || ERROR_ANALYSIS_RESULT=$?
 
@@ -2984,16 +2986,16 @@ _execute-test-with-analysis config_name platform session="":
         fi
     else
         echo ""
-        echo "❌ OVERALL RESULT: FAILED"
-        echo "💡 Test execution failed - skipping validation"
-        exit 1
+        echo "❌ Test execution failed - running validation for debugging..."
+        # Still run validation to collect action results for debugging
+        just _post-test-validation "$TEST_ID" "$PLATFORM" "$CONFIG_NAME" "$SESSION" "$CONFIG_PATH" || true
     fi
     
     # Cleanup session-specific test result files after individual test
     # Skip cleanup if we're in multi-platform mode
     if [[ -n "$SESSION" && "${DISABLE_TEST_CLEANUP:-false}" != "true" ]]; then
         echo "🧹 Cleaning up session test result files..."
-        rm -f /tmp/test_action_results_*_${SESSION}_*.json 2>/dev/null || true
+        rm -f /tmp/test_action_results_*_${SESSION}.json 2>/dev/null || true
     elif [[ "${DISABLE_TEST_CLEANUP:-false}" == "true" ]]; then
         echo "🔄 Preserving session files for multi-platform summary..."
     fi
