@@ -21,9 +21,7 @@ func get_cpp_analytics() -> Object:
 		return cpp_analytics
 
 	Log.debug(
-		"Creating direct C++ FirebaseAnalytics instance",
-		{},
-		["debug", "cpp_firebase", "analytics"]
+		"Creating direct C++ FirebaseAnalytics instance", {}, ["debug", "cpp_firebase", "analytics"]
 	)
 
 	if not ClassDB.class_exists("FirebaseAnalytics"):
@@ -87,9 +85,7 @@ func _execute_action_logic(_params: Dictionary = {}) -> DebugActionResult:
 		errors.append("log_event_string failed")
 
 	_update_status("Testing log_event with int param...")
-	if not _call_method_safe(
-		analytics, "log_event_int", ["cpp_test_int_event", "int_param", 42]
-	):
+	if not _call_method_safe(analytics, "log_event_int", ["cpp_test_int_event", "int_param", 42]):
 		errors.append("log_event_int failed")
 
 	_update_status("Testing log_event with double param...")

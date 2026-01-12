@@ -934,7 +934,10 @@ func _process(_delta: float) -> void:
 		# Overhead is minimal (~0.01ms per call with 0 timeout)
 		if ClassDB.class_exists("Firebase"):
 			var firebase_instance: Object = ClassDB.instantiate("Firebase")
-			if is_instance_valid(firebase_instance) and firebase_instance.has_method("process_notifications"):
+			if (
+				is_instance_valid(firebase_instance)
+				and firebase_instance.has_method("process_notifications")
+			):
 				firebase_instance.process_notifications()
 
 

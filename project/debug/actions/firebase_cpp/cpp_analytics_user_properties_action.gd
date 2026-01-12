@@ -21,9 +21,7 @@ func get_cpp_analytics() -> Object:
 		return cpp_analytics
 
 	Log.debug(
-		"Creating direct C++ FirebaseAnalytics instance",
-		{},
-		["debug", "cpp_firebase", "analytics"]
+		"Creating direct C++ FirebaseAnalytics instance", {}, ["debug", "cpp_firebase", "analytics"]
 	)
 
 	if not ClassDB.class_exists("FirebaseAnalytics"):
@@ -81,9 +79,7 @@ func _execute_action_logic(_params: Dictionary = {}) -> DebugActionResult:
 		errors.append("set_user_id failed")
 
 	_update_status("Testing set_user_property...")
-	if not _call_method_safe(
-		analytics, "set_user_property", ["test_account_type", "premium"]
-	):
+	if not _call_method_safe(analytics, "set_user_property", ["test_account_type", "premium"]):
 		errors.append("set_user_property failed")
 
 	# Verify user_id was set (is_initialized should return true after set_user_id)

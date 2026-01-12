@@ -47,10 +47,7 @@ func get_cpp_remote_config() -> Object:
 
 	# Set defaults for testing
 	var defaults: Dictionary = {
-		"test_bool": true,
-		"test_int": 42,
-		"test_double": 3.14,
-		"test_string": "default_value"
+		"test_bool": true, "test_int": 42, "test_double": 3.14, "test_string": "default_value"
 	}
 	if cpp_rc.has_method("set_defaults"):
 		cpp_rc.call("set_defaults", defaults)
@@ -87,7 +84,11 @@ func _execute_action_logic(_params: Dictionary = {}) -> DebugActionResult:
 	if rc.has_method("loaded"):
 		var loaded: bool = rc.call("loaded")
 		results["loaded"] = loaded
-		Log.debug("RemoteConfig loaded state: " + str(loaded), {}, ["debug", "cpp_firebase", "remote_config"])
+		Log.debug(
+			"RemoteConfig loaded state: " + str(loaded),
+			{},
+			["debug", "cpp_firebase", "remote_config"]
+		)
 
 	# Test fetch_and_activate_async
 	_update_status("Testing fetch_and_activate_async...")
@@ -120,10 +121,7 @@ func _execute_action_logic(_params: Dictionary = {}) -> DebugActionResult:
 			"C++ Remote Config fetch tests passed",
 			duration,
 			action_name,
-			{
-				"cpp_instance_id": cpp_rc_instance_id,
-				"results": results
-			}
+			{"cpp_instance_id": cpp_rc_instance_id, "results": results}
 		)
 	else:
 		_update_status("❌ C++ Remote Config fetch tests failed: " + ", ".join(errors), true)

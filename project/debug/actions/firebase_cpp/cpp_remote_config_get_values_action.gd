@@ -47,10 +47,7 @@ func get_cpp_remote_config() -> Object:
 
 	# Set defaults for testing
 	var defaults: Dictionary = {
-		"test_bool": true,
-		"test_int": 42,
-		"test_double": 3.14,
-		"test_string": "default_value"
+		"test_bool": true, "test_int": 42, "test_double": 3.14, "test_string": "default_value"
 	}
 	if cpp_rc.has_method("set_defaults"):
 		cpp_rc.call("set_defaults", defaults)
@@ -84,10 +81,7 @@ func _execute_action_logic(_params: Dictionary = {}) -> DebugActionResult:
 
 	# Set defaults for testing
 	var defaults: Dictionary = {
-		"test_bool": true,
-		"test_int": 42,
-		"test_double": 3.14,
-		"test_string": "default_value"
+		"test_bool": true, "test_int": 42, "test_double": 3.14, "test_string": "default_value"
 	}
 	if rc.has_method("set_defaults"):
 		rc.call("set_defaults", defaults)
@@ -96,7 +90,9 @@ func _execute_action_logic(_params: Dictionary = {}) -> DebugActionResult:
 	if rc.has_method("get_boolean"):
 		var bool_val: Variant = rc.call("get_boolean", "test_bool")
 		results["get_boolean"] = bool_val
-		Log.debug("get_boolean result: " + str(bool_val), {}, ["debug", "cpp_firebase", "remote_config"])
+		Log.debug(
+			"get_boolean result: " + str(bool_val), {}, ["debug", "cpp_firebase", "remote_config"]
+		)
 	else:
 		errors.append("get_boolean method not found")
 
@@ -112,7 +108,9 @@ func _execute_action_logic(_params: Dictionary = {}) -> DebugActionResult:
 	if rc.has_method("get_double"):
 		var double_val: Variant = rc.call("get_double", "test_double")
 		results["get_double"] = double_val
-		Log.debug("get_double result: " + str(double_val), {}, ["debug", "cpp_firebase", "remote_config"])
+		Log.debug(
+			"get_double result: " + str(double_val), {}, ["debug", "cpp_firebase", "remote_config"]
+		)
 	else:
 		errors.append("get_double method not found")
 
@@ -120,7 +118,9 @@ func _execute_action_logic(_params: Dictionary = {}) -> DebugActionResult:
 	if rc.has_method("get_string"):
 		var string_val: Variant = rc.call("get_string", "test_string")
 		results["get_string"] = string_val
-		Log.debug("get_string result: " + str(string_val), {}, ["debug", "cpp_firebase", "remote_config"])
+		Log.debug(
+			"get_string result: " + str(string_val), {}, ["debug", "cpp_firebase", "remote_config"]
+		)
 	else:
 		errors.append("get_string method not found")
 
@@ -136,26 +136,38 @@ func _execute_action_logic(_params: Dictionary = {}) -> DebugActionResult:
 	if rc.has_method("get_keys_by_prefix"):
 		var prefixed_keys: Variant = rc.call("get_keys_by_prefix", "test_")
 		results["get_keys_by_prefix"] = prefixed_keys
-		Log.debug("get_keys_by_prefix result: " + str(prefixed_keys), {}, ["debug", "cpp_firebase", "remote_config"])
+		Log.debug(
+			"get_keys_by_prefix result: " + str(prefixed_keys),
+			{},
+			["debug", "cpp_firebase", "remote_config"]
+		)
 
 	# Test get_json and get_value_info if available
 	_update_status("Testing get_json...")
 	if rc.has_method("get_json"):
 		var json_val: Variant = rc.call("get_json", "test_string")
 		results["get_json"] = json_val
-		Log.debug("get_json result: " + str(json_val), {}, ["debug", "cpp_firebase", "remote_config"])
+		Log.debug(
+			"get_json result: " + str(json_val), {}, ["debug", "cpp_firebase", "remote_config"]
+		)
 
 	_update_status("Testing get_value_info...")
 	if rc.has_method("get_value_info"):
 		var info: Variant = rc.call("get_value_info", "test_string")
 		results["get_value_info"] = info
-		Log.debug("get_value_info result: " + str(info), {}, ["debug", "cpp_firebase", "remote_config"])
+		Log.debug(
+			"get_value_info result: " + str(info), {}, ["debug", "cpp_firebase", "remote_config"]
+		)
 
 	_update_status("Testing get_fetch_info...")
 	if rc.has_method("get_fetch_info"):
 		var fetch_info: Variant = rc.call("get_fetch_info")
 		results["get_fetch_info"] = fetch_info
-		Log.debug("get_fetch_info result: " + str(fetch_info), {}, ["debug", "cpp_firebase", "remote_config"])
+		Log.debug(
+			"get_fetch_info result: " + str(fetch_info),
+			{},
+			["debug", "cpp_firebase", "remote_config"]
+		)
 
 	var duration: int = Time.get_ticks_msec() - start_time
 
@@ -165,10 +177,7 @@ func _execute_action_logic(_params: Dictionary = {}) -> DebugActionResult:
 			"C++ Remote Config get_values tests passed",
 			duration,
 			action_name,
-			{
-				"cpp_instance_id": cpp_rc_instance_id,
-				"results": results
-			}
+			{"cpp_instance_id": cpp_rc_instance_id, "results": results}
 		)
 	else:
 		_update_status("❌ C++ Remote Config get_values tests failed: " + ", ".join(errors), true)

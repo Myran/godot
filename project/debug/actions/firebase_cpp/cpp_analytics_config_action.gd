@@ -21,9 +21,7 @@ func get_cpp_analytics() -> Object:
 		return cpp_analytics
 
 	Log.debug(
-		"Creating direct C++ FirebaseAnalytics instance",
-		{},
-		["debug", "cpp_firebase", "analytics"]
+		"Creating direct C++ FirebaseAnalytics instance", {}, ["debug", "cpp_firebase", "analytics"]
 	)
 
 	if not ClassDB.class_exists("FirebaseAnalytics"):
@@ -106,7 +104,8 @@ func _execute_action_logic(_params: Dictionary = {}) -> DebugActionResult:
 			action_name,
 			{
 				"cpp_instance_id": cpp_analytics_instance_id,
-				"tested_methods": [
+				"tested_methods":
+				[
 					"set_analytics_collection_enabled",
 					"set_session_timeout_duration",
 					"reset_analytics_data"
