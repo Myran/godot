@@ -4,7 +4,7 @@
 // - firebase_windows.cpp (Windows)
 
 #include "firebase.h"
-#include "database.h"  // For FirebaseDatabase::begin_shutdown()
+#include "database.h"   // For FirebaseDatabase::begin_shutdown()
 
 #if defined(__APPLE__)
 #include <TargetConditionals.h>
@@ -34,9 +34,14 @@ void Firebase::cleanup_firebase() {
     if (app_ptr != NULL) {
         print_line(String("[Firebase] Cleaning up Firebase resources..."));
 
-        // CRITICAL FIX: Call begin_shutdown() to prevent further Firebase callbacks
-        // This prevents call_deferred emissions during app shutdown, avoiding use-after-free crashes
+        // CRITICAL FIX: Call begin_shutdown() on Firebase services that might be active
+        // to prevent further callbacks during app shutdown, avoiding use-after-free crashes
+        // Only Database is guaranteed to be used (card retrieval), others are optional
         FirebaseDatabase::begin_shutdown();
+
+        // Note: Firestore, Auth, RemoteConfig, Analytics shutdown is handled by their
+        // respective destructors and GDScript cleanup. Only call begin_shutdown() if
+        // the service was actually initialized to avoid static initialization issues.
 
         print_line(String("[Firebase] Firebase cleanup completed"));
         app_ptr = NULL;

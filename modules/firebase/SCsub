@@ -10,7 +10,7 @@ env.add_source_files(env.modules_sources, "auth.cpp")           # Pure C++ - wor
 env.add_source_files(env.modules_sources, "convertor.cpp")
 env.add_source_files(env.modules_sources, "database.cpp")
 env.add_source_files(env.modules_sources, "firebase_common.cpp") # Shared Firebase logic
-env.add_source_files(env.modules_sources, "firestore.cpp")       # Firestore C++ module
+# env.add_source_files(env.modules_sources, "firestore.cpp")     # TEMPORARILY DISABLED - investigating macOS crash
 env.add_source_files(env.modules_sources, "messaging.cpp")
 env.add_source_files(env.modules_sources, "register_types.cpp")
 env.add_source_files(env.modules_sources, "remote_config.cpp")
@@ -40,12 +40,14 @@ if env['platform'] == 'iphone':
 elif env['platform'] == 'macos':
     print("Firebase: macOS platform")
     # Link Firebase C++ SDK libraries for macOS (darwin)
+    # SystemConfiguration framework required by Firestore (SCNetworkReachability symbols)
+    # env.Append(LINKFLAGS=['-framework', 'SystemConfiguration'])  # TEMPORARILY DISABLED - Firestore only
     if env['arch'] == 'arm64':
         env.Prepend(LIBS=[File("#/../firebase/firebase_cpp_sdk/libs/darwin/arm64/libfirebase_app.a")])
         env.Prepend(LIBS=[File("#/../firebase/firebase_cpp_sdk/libs/darwin/arm64/libfirebase_analytics.a")])
         env.Prepend(LIBS=[File("#/../firebase/firebase_cpp_sdk/libs/darwin/arm64/libfirebase_remote_config.a")])
         env.Prepend(LIBS=[File("#/../firebase/firebase_cpp_sdk/libs/darwin/arm64/libfirebase_database.a")])
-        env.Prepend(LIBS=[File("#/../firebase/firebase_cpp_sdk/libs/darwin/arm64/libfirebase_firestore.a")])
+        # env.Prepend(LIBS=[File("#/../firebase/firebase_cpp_sdk/libs/darwin/arm64/libfirebase_firestore.a")])  # TEMPORARILY DISABLED
         env.Prepend(LIBS=[File("#/../firebase/firebase_cpp_sdk/libs/darwin/arm64/libfirebase_auth.a")])
         env.Prepend(LIBS=[File("#/../firebase/firebase_cpp_sdk/libs/darwin/arm64/libfirebase_functions.a")])
         env.Prepend(LIBS=[File("#/../firebase/firebase_cpp_sdk/libs/darwin/arm64/libfirebase_messaging.a")])
@@ -54,7 +56,7 @@ elif env['platform'] == 'macos':
         env.Prepend(LIBS=[File("#/../firebase/firebase_cpp_sdk/libs/darwin/x86_64/libfirebase_analytics.a")])
         env.Prepend(LIBS=[File("#/../firebase/firebase_cpp_sdk/libs/darwin/x86_64/libfirebase_remote_config.a")])
         env.Prepend(LIBS=[File("#/../firebase/firebase_cpp_sdk/libs/darwin/x86_64/libfirebase_database.a")])
-        env.Prepend(LIBS=[File("#/../firebase/firebase_cpp_sdk/libs/darwin/x86_64/libfirebase_firestore.a")])
+        # env.Prepend(LIBS=[File("#/../firebase/firebase_cpp_sdk/libs/darwin/x86_64/libfirebase_firestore.a")])  # TEMPORARILY DISABLED
         env.Prepend(LIBS=[File("#/../firebase/firebase_cpp_sdk/libs/darwin/x86_64/libfirebase_auth.a")])
         env.Prepend(LIBS=[File("#/../firebase/firebase_cpp_sdk/libs/darwin/x86_64/libfirebase_functions.a")])
         env.Prepend(LIBS=[File("#/../firebase/firebase_cpp_sdk/libs/darwin/x86_64/libfirebase_messaging.a")])
