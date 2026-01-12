@@ -4,7 +4,7 @@ title: 'Firebase Services Integration Epic - Auth, Remote Config, Firestore, Ana
 status: In Progress
 assignee: []
 created_date: '2025-12-30 21:26'
-updated_date: '2026-01-07 16:41'
+updated_date: '2026-01-07 00:33'
 labels:
   - firebase
   - epic
@@ -122,23 +122,23 @@ All implementations must follow patterns from `database.cpp`:
 
 ## Acceptance Criteria
 <!-- AC:BEGIN -->
-- [x] #1 #1 task-399 (Auth) completed with all acceptance criteria met
+- [ ] #1 #1 task-399 (Auth) completed with all acceptance criteria met
 - [x] #2 #2 task-400 (Remote Config) completed with all acceptance criteria met
-- [x] #3 #3 task-401 (Firestore) completed with all acceptance criteria met
+- [ ] #3 #3 task-401 (Firestore) completed with all acceptance criteria met
 - [x] #4 #4 task-402 (Analytics) completed with all acceptance criteria met
-- [x] #5 #5 task-404 (Steam Auth) completed with all acceptance criteria met
-- [x] #6 #6 All services follow consistent 3-layer architecture (C++ → GDScript Service → Backend)
-- [x] #7 #7 Cross-platform testing passes on Android (arm64 device)
+- [ ] #5 #5 task-404 (Steam Auth) completed with all acceptance criteria met
+- [ ] #6 #6 All services follow consistent 3-layer architecture (C++ → GDScript Service → Backend)
+- [ ] #7 #7 Cross-platform testing passes on Android (arm64 device)
 
 - [ ] #8 #8 Cross-platform testing passes on iOS (arm64 device)
-- [x] #9 #9 Cross-platform testing passes on macOS (Universal binary)
-- [x] #10 #10 Cross-platform testing passes on Windows (x64 physical machine)
+- [ ] #9 #9 Cross-platform testing passes on macOS (Universal binary)
+- [ ] #10 #10 Cross-platform testing passes on Windows (x64 physical machine)
 - [ ] #11 #11 Integration test: Auth user ID correctly linked to Analytics
 - [ ] #12 #12 Integration test: Auth state affects Firestore security rules
 - [ ] #13 #13 Integration test: Remote Config respects Auth user targeting
 - [ ] #14 #14 CLAUDE.md updated with Firebase services documentation
-- [x] #15 #15 All C++ modules use thread-safe singleton pattern from database.h
-- [x] #16 #16 All C++ modules implement shutdown safety (is_shutting_down flag)
+- [ ] #15 #15 All C++ modules use thread-safe singleton pattern from database.h
+- [ ] #16 #16 All C++ modules implement shutdown safety (is_shutting_down flag)
 <!-- AC:END -->
 
 ## Implementation Notes
@@ -322,42 +322,4 @@ ee6b7657 feat: Implement Firebase Analytics with UTF-8 dangling pointer fix
 - task-399 (Auth) - To Do (unblocks Steam full implementation)
 
 - task-401 (Firestore) - To Do
-
-## Android Firebase Test Results (2026-01-07)
-
-**Result: 22/23 configs pass (95%)**
-
-Fixed `sign_in_anonymous` → `sign_in_anonymously` method name mismatch in `auth_get_id_token_action.gd`.
-
-**Only Failure**: `firebase-cpp-layer` due to `sign_in_custom_token` action (requires server-side token generation - expected behavior).
-
-**All Core Firebase Services Verified**:
-- ✅ Auth (anonymous, sign out, ID token, state transitions)
-- ✅ Remote Config (fetch, activate, get values)
-- ✅ Analytics (events, user properties)
-- ✅ Firestore (document CRUD, collection queries)
-- ✅ RTDB (get/set values, concurrent ops, error handling)
-
-## Cross-Platform Test Results (2026-01-07)
-
-**Android**: ✅ **PASSED** - 22/23 configs (95%)
-- Only failure: `sign_in_custom_token` (requires server-side token generation)
-
-**macOS**: ❌ **FAILED** - Abort trap on app launch
-- Error: `Abort trap: 6` when launching exported .app
-- Warning: "built for macOS 13.6, linking to 11.0"
-- Likely: Firebase initialization incompatibility or SDK version mismatch
-- **See task-427**
-
-**Windows**: ❌ **FAILED** - Test infrastructure issue
-- Debug coordinator returns 0 actions collected
-- Test completes but no debug actions execute
-- **See task-428**
-
-**Root Cause**: Both failures are platform-specific test infrastructure issues, not Firebase code defects.
-
-**Commits**:
-- `d8b981ed` - Fix sign_in_anonymous method name
-- `f5fd0dc2` - Implement unified logs command (task-426)
-- `29df82df9` (godot) - Add SystemConfiguration framework for Firestore macOS
 <!-- SECTION:NOTES:END -->
