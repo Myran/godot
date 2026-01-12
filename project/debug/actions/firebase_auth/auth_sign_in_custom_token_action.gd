@@ -49,12 +49,11 @@ func _execute_action_logic(_params: Dictionary = {}) -> DebugActionResult:
 	var signal_result: Array = await auth.custom_token_sign_in_completed
 	var duration: int = Time.get_ticks_msec() - start_time
 
-	# Parse result: [request_id, success, uid, error_code, error_message]
+	# Parse result: [request_id, success, uid, error_message]
 	var recv_request_id: int = int(signal_result[0])
 	var success: bool = bool(signal_result[1])
 	var uid: String = str(signal_result[2])
-	var error_code: int = int(signal_result[3])
-	var error_message: String = str(signal_result[4])
+	var error_message: String = str(signal_result[3])
 
 	if recv_request_id != request_id:
 		return DebugActionResult.new_failure(
@@ -71,7 +70,6 @@ func _execute_action_logic(_params: Dictionary = {}) -> DebugActionResult:
 		"test_token_used": true,
 		"success": success,
 		"uid": uid if success else "",
-		"error_code": error_code if not success else 0,
 		"error_message": error_message if not success else "",
 		"expected_failure": true,  # Using test token, expected to fail
 		"timestamp": Time.get_unix_time_from_system()
