@@ -3496,24 +3496,28 @@ _execute-test-android config_name:
 _execute-test-editor config_name:
     #!/usr/bin/env bash
     set -euo pipefail
-    
+
     CONFIG_NAME="{{config_name}}"
-    
+
     echo "🖥️  Starting desktop test execution..."
-    
+
+    # Configurable timeout for desktop tests (default: 120 seconds)
+    # Can be overridden via environment variable DESKTOP_TEST_MAX_TIMEOUT
+    MAX_TIMEOUT="${DESKTOP_TEST_MAX_TIMEOUT:-120}"
+
     # Run desktop Godot with debug actions (automated mode with quit)
     # CRITICAL: --test-mode flag enables debug coordinator (without it, debug actions are skipped)
-    echo "🚀 Starting desktop test in automated mode with --test-mode flag..."
-    
+    echo "🚀 Starting desktop test in automated mode with --test-mode flag (timeout: ${MAX_TIMEOUT}s)..."
+
     echo ""
-    
+
     # Capture all output to a temporary file for filtering
     TEMP_OUTPUT=$(mktemp)
-    
-    # Execute test with reduced logging but preserve essential test information
-    # Use --verbose to override quiet mode and get test logs, but filter output
+
+    # Execute test with timeout wrapper to prevent indefinite hangs
+    # Exit code 124 = timeout reached (handled below)
     {
-        ./editor/{{GODOT_EXECUTABLE}} --path {{PROJECT_PATH}} --test-mode --minimized 2>&1
+        timeout "$MAX_TIMEOUT" ./editor/{{GODOT_EXECUTABLE}} --path {{PROJECT_PATH}} --test-mode --minimized 2>&1
         TEST_EXIT_CODE=$?
     } > "$TEMP_OUTPUT" || TEST_EXIT_CODE=$?
     
@@ -3632,6 +3636,10 @@ _execute-test-macos config_name:
 
     echo "🍎 Starting macOS exported app test execution..."
 
+    # Configurable timeout for macOS tests (default: 120 seconds)
+    # Can be overridden via environment variable MACOS_TEST_MAX_TIMEOUT
+    MAX_TIMEOUT="${MACOS_TEST_MAX_TIMEOUT:-120}"
+
     # Validate exported app exists
     MACOS_APP_PATH="export/macos/{{GAME_NAME}}_debug.app"
     MACOS_BINARY_PATH="$MACOS_APP_PATH/Contents/MacOS/{{GAME_NAME}}"
@@ -3652,7 +3660,7 @@ _execute-test-macos config_name:
     echo "🔓 Clearing quarantine attributes for Gatekeeper..."
     xattr -cr "$MACOS_APP_PATH" 2>/dev/null || true
 
-    echo "🚀 Starting macOS test in automated mode..."
+    echo "🚀 Starting macOS test in automated mode (timeout: ${MAX_TIMEOUT}s)..."
     echo ""
 
     # Capture all output to a temporary file for filtering
@@ -3666,8 +3674,10 @@ _execute-test-macos config_name:
         MACOS_ARGS="$MACOS_ARGS --main-pack $TEST_MACOS_PCK"
     fi
 
+    # Execute test with timeout wrapper to prevent indefinite hangs
+    # Exit code 124 = timeout reached (handled below)
     {
-        "$MACOS_BINARY_PATH" $MACOS_ARGS 2>&1
+        timeout "$MAX_TIMEOUT" "$MACOS_BINARY_PATH" $MACOS_ARGS 2>&1
         TEST_EXIT_CODE=$?
     } > "$TEMP_OUTPUT" || TEST_EXIT_CODE=$?
 
@@ -3715,7 +3725,7 @@ _execute-test-macos config_name:
     # Handle exit codes with intelligent success detection
     if [[ ${TEST_EXIT_CODE:-0} -eq 124 ]]; then
         echo ""
-        echo "❌ macOS test timed out"
+        echo "❌ macOS test timed out after ${MAX_TIMEOUT} seconds"
         echo "📄 Extracting macOS logs for analysis..."
         just _extract-logs "$TEST_ID" "macos" "$TEMP_OUTPUT" || echo "⚠️  Failed to extract macOS logs"
         rm -f "$TEMP_OUTPUT"
