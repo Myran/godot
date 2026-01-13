@@ -69,6 +69,18 @@ func start_debug_coordinator() -> void:
 		"Actions retrieved", {"count": actions.size(), "actions": actions}, ["debug", "startup"]
 	)
 
+	# CRITICAL (Task-434): Check if config requests force_local_data mode
+	# This bypasses Firebase RTDB on Windows where GetValue() crashes (Firebase C++ SDK bug)
+	var config_metadata: Dictionary = DebugConfigReader.get_metadata()
+	var force_local_data: bool = config_metadata.get("force_local_data", false)
+	if force_local_data:
+		ProjectSettings.set_setting("game/debug/force_local_data", true)
+		Log.info(
+			"Force local data mode enabled via config metadata (Task-434 - Windows RTDB crash workaround)",
+			{},
+			["debug", "startup", "task434", "windows", "firebase"]
+		)
+
 	# CRITICAL (Task-424): Set card cache skip flag BEFORE any game initialization
 	# This prevents 45s RTDB timeout for tests that don't need card data (e.g., Analytics)
 	var needs_cards: bool = _actions_need_cards(actions)
