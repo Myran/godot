@@ -154,8 +154,9 @@ public:
 	void monitor_connection_state();
 	void on_connection_state_changed(const firebase::database::DataSnapshot &snapshot);
 
-	// Task-434: Diagnostic test to isolate Windows GetValue crash
+	// Task-434: Diagnostic tests to isolate Windows RTDB issues
 	void test_get_value_diagnostic();
+	void test_set_value_diagnostic();
 };
 
 #endif // FirebaseDatabase_h

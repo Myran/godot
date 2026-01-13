@@ -886,6 +886,79 @@ void FirebaseDatabase::test_get_value_diagnostic() {
 	print_line("=== RTDB DIAGNOSTIC TEST COMPLETE ===");
 }
 
+// Task-434: Diagnostic test to check if SetValue works on Windows
+void FirebaseDatabase::test_set_value_diagnostic() {
+	print_line("=== RTDB SETVALUE DIAGNOSTIC START (Task-434) ===");
+
+	// Step 0: Check initialization
+	print_line(String("[DIAG] Step 0: Check RTDB initialization"));
+	if (!database) {
+		print_line(String("[DIAG]   ERROR: database pointer is NULL"));
+		print_line("=== RTDB SETVALUE DIAGNOSTIC ABORTED ===");
+		return;
+	}
+	print_line(String("[DIAG]   database pointer is valid"));
+
+	// Step 1: Get root reference
+	print_line(String("[DIAG] Step 1: Get root reference"));
+	firebase::database::DatabaseReference root_ref = database->GetReference();
+	print_line(String("[DIAG]   root_ref.is_valid()=") + (root_ref.is_valid() ? "true" : "false"));
+
+	std::string root_url_str = root_ref.url();
+	print_line(String("[DIAG]   root_url=") + String(root_url_str.c_str()));
+
+	// Step 2: Create child reference for test
+	print_line(String("[DIAG] Step 2: Create child reference ('diagnostic_test')"));
+	CharString test_path_cs = String("diagnostic_test").utf8();
+	firebase::database::DatabaseReference child_ref = root_ref.Child(test_path_cs.get_data());
+	print_line(String("[DIAG]   child_ref.is_valid()=") + (child_ref.is_valid() ? "true" : "false"));
+
+	// Step 3: Create test data (simple string value)
+	print_line(String("[DIAG] Step 3: Create test data"));
+	CharString test_value_cs = String("test_value_123").utf8();
+	firebase::Variant test_value = firebase::Variant(test_value_cs.get_data());
+	print_line(String("[DIAG]   test_value=") + String(test_value_cs.get_data()));
+
+	// Step 4: Call SetValue (CRITICAL POINT)
+	print_line(String("[DIAG] Step 4: Call SetValue() - CRITICAL POINT"));
+	print_line(String("[DIAG]   About to call child_ref.SetValue()..."));
+	print_line(String("[DIAG]   *** IF CRASH HAPPENS HERE, SetValue IS BROKEN ON WINDOWS ***"));
+
+	firebase::Future<void> set_future = child_ref.SetValue(test_value);
+
+	print_line(String("[DIAG]   *** SetValue RETURNED SUCCESSFULLY ***"));
+	print_line(String("[DIAG]   set_future.status()=") + itos(set_future.status()));
+
+	// Step 5: Wait for completion (with timeout)
+	print_line(String("[DIAG] Step 5: Wait for SetValue completion (max 5 seconds)"));
+	int wait_count = 0;
+	const int max_wait = 100; // 5 seconds (50ms * 100)
+
+	while (set_future.status() == firebase::kFutureStatusPending && wait_count < max_wait) {
+		// Small delay
+		usleep(50000); // 50ms
+		wait_count++;
+	}
+
+	print_line(String("[DIAG]   Wait count: ") + itos(wait_count));
+	print_line(String("[DIAG]   Final status: ") + itos(set_future.status()));
+
+	if (set_future.status() == firebase::kFutureStatusComplete) {
+		int error_code = set_future.error();
+		print_line(String("[DIAG]   Error code: ") + itos(error_code));
+		if (error_code == 0) {
+			print_line(String("[DIAG]   *** SetValue SUCCESS ***"));
+		} else {
+			const char* error_msg = set_future.error_message();
+			print_line(String("[DIAG]   Error message: ") + String(error_msg ? error_msg : "(null)"));
+		}
+	} else {
+		print_line(String("[DIAG]   *** SetValue DID NOT COMPLETE (timeout) ***"));
+	}
+
+	print_line("=== RTDB SETVALUE DIAGNOSTIC COMPLETE ===");
+}
+
 // --- Main Thread Callback Handlers (Task-207 SIGBUS Fix) ---
 // These methods execute on Godot's main thread via MessageQueue marshalling
 // ensuring all Godot operations (Variant conversion, signal emission) are thread-safe
@@ -1131,8 +1204,9 @@ void FirebaseDatabase::_bind_methods() {
 	ClassDB::bind_method(D_METHOD("remove_listener_at_path", "keys"), &FirebaseDatabase::remove_listener_at_path);
 	ClassDB::bind_method(D_METHOD("monitor_connection_state"), &FirebaseDatabase::monitor_connection_state);
 
-	// Task-434: Diagnostic test method
+	// Task-434: Diagnostic test methods
 	ClassDB::bind_method(D_METHOD("test_get_value_diagnostic"), &FirebaseDatabase::test_get_value_diagnostic);
+	ClassDB::bind_method(D_METHOD("test_set_value_diagnostic"), &FirebaseDatabase::test_set_value_diagnostic);
 
 	ADD_SIGNAL(MethodInfo("get_value_completed", PropertyInfo(Variant::INT, "request_id"), PropertyInfo(Variant::STRING, "key"), PropertyInfo(Variant::NIL, "value", PROPERTY_HINT_NONE, "", PROPERTY_USAGE_NIL_IS_VARIANT)));
 	ADD_SIGNAL(MethodInfo("get_value_error", PropertyInfo(Variant::INT, "request_id"), PropertyInfo(Variant::STRING, "key"), PropertyInfo(Variant::STRING, "error_code"), PropertyInfo(Variant::STRING, "error_message")));
