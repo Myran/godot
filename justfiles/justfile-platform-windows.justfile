@@ -934,6 +934,10 @@ _execute-test-windows-physical config_name test_id:
     echo "📍 Target: {{WIN_PHYSICAL_HOST}} (GUI mode)"
     echo ""
 
+    # Ensure machine is awake before running test (checks first, wakes if needed)
+    just win-physical-wake-wait
+    echo ""
+
     # Run test with GUI using PowerShell Start-Process
     echo "🚀 Starting test with GUI..."
     echo ""
