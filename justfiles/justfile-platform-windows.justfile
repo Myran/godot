@@ -727,6 +727,9 @@ WIN_PHYSICAL_LOGS := WIN_PHYSICAL_DIR + "\\logs"
 WIN_PHYSICAL_CONFIGS := WIN_PHYSICAL_DIR + "\\configs"
 # Godot user data on physical machine
 WIN_PHYSICAL_USER_DATA := "C:\\Users\\" + WIN_PHYSICAL_USER + "\\AppData\\Roaming\\Godot\\app_userdata\\gametwo"
+# SCP-friendly paths (forward slashes required for scp protocol)
+WIN_PHYSICAL_BUILDS_SCP := "/C:/GameTwoTests/builds"
+WIN_PHYSICAL_USER_DATA_SCP := "/C:/Users/" + WIN_PHYSICAL_USER + "/AppData/Roaming/Godot/app_userdata/gametwo"
 
 # Internal helper: Deploy Windows export with build type selection
 _win-physical-deploy-internal BUILD_TYPE="debug":
@@ -772,19 +775,19 @@ _win-physical-deploy-internal BUILD_TYPE="debug":
 
     # Copy the specific export files
     echo "📤 Copying Windows $BUILD_TYPE export files..."
-    scp "$WIN_EXE_PATH" "$WIN_PCK_PATH" "{{WIN_PHYSICAL_USER}}@{{WIN_PHYSICAL_HOST}}:/C:/GameTwoTests/builds/"
+    scp "$WIN_EXE_PATH" "$WIN_PCK_PATH" "{{WIN_PHYSICAL_USER}}@{{WIN_PHYSICAL_HOST}}:{{WIN_PHYSICAL_BUILDS_SCP}}/"
 
     # Copy Firebase config if exists
     if [ -f "firebase/google-services-desktop.json" ]; then
         echo "🔥 Copying Firebase config..."
-        scp firebase/google-services-desktop.json "{{WIN_PHYSICAL_USER}}@{{WIN_PHYSICAL_HOST}}:/C:/GameTwoTests/builds/"
+        scp firebase/google-services-desktop.json "{{WIN_PHYSICAL_USER}}@{{WIN_PHYSICAL_HOST}}:{{WIN_PHYSICAL_BUILDS_SCP}}/"
     fi
 
     # Copy Sentry DLLs if they exist
     if [ -d "project/addons/sentry/bin/windows/x86_64" ]; then
         echo "🛡️ Copying Sentry DLLs..."
-        scp project/addons/sentry/bin/windows/x86_64/*.dll "{{WIN_PHYSICAL_USER}}@{{WIN_PHYSICAL_HOST}}:/C:/GameTwoTests/builds/"
-        scp project/addons/sentry/bin/windows/x86_64/*.exe "{{WIN_PHYSICAL_USER}}@{{WIN_PHYSICAL_HOST}}:/C:/GameTwoTests/builds/"
+        scp project/addons/sentry/bin/windows/x86_64/*.dll "{{WIN_PHYSICAL_USER}}@{{WIN_PHYSICAL_HOST}}:{{WIN_PHYSICAL_BUILDS_SCP}}/"
+        scp project/addons/sentry/bin/windows/x86_64/*.exe "{{WIN_PHYSICAL_USER}}@{{WIN_PHYSICAL_HOST}}:{{WIN_PHYSICAL_BUILDS_SCP}}/"
     fi
 
     # Verify deployment
@@ -882,7 +885,7 @@ _win-physical-deploy-config config_path:
     ssh {{WIN_PHYSICAL_USER}}@{{WIN_PHYSICAL_HOST}} "del \"{{WIN_PHYSICAL_USER_DATA}}\\debug_startup_actions.json\" 2>nul || echo No old config"
 
     # Copy new config
-    scp "$CONFIG_PATH" "{{WIN_PHYSICAL_USER}}@{{WIN_PHYSICAL_HOST}}:/C:/Users/{{WIN_PHYSICAL_USER}}/AppData/Roaming/Godot/app_userdata/gametwo/debug_startup_actions.json"
+    scp "$CONFIG_PATH" "{{WIN_PHYSICAL_USER}}@{{WIN_PHYSICAL_HOST}}:{{WIN_PHYSICAL_USER_DATA_SCP}}/debug_startup_actions.json"
 
     echo "✅ Config deployed"
 
