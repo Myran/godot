@@ -102,6 +102,7 @@ elif env['platform'] == 'windows':
         # Windows system libraries required by Firebase SDK
         # Use LINKFLAGS to pass system libraries directly to linker (avoids SCons name mangling)
         env.Append(LINKFLAGS=['Userenv.lib'])  # For GetUserProfileDirectoryW (used by firebase_database)
+        env.Append(LINKFLAGS=['dbghelp.lib'])  # For SymSetOptions, SymInitialize, SymFromAddr (used by firebase_firestore)
         # ICU libraries for timezone/locale functions (u_errorName, ucal_getTimeZoneIDForWindowsID)
         # Windows 10 1903+ uses icu.lib, older versions use icuuc.lib + icuin.lib
         env.Append(LINKFLAGS=['icu.lib'])      # Modern unified ICU library (Windows 10 1903+)
