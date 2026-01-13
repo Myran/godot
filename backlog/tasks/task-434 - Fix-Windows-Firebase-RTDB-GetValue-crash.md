@@ -59,6 +59,36 @@ The crash occurs **inside** `firebase::database::DatabaseReference::GetValue()` 
 1. **Short-term**: Force local data mode on Windows (`game/debug/force_local_data = true`)
 2. **Medium-term**: Report to Firebase C++ SDK GitHub issues
 3. **Long-term**: Monitor Firebase SDK updates for Windows RTDB fixes
+
+## ✅ WORKAROUND IMPLEMENTED (2026-01-13)
+
+**Config Metadata Flag for `force_local_data`:**
+- Added `force_local_data: true` to debug config metadata
+- `backend_factory.gd` reads config metadata before creating backend
+- Bypasses RTDB initialization while allowing other Firebase features to work
+
+### Test Results (2026-01-13)
+Config: `windows-firebase-non-rtdb-test.json`
+Test ID: `windows-firebase-non-rtdb-test_windows-physical_1768330197`
+
+| Firebase Feature | Windows Status | Evidence |
+|-----------------|----------------|----------|
+| **Analytics** | ✅ **WORKS** | `cpp.firebase.analytics.log_event` PASSED (40ms) |
+| **Remote Config** | ✅ **WORKS** | `get_values` PASSED (37ms), `fetch_and_activate` PASSED (540ms) |
+| **RTDB GetValue()** | ❌ **CRASHES** | Crash occurs inside Firebase C++ SDK |
+
+**Log Confirmation:**
+```
+force_local_data: true  (config metadata flag applied)
+Local backend used (no RTDB calls)
+```
+
+**Files Modified:**
+- `project/data/backends/backend_factory.gd` - Reads config metadata for force_local_data
+- `project/addons/debug_startup/debug_startup_coordinator.gd` - Sets ProjectSetting (backup)
+- `tests/debug_configs/windows-firebase-non-rtdb-test.json` - Test config with workaround
+
+**This confirms the crash is isolated to RTDB `GetValue()` - other Firebase SDK modules work correctly on Windows.**
 <!-- SECTION:DESCRIPTION:END -->
 
 # Windows Firebase RTDB GetValue() Crash
