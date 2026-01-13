@@ -106,6 +106,9 @@ private:
 	uint64_t _listener_path_ref_count;
 	firebase::database::DatabaseReference _active_child_listener_ref;
 
+	// Task-434: Store DatabaseReference to extend lifetime (Windows crash workaround)
+	firebase::database::DatabaseReference _cached_get_value_ref;
+
 protected:
 	static void _bind_methods();
 
