@@ -99,12 +99,25 @@ elif env['platform'] == 'windows':
         env.Prepend(LIBS=[File("#/../firebase/firebase_cpp_sdk/libs/windows/VS2019/MT/x64/Release/firebase_auth.lib")])
         env.Prepend(LIBS=[File("#/../firebase/firebase_cpp_sdk/libs/windows/VS2019/MT/x64/Release/firebase_functions.lib")])
         env.Prepend(LIBS=[File("#/../firebase/firebase_cpp_sdk/libs/windows/VS2019/MT/x64/Release/firebase_messaging.lib")])
-        # Windows system libraries required by Firebase SDK
+        # Windows system libraries required by Firebase SDK (Task-434)
         # Use LINKFLAGS to pass system libraries directly to linker (avoids SCons name mangling)
-        env.Append(LINKFLAGS=['Userenv.lib'])  # For GetUserProfileDirectoryW (used by firebase_database)
-        env.Append(LINKFLAGS=['dbghelp.lib'])  # For SymSetOptions, SymInitialize, SymFromAddr (used by firebase_firestore)
+        # Reference: https://firebase.google.com/docs/database/cpp/start
+
+        # Core Firebase libraries (all services)
+        env.Append(LINKFLAGS=['advapi32.lib'])  # Windows advanced API (cryptography, registry)
+        env.Append(LINKFLAGS=['ws2_32.lib'])    # Windows Sockets (CRITICAL: RTDB desktop uses REST API)
+        env.Append(LINKFLAGS=['crypt32.lib'])   # Cryptography API (auth/tokens)
+
+        # Realtime Database specific libraries
+        env.Append(LINKFLAGS=['iphlpapi.lib'])  # IP Helper API (network operations)
+        env.Append(LINKFLAGS=['psapi.lib'])     # Process Status API
+        env.Append(LINKFLAGS=['Userenv.lib'])   # User Environment/Profile ( GetUserProfileDirectoryW)
+
+        # Firestore specific
+        env.Append(LINKFLAGS=['dbghelp.lib'])   # Debug Help (SymSetOptions, SymInitialize)
+
         # ICU libraries for timezone/locale functions (u_errorName, ucal_getTimeZoneIDForWindowsID)
         # Windows 10 1903+ uses icu.lib, older versions use icuuc.lib + icuin.lib
-        env.Append(LINKFLAGS=['icu.lib'])      # Modern unified ICU library (Windows 10 1903+)
+        env.Append(LINKFLAGS=['icu.lib'])       # Modern unified ICU library (Windows 10 1903+)
     else:
         print('WARN: Unsupported architecture for Firebase Windows: ' + env['arch'] + ' (only x86_64 supported)')
