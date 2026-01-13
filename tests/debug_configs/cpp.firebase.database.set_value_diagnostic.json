@@ -1,0 +1,9 @@
+{
+  "name": "cpp.firebase.database.set_value_diagnostic",
+  "description": "Task-434: Diagnostic test for Firebase RTDB SetValue on Windows. Tests if SetValue works before attempting GetValue.",
+  "actions": ["cpp.firebase.database.set_value_diagnostic"],
+  "platforms": ["editor", "macos", "android", "ios", "windows-physical"],
+  "metadata": {
+    "force_local_data": true
+  }
+}

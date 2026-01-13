@@ -3,7 +3,10 @@
   "actions": [
     "cpp.firebase.database.get_value_diagnostic"
   ],
-  "platforms": ["editor", "macos", "android", "ios"],
+  "platforms": ["editor", "macos", "android", "ios", "windows-physical"],
   "tags": ["firebase", "rtdb", "diagnostic", "task434"],
-  "notes": "Windows excluded - crash occurs during DataSource initialization before debug actions run"
+  "notes": "Diagnostic test to pinpoint exact location of Windows GetValue crash",
+  "metadata": {
+    "force_local_data": true
+  }
 }
