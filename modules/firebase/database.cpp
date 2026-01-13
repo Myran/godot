@@ -422,16 +422,11 @@ void FirebaseDatabase::get_value_async(int p_request_id, const Array &keys) {
 		return;
 	}
 
-	// Task-434: Store reference in member variable to extend lifetime (Windows crash workaround)
-	_cached_get_value_ref = ref;
-
 	String path_str_for_logging = String(Variant(keys));
 	print_line(String("[RTDB C++] GetValue ReqID:") + itos(p_request_id) + " Path (GDScript Array): " + path_str_for_logging + " -> URL: " + String(ref.url().c_str()));
 
-	// Task-432: Additional diagnostic check before calling GetValue
-	print_line(String("[RTDB C++] Calling _cached_get_value_ref.GetValue() - DatabaseReference appears valid"));
-
-	firebase::Future<firebase::database::DataSnapshot> future = _cached_get_value_ref.GetValue();
+	// Task-434: Use ref directly - storing in member variable caused Windows crash
+	firebase::Future<firebase::database::DataSnapshot> future = ref.GetValue();
 	future.OnCompletion([this, p_request_id, path_str_for_logging](const firebase::Future<firebase::database::DataSnapshot> &result) {
 		// WORKER THREAD - Extract thread-safe data only (Task-207 SIGBUS fix)
 		int error = result.error();
