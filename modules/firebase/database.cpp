@@ -425,8 +425,13 @@ void FirebaseDatabase::get_value_async(int p_request_id, const Array &keys) {
 	String path_str_for_logging = String(Variant(keys));
 	print_line(String("[RTDB C++] GetValue ReqID:") + itos(p_request_id) + " Path (GDScript Array): " + path_str_for_logging + " -> URL: " + String(ref.url().c_str()));
 
+	// Task-434: Diagnostic logging to isolate Windows crash
+	print_line(String("[RTDB C++] About to call ref.GetValue() - ref.is_valid()=") + (ref.is_valid() ? "true" : "false"));
+	print_line(String("[RTDB C++] ref.key()=") + (ref.key() ? String(ref.key()) : "(null)"));
+
 	// Task-434: Use ref directly - storing in member variable caused Windows crash
 	firebase::Future<firebase::database::DataSnapshot> future = ref.GetValue();
+	print_line(String("[RTDB C++] ref.GetValue() returned successfully - future.status()=") + itos(future.status()));
 	future.OnCompletion([this, p_request_id, path_str_for_logging](const firebase::Future<firebase::database::DataSnapshot> &result) {
 		// WORKER THREAD - Extract thread-safe data only (Task-207 SIGBUS fix)
 		int error = result.error();
