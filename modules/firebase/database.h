@@ -153,6 +153,9 @@ public:
 	void remove_listener_at_path(const Array &keys);
 	void monitor_connection_state();
 	void on_connection_state_changed(const firebase::database::DataSnapshot &snapshot);
+
+	// Task-434: Diagnostic test to isolate Windows GetValue crash
+	void test_get_value_diagnostic();
 };
 
 #endif // FirebaseDatabase_h

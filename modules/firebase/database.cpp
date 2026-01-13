@@ -821,6 +821,71 @@ void FirebaseDatabase::on_connection_state_changed(const firebase::database::Dat
 	}
 }
 
+// --- Task-434: Diagnostic Test to Isolate Windows GetValue Crash ---
+// This function tests each step of the GetValue call incrementally to pinpoint the crash
+void FirebaseDatabase::test_get_value_diagnostic() {
+	print_line("=== RTDB DIAGNOSTIC TEST START (Task-434) ===");
+
+	// Step 0: Check initialization
+	print_line(String("[DIAG] Step 0: Check initialization"));
+	print_line(String("[DIAG]   inited=") + (inited.load() ? "true" : "false"));
+	print_line(String("[DIAG]   database_instance=") + (database_instance ? "valid" : "NULL"));
+
+	if (!inited || !database_instance) {
+		print_error("[DIAG] CANNOT CONTINUE: Database not initialized");
+		return;
+	}
+
+	// Step 1: Create root reference
+	print_line(String("[DIAG] Step 1: Create root reference"));
+	firebase::database::DatabaseReference root_ref = database_instance->GetReference();
+	print_line(String("[DIAG]   root_ref.is_valid()=") + (root_ref.is_valid() ? "true" : "false"));
+	if (!root_ref.is_valid()) {
+		print_error("[DIAG] FAILED: Root reference is not valid");
+		return;
+	}
+
+	// Step 2: Get root URL
+	print_line(String("[DIAG] Step 2: Get root URL"));
+	std::string root_url_str = root_ref.url();
+	print_line(String("[DIAG]   root_url=") + String(root_url_str.c_str()));
+
+	// Step 3: Create child reference
+	print_line(String("[DIAG] Step 3: Create child reference ('test_path')"));
+	CharString test_path_cs = String("test_path").utf8();
+	firebase::database::DatabaseReference child_ref = root_ref.Child(test_path_cs.get_data());
+	print_line(String("[DIAG]   child_ref.is_valid()=") + (child_ref.is_valid() ? "true" : "false"));
+
+	// Step 4: Get child key
+	print_line(String("[DIAG] Step 4: Get child key"));
+	const char* child_key = child_ref.key();
+	print_line(String("[DIAG]   child_key=") + (child_key ? String(child_key) : "(null)"));
+
+	// Step 5: Get child URL
+	print_line(String("[DIAG] Step 5: Get child URL"));
+	std::string child_url_str = child_ref.url();
+	print_line(String("[DIAG]   child_url=") + String(child_url_str.c_str()));
+
+	// Step 6: Create a Future object (without calling GetValue)
+	print_line(String("[DIAG] Step 6: Create Future<DataSnapshot> object"));
+	print_line(String("[DIAG]   About to create Future object..."));
+	firebase::Future<firebase::database::DataSnapshot> test_future;
+	print_line(String("[DIAG]   Future created successfully"));
+
+	// Step 7: Assign GetValue result (this is where crash happens)
+	print_line(String("[DIAG] Step 7: Call ref.GetValue() - CRITICAL POINT"));
+	print_line(String("[DIAG]   About to call child_ref.GetValue()..."));
+	print_line(String("[DIAG]   *** CRASH OCCURS HERE ON WINDOWS IF GetValue IS BROKEN ***"));
+
+	// THIS IS THE CRASH LINE
+	test_future = child_ref.GetValue();
+
+	print_line(String("[DIAG]   *** GetValue RETURNED SUCCESSFULLY ***"));
+	print_line(String("[DIAG]   test_future.status()=") + itos(test_future.status()));
+
+	print_line("=== RTDB DIAGNOSTIC TEST COMPLETE ===");
+}
+
 // --- Main Thread Callback Handlers (Task-207 SIGBUS Fix) ---
 // These methods execute on Godot's main thread via MessageQueue marshalling
 // ensuring all Godot operations (Variant conversion, signal emission) are thread-safe
@@ -1065,6 +1130,9 @@ void FirebaseDatabase::_bind_methods() {
 	ClassDB::bind_method(D_METHOD("add_listener_at_path", "keys"), &FirebaseDatabase::add_listener_at_path);
 	ClassDB::bind_method(D_METHOD("remove_listener_at_path", "keys"), &FirebaseDatabase::remove_listener_at_path);
 	ClassDB::bind_method(D_METHOD("monitor_connection_state"), &FirebaseDatabase::monitor_connection_state);
+
+	// Task-434: Diagnostic test method
+	ClassDB::bind_method(D_METHOD("test_get_value_diagnostic"), &FirebaseDatabase::test_get_value_diagnostic);
 
 	ADD_SIGNAL(MethodInfo("get_value_completed", PropertyInfo(Variant::INT, "request_id"), PropertyInfo(Variant::STRING, "key"), PropertyInfo(Variant::NIL, "value", PROPERTY_HINT_NONE, "", PROPERTY_USAGE_NIL_IS_VARIANT)));
 	ADD_SIGNAL(MethodInfo("get_value_error", PropertyInfo(Variant::INT, "request_id"), PropertyInfo(Variant::STRING, "key"), PropertyInfo(Variant::STRING, "error_code"), PropertyInfo(Variant::STRING, "error_message")));
