@@ -48,6 +48,11 @@ const CPPRemoteConfigGetValuesActionClass = preload(
 	"res://debug/actions/firebase_cpp/cpp_remote_config_get_values_action.gd"
 )
 
+# Task-434: RTDB diagnostic test
+const CPPGetValueDiagnosticActionClass = preload(
+	"res://debug/actions/firebase_rtdb/cpp_rtdb_get_value_diagnostic_action.gd"
+)
+
 
 static func register_all(registry: DebugActionRegistry) -> void:
 	var helper: RegistrationHelper = RegistrationHelper.new(registry, "C++ Firebase")
@@ -71,5 +76,8 @@ static func register_all(registry: DebugActionRegistry) -> void:
 	# Remote Config tests
 	helper.register(CPPRemoteConfigFetchActionClass.new())
 	helper.register(CPPRemoteConfigGetValuesActionClass.new())
+
+	# Task-434: RTDB diagnostic test
+	helper.register(CPPGetValueDiagnosticActionClass.new())
 
 	helper.complete()

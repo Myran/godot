@@ -1,0 +1,9 @@
+{
+  "description": "RTDB GetValue diagnostic test to isolate Windows crash (Task-434)",
+  "actions": [
+    "cpp.firebase.database.get_value_diagnostic"
+  ],
+  "platforms": ["editor", "macos", "android", "ios"],
+  "tags": ["firebase", "rtdb", "diagnostic", "task434"],
+  "notes": "Windows excluded - crash occurs during DataSource initialization before debug actions run"
+}
