@@ -892,16 +892,17 @@ void FirebaseDatabase::test_set_value_diagnostic() {
 
 	// Step 0: Check initialization
 	print_line(String("[DIAG] Step 0: Check RTDB initialization"));
-	if (!database) {
-		print_line(String("[DIAG]   ERROR: database pointer is NULL"));
-		print_line("=== RTDB SETVALUE DIAGNOSTIC ABORTED ===");
+	print_line(String("[DIAG]   inited=") + (inited.load() ? "true" : "false"));
+	print_line(String("[DIAG]   database_instance=") + (database_instance ? "valid" : "NULL"));
+
+	if (!inited || !database_instance) {
+		print_error("[DIAG] CANNOT CONTINUE: Database not initialized");
 		return;
 	}
-	print_line(String("[DIAG]   database pointer is valid"));
 
 	// Step 1: Get root reference
 	print_line(String("[DIAG] Step 1: Get root reference"));
-	firebase::database::DatabaseReference root_ref = database->GetReference();
+	firebase::database::DatabaseReference root_ref = database_instance->GetReference();
 	print_line(String("[DIAG]   root_ref.is_valid()=") + (root_ref.is_valid() ? "true" : "false"));
 
 	std::string root_url_str = root_ref.url();
@@ -935,8 +936,8 @@ void FirebaseDatabase::test_set_value_diagnostic() {
 	const int max_wait = 100; // 5 seconds (50ms * 100)
 
 	while (set_future.status() == firebase::kFutureStatusPending && wait_count < max_wait) {
-		// Small delay
-		usleep(50000); // 50ms
+		// Small delay - use OS::delay_usec for cross-platform compatibility
+		OS::get_singleton()->delay_usec(50000); // 50ms
 		wait_count++;
 	}
 
