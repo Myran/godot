@@ -734,7 +734,7 @@ export-test-windows CONFIG="":
     echo ""
     echo "✅ Windows export-test complete!"
 
-# Windows: VM sync → Rebuild templates → Package → Export → Deploy → Test (full suite or specific config)
+# Windows: Build templates + Sentry (via build-all-windows) → Export → Deploy → Test (full suite or specific config)
 # Defaults to 'main' test list if no CONFIG provided
 build-export-test-windows CONFIG="":
     #!/usr/bin/env bash
@@ -778,29 +778,21 @@ build-export-test-windows CONFIG="":
                 echo ""
 
                 if [[ $INDEX -eq 1 ]]; then
-                    # First config: rebuild templates
-                    echo "📦 Step 1: Syncing repo to VM..."
-                    just win-vm-sync
+                    # First config: rebuild templates + Sentry (via shared build-all-windows)
+                    echo "📦 Step 1: Building Windows templates and Sentry..."
+                    just build-all-windows yes
                     echo ""
 
-                    echo "🔨 Step 2: Rebuilding Windows templates on VM..."
-                    just win-vm-template-debug
-                    echo ""
-
-                    echo "📦 Step 3: Packaging templates from VM..."
-                    just win-vm-templates-package
-                    echo ""
-
-                    echo "📤 Step 4: Exporting Windows app..."
+                    echo "📤 Step 2: Exporting Windows app..."
                     rm -f export/windows/gametwo_debug.pck
                     just export-windows-debug
                     echo ""
 
-                    echo "📲 Step 5: Deploying to Windows physical machine..."
+                    echo "📲 Step 3: Deploying to Windows physical machine..."
                     just win-physical-deploy
                     echo ""
 
-                    echo "🧪 Step 6: Testing config: $config"
+                    echo "🧪 Step 4: Testing config: $config"
                     just test-windows-physical-target "$config"
                 else
                     # Remaining configs: use cached templates, just export + deploy + test
@@ -822,22 +814,12 @@ build-export-test-windows CONFIG="":
         done <<< "$RESOLVED"
     else
         # Single config
-        # 1. Sync repo to VM
-        echo "📦 Step 1: Syncing repo to VM..."
-        just win-vm-sync
+        # Build templates + Sentry (via shared build-all-windows)
+        echo "📦 Step 1: Building Windows templates and Sentry..."
+        just build-all-windows yes
         echo ""
 
-        # 2. Rebuild templates on VM
-        echo "🔨 Step 2: Rebuilding Windows templates on VM..."
-        just win-vm-template-debug
-        echo ""
-
-        # 3. Package templates from VM
-        echo "📦 Step 3: Packaging templates from VM..."
-        just win-vm-templates-package
-        echo ""
-
-        just _export-test-windows-impl "$RESOLVED" 3
+        just _export-test-windows-impl "$RESOLVED" 1
     fi
 
     echo ""
