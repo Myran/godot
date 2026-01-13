@@ -2,16 +2,64 @@
 id: task-434
 title: Fix Windows Firebase RTDB GetValue() crash
 status: Open
-priority: critical
+assignee: []
+created_date: '2025-01-13 14:35'
+updated_date: '2026-01-13 16:43'
 labels:
-  - critical
   - windows
   - firebase
+  - sdk-bug
   - crash
+  - rtdb
 dependencies: []
-created_date: '2025-01-13 14:35'
-updated_date: '2025-01-13 14:35'
+priority: high
 ---
+
+## Description
+
+<!-- SECTION:DESCRIPTION:BEGIN -->
+**Root Cause Identified**: Firebase C++ SDK bug in Windows RTDB
+
+## Crash Location
+The crash occurs **inside** `firebase::database::DatabaseReference::GetValue()` - a Firebase C++ SDK function, not our code.
+
+## Evidence (from diagnostic logging)
+```
+[RTDB C++] get_value_async START - ReqID:1
+[RTDB C++] inited=true database_instance=valid
+[RTDB C++] GetValue ReqID:1 Path (GDScript Array): ["...", "cards_0"] -> URL: /*/cards_0
+[RTDB C++] About to call ref.GetValue() - ref.is_valid()=true
+[RTDB C++] ref.key()=cards_0
+<crash - no further output>
+```
+
+## What Works on Windows
+- Firebase App initialization ✅
+- Firebase Auth initialization ✅  
+- Firebase Database instance creation ✅
+- DatabaseReference.is_valid() ✅
+- DatabaseReference.url() ✅
+- DatabaseReference.key() ✅
+
+## What Crashes
+- `DatabaseReference::GetValue()` - crashes inside the Firebase SDK call itself
+
+## Key Facts
+- All other platforms (Android, iOS, macOS, editor) work perfectly with the same code
+- Firebase C++ SDK Windows RTDB is "Beta quality" per Google documentation
+- SDK version: 12.2.0
+- Crash is 100% reproducible
+
+## Attempted Fixes (all failed)
+1. Storing DatabaseReference in member variable - still crashes
+2. Reverting to direct ref usage - still crashes
+3. Verifying ref validity before call - still crashes
+
+## Recommendations
+1. **Short-term**: Force local data mode on Windows (`game/debug/force_local_data = true`)
+2. **Medium-term**: Report to Firebase C++ SDK GitHub issues
+3. **Long-term**: Monitor Firebase SDK updates for Windows RTDB fixes
+<!-- SECTION:DESCRIPTION:END -->
 
 # Windows Firebase RTDB GetValue() Crash
 

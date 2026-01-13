@@ -1,0 +1,7 @@
+{
+  "description": "Simple test without Firebase dependency",
+  "actions": [
+    "system.debug.registry_stats",
+    "app.quit_application"
+  ]
+}

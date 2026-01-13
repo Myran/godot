@@ -10,6 +10,21 @@ static func create_backend() -> DataBackend:
 	var is_editor: bool = OS.has_feature("editor")
 	var force_local: bool = ProjectSettings.get_setting("game/debug/force_local_data", false)
 
+	# Task-434: Check debug config metadata for force_local_data flag (Windows RTDB crash workaround)
+	# This MUST happen here in backend_factory because DataSource initializes before debug coordinator
+	if not force_local:
+		var config_metadata: Dictionary = _get_debug_config_metadata()
+		force_local = config_metadata.get("force_local_data", false)
+		if force_local:
+			(
+				Log
+				. info(
+					"Force local data mode enabled via debug config metadata (Task-434 - Windows RTDB workaround)",
+					{},
+					[Log.TAG_DB]
+				)
+			)
+
 	Log.info(
 		"Backend selection starting",
 		{"is_editor": is_editor, "force_local_data": force_local, "platform": OS.get_name()},
@@ -119,3 +134,37 @@ static func create_local_backend(file_path: String = "") -> LocalJSONBackend:
 		[Log.TAG_DB, Log.TAG_LOCAL]
 	)
 	return local_backend
+
+
+# Task-434: Read debug config metadata directly for force_local_data flag
+# This is needed because DataSource initializes before debug coordinator runs
+static func _get_debug_config_metadata() -> Dictionary:
+	var config_path: String = _get_debug_config_path()
+	if not FileAccess.file_exists(config_path):
+		return {}
+
+	var file: FileAccess = FileAccess.open(config_path, FileAccess.READ)
+	if not file:
+		return {}
+
+	var json_text: String = file.get_as_text()
+	file.close()
+
+	var json: JSON = JSON.new()
+	if json.parse(json_text) != OK:
+		return {}
+
+	var data: Dictionary = json.data
+	if data.has("metadata"):
+		return data.metadata
+	return {}
+
+
+static func _get_debug_config_path() -> String:
+	# Match DebugConfigReader logic for finding config file
+	if OS.has_feature("mobile"):
+		var external_path: String = "user://debug_startup_actions.json"
+		if FileAccess.file_exists(external_path):
+			return external_path
+		return "res://debug_startup_actions.json"
+	return "user://debug_startup_actions.json"

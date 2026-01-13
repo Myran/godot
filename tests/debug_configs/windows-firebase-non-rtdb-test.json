@@ -5,7 +5,7 @@
     "cpp.firebase.remote_config.fetch_and_activate",
     "cpp.firebase.analytics.log_event"
   ],
-  "platforms": ["windows"],
+  "platforms": ["windows-physical"],
   "metadata": {
     "force_local_data": true
   },
