@@ -88,7 +88,7 @@ adb logcat -d | rg "search_term" -i       # Direct full log access
 # Missing logs? Use logs-android-device
 
 # Android Development
-just fastbuild-android                     # REQUIRED after ANY code changes
+just deploy-android                     # REQUIRED after ANY code changes
 
 # Deploy (Development - export → install → run)
 just deploy-android                        # Deploy to Android device
@@ -140,7 +140,7 @@ just ci-validate                           # CI validation (format + lint + synt
 just validate                              # Complete validation (format + syntax + runtime)
 just test-android development-workflow     # Daily validation
 just config-restart-android ACTION         # Quick testing (5 sec)
-just development                           # Complete workflow (fastbuild-android + ci-validate + test)
+just development                           # Complete workflow (deploy-android + ci-validate + test)
 
 # Gamestate System
 just capture-gamestate-editor NAME       # Desktop extraction
@@ -159,14 +159,14 @@ just help-gamestate                       # Workflow guide
 just ci-validate                # Code quality, formatting, linting
 just log-run-silent test        # Complete test with silent logging
 just logs-errors TEST_ID        # Issue analysis (98% token savings)
-just fastbuild-android          # REQUIRED after GDScript/C++ changes
+just deploy-android          # REQUIRED after GDScript/C++ changes
 just log-run-silent test-android-target CONFIG  # Automated testing
 ```
 
 **🚨 CRITICAL Rules:**
 - **`just ci-validate`** - MANDATORY before commits
-- **`just fastbuild-android`** - MANDATORY after code changes before Android testing
-- **`just development`** - REQUIRED before GDScript commits (fastbuild-android + ci-validate + test)
+- **`just deploy-android`** - MANDATORY after code changes before Android testing
+- **`just development`** - REQUIRED before GDScript commits (deploy-android + ci-validate + test)
 
 **Debug Decision Tree:**
 1. **Test Results**: `logs-tree` → `logs-pattern` → `logs-search` → `logs-errors`
@@ -203,7 +203,7 @@ just log-run-silent test-android-target CONFIG  # Automated testing
 - `just development` - Complete workflow (MANDATORY before GDScript commits)
 - `just cpp-dev` - C++ workflow (build + install + fastbuild)
 - `just ci-validate` - CI validation (MANDATORY before commits)
-- `just fastbuild-android` - Smart rebuild (15-60 sec, REQUIRED)
+- `just deploy-android` - Smart rebuild (15-60 sec, REQUIRED)
 - `just build-all-android` - Android pipeline (3-25 min)
 - `just build` - Complete pipeline (46 min)
 - `just build-export-test-all [CONFIG]` - Full rebuild + test (all platforms, 20-45 min)
@@ -272,7 +272,7 @@ just log-run-silent test-android-target CONFIG  # Automated testing
 - ❌ Never use `just run-editor` (skips state capture) (Task-329)
 
 **Android Development:**
-- **MANDATORY**: `just fastbuild-android` after ANY code changes before testing
+- **MANDATORY**: `just deploy-android` after ANY code changes before testing
 - **Reason**: Android uses compiled/cached code that doesn't auto-update
 
 ## 📱 Android Configuration

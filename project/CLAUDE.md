@@ -24,7 +24,7 @@ This directory contains all game logic, UI, Firebase integration, and Godot-spec
 **Common Commands**:
 - `just validate` - Complete validation
 - `just ci-validate` - CI validation (MANDATORY before commits)
-- `just fastbuild-android` - Deploy to Android (REQUIRED after changes)
+- `just deploy-android` - Deploy to Android (REQUIRED after changes)
 - `just test-android-target CONFIG` - Automated Android testing
 - `just run-editor-debug [verbose]` - Desktop debugging
 

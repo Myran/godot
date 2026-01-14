@@ -538,7 +538,7 @@ just list-saved-states
 ## 🚨 Critical Testing Rules
 
 ### **Build Requirements**
-1. **MANDATORY**: `just fastbuild-android` after ANY code changes before Android testing
+1. **MANDATORY**: `just deploy-android` after ANY code changes before Android testing
 2. **Reason**: Android uses compiled/cached code that doesn't auto-update
 3. **Desktop**: Auto-reloads scripts, no build needed
 

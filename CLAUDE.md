@@ -155,7 +155,7 @@ updated_date: '2025-10-15 19:45'
 
 **Essential Patterns:**
 - Use `rg` instead of `grep` (10x faster)
-- REQUIRED: `just fastbuild-android` after ANY GDScript/C++ changes before Android testing
+- REQUIRED: `just deploy-android` after ANY GDScript/C++ changes before Android testing
 - CRITICAL: Prefix long-running commands with `just log-run-silent` (saves tokens)
 - Link tasks bidirectionally: Reference task in commit, commit in task
 - Use Advanced OODA Loop Debugging (investigation-first with expert panel)
@@ -203,13 +203,13 @@ updated_date: '2025-10-15 19:45'
 
 **ACT:**
 - Failed CI → Fix → `just ci-validate` → Repeat
-- Failed tests → `just logs-errors TEST_ID` → Debug → `just fastbuild-android` → Re-test
+- Failed tests → `just logs-errors TEST_ID` → Debug → `just deploy-android` → Re-test
 - All pass → Continue
 
 **Critical Pattern:**
 ```bash
 just ci-validate           # Must pass
-just fastbuild-android     # Required after code changes
+just deploy-android     # Required after code changes
 just test-android CONFIG   # Validate on platform
 just logs-errors TEST_ID   # Debug efficiently
 ```

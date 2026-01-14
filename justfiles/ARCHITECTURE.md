@@ -13,8 +13,8 @@ This document ensures correct recipe selection during development, testing, and 
 ### Build & Compile
 - **First time setup**: `just build` (46 min)
 - **C++ changes** (Firebase, modules): `just cpp-dev` (3-15 min) ⭐ **RECOMMENDED**
-- **GDScript changes**: `just fastbuild-android` (30-60 sec) ⚡ **REQUIRED**
-- **After ANY code changes before Android testing**: `just fastbuild-android` ⚡ **MANDATORY**
+- **GDScript changes**: `just deploy-android` (30-60 sec) ⚡ **REQUIRED**
+- **After ANY code changes before Android testing**: `just deploy-android` ⚡ **MANDATORY**
 
 ### Test & Validate
 - **Before commit**: `just ci-validate` 🚨 **MANDATORY**
@@ -84,7 +84,7 @@ This document ensures correct recipe selection during development, testing, and 
 #### `justfile-platform-android.justfile`
 - **Purpose**: Android-specific build and deployment
 - **Critical Recipes**:
-  - `fastbuild-android` ⚡ **MANDATORY after code changes**
+  - `deploy-android` ⚡ **MANDATORY after code changes**
   - `build-all-android` - Full Android pipeline (3-25 min)
   - `quick-build-android` - Skip template check (2-3 min)
   - `export-android-apk`, `export-android-aab` (Task-378)
@@ -94,8 +94,8 @@ This document ensures correct recipe selection during development, testing, and 
   1. **Template Building** (C++ changes): `build-android-templates` → `install-android-template`
   2. **Full Pipeline**: `build-all-android` (templates + Firebase + APK + AAB)
   3. **Quick Build**: `quick-build-android` (Firebase + export)
-  4. **Fast Build**: `fastbuild-android` ⚡ (dev iteration: 30-60 sec)
-- **Critical**: `fastbuild-android` REQUIRED after ANY GDScript/C++ changes before Android testing
+  4. **Fast Build**: `deploy-android` ⚡ (dev iteration: 30-60 sec)
+- **Critical**: `deploy-android` REQUIRED after ANY GDScript/C++ changes before Android testing
 
 #### `justfile-platform-ios.justfile`
 - **Purpose**: iOS-specific build and deployment
@@ -451,7 +451,7 @@ This document ensures correct recipe selection during development, testing, and 
 just ci-validate           # Code quality, format, lint
 
 # ORIENT (after code changes)
-just fastbuild-android     # ⚡ MANDATORY before Android testing
+just deploy-android     # ⚡ MANDATORY before Android testing
 
 # DECIDE
 just test-android-target CONFIG  # Automated testing with validation
@@ -469,7 +469,7 @@ just cpp-dev               # Build templates → Install → Fastbuild (3-15 min
 # Manual workflow (alternative)
 just build-android-templates     # 1. Build C++ → .aar
 just install-android-template    # 2. Install template
-just fastbuild-android           # 3. Package + deploy (REQUIRED)
+just deploy-android           # 3. Package + deploy (REQUIRED)
 ```
 
 ### **Pre-Commit Workflow**
@@ -520,7 +520,7 @@ just test-editor-manual CONFIG  # Editor inspection
 
 ### **Build Requirements**
 
-1. **After ANY GDScript/C++ changes**: `just fastbuild-android` ⚡ **MANDATORY** before Android testing
+1. **After ANY GDScript/C++ changes**: `just deploy-android` ⚡ **MANDATORY** before Android testing
 2. **Before commit**: `just ci-validate` 🚨 **MANDATORY**
 3. **After C++ changes**: Use `just cpp-dev` ⭐ (one command: build → install → fastbuild)
 
@@ -627,7 +627,7 @@ justfile (main entry)
 |----------|--------|------|-------------|
 | First-time setup | `just build` | 46 min | Initial setup, complete rebuild |
 | C++ module changes | `just cpp-dev` ⭐ | 3-15 min | Firebase SDK, custom C++ modules |
-| GDScript changes | `just fastbuild-android` ⚡ | 30-60 sec | **REQUIRED** before Android testing |
+| GDScript changes | `just deploy-android` ⚡ | 30-60 sec | **REQUIRED** before Android testing |
 | Full Android build | `just build-all-android` | 3-25 min | Release builds, first-time setup |
 | iOS build | `just build-install-ios` | 2-5 min | iOS development, deployment |
 | Templates only | `just build-android-templates` | 3-15 min | C++ changes without full build |
@@ -689,7 +689,7 @@ justfile (main entry)
 ### **Build System Decisions**
 
 1. **C++ changes** → Use `just cpp-dev` (one command handles everything)
-2. **GDScript changes** → **ALWAYS** run `just fastbuild-android` before Android testing
+2. **GDScript changes** → **ALWAYS** run `just deploy-android` before Android testing
 3. **Release builds** → Use full pipelines (`build-all-android`, `build-all-ios`)
 4. **First-time setup** → Start with `just build` (complete toolchain)
 
@@ -740,7 +740,7 @@ justfile (main entry)
 ```bash
 # Build
 just cpp-dev                          # ⭐ C++ workflow (one command)
-just fastbuild-android                # ⚡ REQUIRED after code changes
+just deploy-android                # ⚡ REQUIRED after code changes
 
 # Validate
 just ci-validate                      # 🚨 MANDATORY before commit
