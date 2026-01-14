@@ -995,7 +995,7 @@ void FirebaseDatabase::test_get_value_blocking() {
 
 	// Step 3: First, set a value so we have something to read
 	print_line(String("[BLOCK] Step 3: Set a test value first"));
-	firebase::Variant test_value = firebase::Variant::FromInt(42);
+	firebase::Variant test_value = firebase::Variant(static_cast<int64_t>(42));
 	firebase::Future<void> set_future = child_ref.SetValue(test_value);
 	print_line(String("[BLOCK]   SetValue called, waiting..."));
 
