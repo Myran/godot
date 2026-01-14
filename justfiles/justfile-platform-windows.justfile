@@ -10,11 +10,8 @@
 # WINDOWS VM CONFIGURATION
 # ================================
 
-# Windows VM SSH connection details (UTM ARM64 VM with Visual Studio 2022)
-# WIN_VM_HOST and WIN_VM_USER defined in justfile-core-config.justfile
-WIN_VM_REPO := "C:\\gametwo"
-# Note: vcvars path contains (x86) which requires careful escaping for SSH
-WIN_VM_VCVARS := '"C:\\Program Files (x86)\\Microsoft Visual Studio\\2022\\BuildTools\\VC\\Auxiliary\\Build\\vcvars64.bat"'
+# Windows VM SSH connection details
+# WIN_VM_HOST, WIN_VM_USER, WIN_VM_REPO, WIN_VM_VCVARS defined in justfile-core-config.justfile
 
 # ================================
 # WINDOWS VM NATIVE BUILDS (MSVC)
@@ -22,76 +19,48 @@ WIN_VM_VCVARS := '"C:\\Program Files (x86)\\Microsoft Visual Studio\\2022\\Build
 # These recipes invoke native MSVC builds on Windows VM via SSH
 # Required for Firebase C++ SDK integration (MSVC-only libraries)
 
-# Verify Windows VM connectivity and build environment
+# Verify Windows VM connectivity and build environment (backward compatibility alias)
 win-vm-verify:
-    #!/usr/bin/env bash
-    set -euo pipefail
-    echo "🔍 Verifying Windows VM build environment..."
-    echo ""
-    echo "📡 SSH Connection: {{WIN_VM_USER}}@{{WIN_VM_HOST}}"
+    just build-windows-vm-verify
 
-    if ! ssh -o ConnectTimeout=5 {{WIN_VM_USER}}@{{WIN_VM_HOST}} "echo Connected" &>/dev/null; then
-        echo "❌ Cannot connect to Windows VM"
-        echo "   Ensure VM is running and SSH is accessible"
-        exit 1
-    fi
-    echo "✅ SSH connection successful"
-    echo ""
-
-    echo "🔧 Running environment verification on Windows VM..."
-    # Use single quotes for the SSH command to avoid bash interpreting (x86)
-    ssh {{WIN_VM_USER}}@{{WIN_VM_HOST}} '{{WIN_VM_VCVARS}} && cd {{WIN_VM_REPO}} && just --justfile justfiles\justfile-windows-native.justfile --working-directory . windows-native-verify'
-
-# Build Windows debug template natively on VM (with Firebase support)
+# Build Windows debug template natively on VM (backward compatibility alias)
 win-vm-template-debug jobs="6":
-    #!/usr/bin/env bash
-    set -euo pipefail
-    echo "🔨 Building Windows debug template on VM (MSVC + Firebase)..."
-    echo "   This may take 10-20 minutes on first build"
-    echo ""
-    ssh {{WIN_VM_USER}}@{{WIN_VM_HOST}} '{{WIN_VM_VCVARS}} && cd {{WIN_VM_REPO}} && just --justfile justfiles\justfile-windows-native.justfile --working-directory . windows-native-template-debug {{jobs}}'
+    just build-windows-vm-template-debug "{{jobs}}"
 
-# Build Windows release template natively on VM (with Firebase support)
+# Build Windows release template natively on VM (backward compatibility alias)
 win-vm-template-release jobs="6":
-    #!/usr/bin/env bash
-    set -euo pipefail
-    echo "🔨 Building Windows release template on VM (MSVC + Firebase)..."
-    echo "   This may take 15-25 minutes on first build"
-    echo ""
-    ssh {{WIN_VM_USER}}@{{WIN_VM_HOST}} '{{WIN_VM_VCVARS}} && cd {{WIN_VM_REPO}} && just --justfile justfiles\justfile-windows-native.justfile --working-directory . windows-native-template-release {{jobs}}'
+    just build-windows-vm-template-release "{{jobs}}"
 
-# Build both Windows templates natively on VM
+# Build both Windows templates natively on VM (backward compatibility alias)
 win-vm-templates jobs="6":
-    just win-vm-template-debug "{{jobs}}"
-    just win-vm-template-release "{{jobs}}"
-    @echo "✅ Both Windows templates built successfully on VM"
+    just build-windows-vm-templates "{{jobs}}"
 
-# Package templates from VM (copy to macOS templates/ directory)
-win-vm-templates-package:
+# Clean Windows template build cache on VM (forces full rebuild)
+# Use this when SCsub/LINKFLAGS changes but no source files changed
+win-vm-templates-clean:
     #!/usr/bin/env bash
     set -euo pipefail
-    echo "📦 Packaging Windows templates from VM..."
+    echo "🧹 Cleaning Windows template build cache on VM..."
+    echo "   This will force SCons to rebuild from scratch"
+    echo ""
+    ssh {{WIN_VM_USER}}@{{WIN_VM_HOST}} 'cd {{WIN_VM_REPO}}\godot && if exist .sconsign.dblite del .sconsign.dblite && echo Deleted SCons cache'
+    ssh {{WIN_VM_USER}}@{{WIN_VM_HOST}} 'cd {{WIN_VM_REPO}}\godot && if exist bin\obj rmdir /s /q bin\obj && echo Deleted object files'
+    echo "✅ Windows template build cache cleaned"
+    echo "   Next build will be a full rebuild (~15-25 min)"
 
-    # Ensure local templates directory exists
-    mkdir -p templates
+# Force clean rebuild of Windows templates on VM
+win-vm-templates-rebuild jobs="6": win-vm-templates-clean
+    #!/usr/bin/env bash
+    set -euo pipefail
+    echo "🔨 Force clean rebuild of Windows templates on VM..."
+    just win-vm-templates "{{jobs}}"
+    echo "✅ Clean rebuild completed"
 
-    # SCP path format for Windows: /C:/path/to/file (forward slashes with drive letter)
-    WIN_BIN_PATH="/C:/gametwo/godot/bin"
+# Package templates from VM (copy to macOS templates/ directory) - backward compatibility alias
+win-vm-templates-package:
+    just build-windows-vm-templates-package
 
-    # Copy debug template
-    echo "📥 Copying debug template..."
-    scp "{{WIN_VM_USER}}@{{WIN_VM_HOST}}:${WIN_BIN_PATH}/godot.windows.template_debug.x86_64.exe" templates/
-
-    # Copy release template if it exists
-    if ssh {{WIN_VM_USER}}@{{WIN_VM_HOST}} 'if exist {{WIN_VM_REPO}}\godot\bin\godot.windows.template_release.x86_64.exe echo exists'; then
-        echo "📥 Copying release template..."
-        scp "{{WIN_VM_USER}}@{{WIN_VM_HOST}}:${WIN_BIN_PATH}/godot.windows.template_release.x86_64.exe" templates/
-    fi
-
-    echo "✅ Windows templates packaged in templates/ directory"
-    ls -la templates/godot.windows.template_*.exe 2>/dev/null || true
-
-# Check Windows template build status on VM
+# Check Windows template build status on VM - backward compatibility alias
 win-vm-status:
     #!/usr/bin/env bash
     set -euo pipefail
@@ -179,51 +148,9 @@ build-sentry-native-windows-vm-package:
 build-sentry-native-windows-vm-complete: win-vm-verify build-sentry-native-windows-vm-build-all build-sentry-native-windows-vm-package
     @echo "✅ Windows Sentry build complete with crashpad backend"
 
-# Sync repository to Windows VM
+# Sync repository to Windows VM - backward compatibility alias
 win-vm-sync:
-    #!/usr/bin/env bash
-    set -euo pipefail
-
-    # Get current local branch and commit
-    LOCAL_BRANCH=$(git rev-parse --abbrev-ref HEAD)
-    LOCAL_COMMIT=$(git rev-parse --short HEAD)
-
-    echo "🔄 Syncing Windows VM to local state..."
-    echo "   Branch: ${LOCAL_BRANCH}"
-    echo "   Commit: ${LOCAL_COMMIT}"
-    echo ""
-
-    # Check if in detached HEAD state (bisect, rebase, etc.)
-    if [ "${LOCAL_BRANCH}" = "HEAD" ]; then
-        echo "⚠️  Detached HEAD detected (bisect/rebase mode)"
-        echo "   Syncing VM to specific commit: ${LOCAL_COMMIT}"
-        # Direct checkout of the commit without fetch/reset
-        ssh {{WIN_VM_USER}}@{{WIN_VM_HOST}} "cd {{WIN_VM_REPO}} && git checkout ${LOCAL_COMMIT}"
-    else
-        # Fetch and hard reset to match origin (avoids merge commits)
-        ssh {{WIN_VM_USER}}@{{WIN_VM_HOST}} "cd {{WIN_VM_REPO}} && git fetch origin && git checkout ${LOCAL_BRANCH} && git reset --hard origin/${LOCAL_BRANCH}"
-    fi
-
-    # Sync essential submodules for Windows builds (godot is required, others optional)
-    echo "📦 Syncing submodules..."
-    ssh {{WIN_VM_USER}}@{{WIN_VM_HOST}} "cd {{WIN_VM_REPO}} && git submodule sync && git submodule update --init godot" || true
-    # Try other submodules but don't fail if they have unavailable commits
-    ssh {{WIN_VM_USER}}@{{WIN_VM_HOST}} "cd {{WIN_VM_REPO}} && git submodule update --init extras/firebase-cpp-sdk extras/sentry-godot" 2>/dev/null || echo "   (some optional submodules skipped)"
-    # Sentry-godot requires recursive submodule init for crashpad backend
-    echo "   Initializing sentry-godot nested submodules (crashpad)..."
-    ssh {{WIN_VM_USER}}@{{WIN_VM_HOST}} "cd {{WIN_VM_REPO}}/extras/sentry-godot && git submodule update --init --recursive" 2>/dev/null || echo "   (sentry-godot submodules skipped)"
-
-    # Verify alignment
-    VM_COMMIT=$(ssh {{WIN_VM_USER}}@{{WIN_VM_HOST}} "cd {{WIN_VM_REPO}} && git rev-parse --short HEAD")
-    if [ "${LOCAL_COMMIT}" = "${VM_COMMIT}" ]; then
-        echo "✅ VM synced to ${VM_COMMIT} (matches local)"
-    else
-        echo "⚠️  WARNING: VM at ${VM_COMMIT}, local at ${LOCAL_COMMIT}"
-        if [ "${LOCAL_BRANCH}" != "HEAD" ]; then
-            echo "   Push local changes first: git push origin ${LOCAL_BRANCH}"
-        fi
-        exit 1
-    fi
+    just build-windows-vm-sync
 
 # Full Windows native pipeline: sync → templates → sentry → package
 win-vm-full-pipeline jobs="6": win-vm-sync (win-vm-templates jobs) build-sentry-native-windows-vm-build-all win-vm-templates-package
@@ -232,31 +159,242 @@ win-vm-full-pipeline jobs="6": win-vm-sync (win-vm-templates jobs) build-sentry-
     @echo "   Templates and Sentry DLLs built with MSVC + Firebase support"
 
 # ================================
+# WINDOWS TEMPLATE BUILD COMMANDS (Standard Naming)
+# ================================
+# Following the <action>-<platform>-<target> pattern used by Android/iOS/macOS
+# build-windows-vm-* = Build templates on VM (aliases for win-vm-*)
+# build-windows-physical-* = Build templates on physical machine (NEW)
+
+# Shared template build recipe - works on VM or physical via attributes
+# Usage: just _build-windows-templates <host> <user> <repo> <vcvars> <jobs> <target>
+_build-windows-templates host user repo vcvars jobs target:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    HOST="{{host}}"
+    USER="{{user}}"
+    REPO="{{repo}}"
+    VCVARS="{{vcvars}}"
+    JOBS="{{jobs}}"
+    TARGET="{{target}}"
+
+    echo "🔨 Building Windows ${TARGET} template on ${HOST}..."
+    ssh ${USER}@${HOST} "\"${VCVARS}\" && cd ${REPO} && just --justfile justfiles\justfile-windows-native.justfile --working-directory . windows-native-${TARGET} ${JOBS}"
+
+# Verify Windows VM build environment (standard naming)
+build-windows-vm-verify:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    echo "🔍 Verifying Windows VM build environment..."
+    echo ""
+    echo "📡 SSH Connection: {{WIN_VM_USER}}@{{WIN_VM_HOST}}"
+    if ! ssh -o ConnectTimeout=5 {{WIN_VM_USER}}@{{WIN_VM_HOST}} "echo Connected" &>/dev/null; then
+        echo "❌ Cannot connect to Windows VM"
+        exit 1
+    fi
+    echo "✅ SSH connection successful"
+    echo ""
+    ssh {{WIN_VM_USER}}@{{WIN_VM_HOST}} '{{WIN_VM_VCVARS}} && cd {{WIN_VM_REPO}} && just --justfile justfiles\justfile-windows-native.justfile --working-directory . windows-native-verify'
+
+# Sync repository to Windows VM (standard naming)
+build-windows-vm-sync:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    LOCAL_BRANCH=$(git rev-parse --abbrev-ref HEAD)
+    LOCAL_COMMIT=$(git rev-parse --short HEAD)
+    echo "🔄 Syncing Windows VM to local state..."
+    echo "   Branch: ${LOCAL_BRANCH}"
+    echo "   Commit: ${LOCAL_COMMIT}"
+    echo ""
+    if [ "${LOCAL_BRANCH}" = "HEAD" ]; then
+        ssh {{WIN_VM_USER}}@{{WIN_VM_HOST}} "cd {{WIN_VM_REPO}} && git checkout ${LOCAL_COMMIT}"
+    else
+        ssh {{WIN_VM_USER}}@{{WIN_VM_HOST}} "cd {{WIN_VM_REPO}} && git fetch origin && git checkout ${LOCAL_BRANCH} && git reset --hard origin/${LOCAL_BRANCH}"
+    fi
+    echo "📦 Syncing submodules..."
+    ssh {{WIN_VM_USER}}@{{WIN_VM_HOST}} "cd {{WIN_VM_REPO}} && git submodule sync && git submodule update --init godot" || true
+    ssh {{WIN_VM_USER}}@{{WIN_VM_HOST}} "cd {{WIN_VM_REPO}} && git submodule update --init extras/firebase-cpp-sdk extras/sentry-godot" 2>/dev/null || true
+    echo "   Initializing sentry-godot nested submodules..."
+    ssh {{WIN_VM_USER}}@{{WIN_VM_HOST}} "cd {{WIN_VM_REPO}}/extras/sentry-godot && git submodule update --init --recursive" 2>/dev/null || true
+    VM_COMMIT=$(ssh {{WIN_VM_USER}}@{{WIN_VM_HOST}} "cd {{WIN_VM_REPO}} && git rev-parse --short HEAD")
+    if [ "${LOCAL_COMMIT}" = "${VM_COMMIT}" ]; then
+        echo "✅ VM synced to ${VM_COMMIT} (matches local)"
+    else
+        echo "⚠️  WARNING: VM at ${VM_COMMIT}, local at ${LOCAL_COMMIT}"
+        exit 1
+    fi
+
+# Build Windows debug template on VM (standard naming)
+build-windows-vm-template-debug jobs="6":
+    just _build-windows-templates "{{WIN_VM_HOST}}" "{{WIN_VM_USER}}" "{{WIN_VM_REPO}}" {{WIN_VM_VCVARS}} "{{jobs}}" "template-debug"
+
+# Build Windows release template on VM (standard naming)
+build-windows-vm-template-release jobs="6":
+    just _build-windows-templates "{{WIN_VM_HOST}}" "{{WIN_VM_USER}}" "{{WIN_VM_REPO}}" {{WIN_VM_VCVARS}} "{{jobs}}" "template-release"
+
+# Build both Windows templates on VM (standard naming)
+build-windows-vm-templates jobs="6":
+    just build-windows-vm-template-debug "{{jobs}}"
+    just build-windows-vm-template-release "{{jobs}}"
+    @echo "✅ Both Windows templates built successfully on VM"
+
+# Package templates from VM to macOS (standard naming)
+build-windows-vm-templates-package:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    echo "📦 Packaging Windows templates from VM..."
+    mkdir -p templates
+    WIN_BIN_PATH="/C:/gametwo/godot/bin"
+    echo "📥 Copying debug template..."
+    scp "{{WIN_VM_USER}}@{{WIN_VM_HOST}}:${WIN_BIN_PATH}/godot.windows.template_debug.x86_64.exe" templates/
+    if ssh {{WIN_VM_USER}}@{{WIN_VM_HOST}} 'if exist {{WIN_VM_REPO}}\godot\bin\godot.windows.template_release.x86_64.exe echo exists'; then
+        echo "📥 Copying release template..."
+        scp "{{WIN_VM_USER}}@{{WIN_VM_HOST}}:${WIN_BIN_PATH}/godot.windows.template_release.x86_64.exe" templates/
+    fi
+    echo "✅ Windows templates packaged in templates/ directory"
+
+# Verify Windows physical machine build environment (NEW)
+build-windows-physical-verify:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    echo "🔍 Verifying Windows physical machine build environment..."
+    echo ""
+    echo "📡 SSH Connection: {{WIN_PHYSICAL_USER}}@{{WIN_PHYSICAL_HOST}}"
+    if ! ssh -o ConnectTimeout=5 {{WIN_PHYSICAL_USER}}@{{WIN_PHYSICAL_HOST}} "echo Connected" &>/dev/null; then
+        echo "❌ Cannot connect to Windows physical machine"
+        exit 1
+    fi
+    echo "✅ SSH connection successful"
+    echo ""
+    ssh {{WIN_PHYSICAL_USER}}@{{WIN_PHYSICAL_HOST}} '{{WIN_PHYSICAL_VCVARS}} && cd {{WIN_PHYSICAL_REPO}} && just --justfile justfiles\justfile-windows-native.justfile --working-directory . windows-native-verify'
+
+# Sync repository to Windows physical machine (NEW)
+build-windows-physical-sync:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    LOCAL_BRANCH=$(git rev-parse --abbrev-ref HEAD)
+    LOCAL_COMMIT=$(git rev-parse --short HEAD)
+    echo "🔄 Syncing Windows physical machine to local state..."
+    echo "   Branch: ${LOCAL_BRANCH}"
+    echo "   Commit: ${LOCAL_COMMIT}"
+    echo ""
+
+    # Check if repo exists on physical machine, clone if not
+    if ! ssh {{WIN_PHYSICAL_USER}}@{{WIN_PHYSICAL_HOST}} "cd {{WIN_PHYSICAL_REPO}} 2>/dev/null" 2>/dev/null; then
+        echo "📦 Repository not found on physical machine, cloning..."
+        echo "   Using shallow clone for faster initial transfer..."
+        ssh {{WIN_PHYSICAL_USER}}@{{WIN_PHYSICAL_HOST}} "git clone --depth 1 --single-branch --branch ${LOCAL_BRANCH} git@github.com:Myran/gametwo {{WIN_PHYSICAL_REPO}}"
+        echo "✅ Initial shallow clone completed"
+    fi
+
+    if [ "${LOCAL_BRANCH}" = "HEAD" ]; then
+        ssh {{WIN_PHYSICAL_USER}}@{{WIN_PHYSICAL_HOST}} "cd {{WIN_PHYSICAL_REPO}} && git checkout ${LOCAL_COMMIT}"
+    else
+        ssh {{WIN_PHYSICAL_USER}}@{{WIN_PHYSICAL_HOST}} "cd {{WIN_PHYSICAL_REPO}} && git fetch origin && git checkout ${LOCAL_BRANCH} && git reset --hard origin/${LOCAL_BRANCH}"
+    fi
+    echo "📦 Syncing submodules..."
+    ssh {{WIN_PHYSICAL_USER}}@{{WIN_PHYSICAL_HOST}} "cd {{WIN_PHYSICAL_REPO}} && git submodule sync && git submodule update --init godot" || true
+    ssh {{WIN_PHYSICAL_USER}}@{{WIN_PHYSICAL_HOST}} "cd {{WIN_PHYSICAL_REPO}} && git submodule update --init extras/firebase-cpp-sdk extras/sentry-godot" 2>/dev/null || true
+    echo "   Initializing sentry-godot nested submodules..."
+    ssh {{WIN_PHYSICAL_USER}}@{{WIN_PHYSICAL_HOST}} "cd {{WIN_PHYSICAL_REPO}}/extras/sentry-godot && git submodule update --init --recursive" 2>/dev/null || true
+    PHYSICAL_COMMIT=$(ssh {{WIN_PHYSICAL_USER}}@{{WIN_PHYSICAL_HOST}} "cd {{WIN_PHYSICAL_REPO}} && git rev-parse --short HEAD")
+    if [ "${LOCAL_COMMIT}" = "${PHYSICAL_COMMIT}" ]; then
+        echo "✅ Physical machine synced to ${PHYSICAL_COMMIT} (matches local)"
+    else
+        echo "⚠️  WARNING: Physical machine at ${PHYSICAL_COMMIT}, local at ${LOCAL_COMMIT}"
+        exit 1
+    fi
+
+# Build Windows debug template on physical machine (NEW)
+build-windows-physical-template-debug jobs="6":
+    just _build-windows-templates "{{WIN_PHYSICAL_HOST}}" "{{WIN_PHYSICAL_USER}}" "{{WIN_PHYSICAL_REPO}}" {{WIN_PHYSICAL_VCVARS}} "{{jobs}}" "template-debug"
+
+# Build Windows release template on physical machine (NEW)
+build-windows-physical-template-release jobs="6":
+    just _build-windows-templates "{{WIN_PHYSICAL_HOST}}" "{{WIN_PHYSICAL_USER}}" "{{WIN_PHYSICAL_REPO}}" {{WIN_PHYSICAL_VCVARS}} "{{jobs}}" "template-release"
+
+# Build both Windows templates on physical machine (NEW)
+build-windows-physical-templates jobs="6":
+    just build-windows-physical-template-debug "{{jobs}}"
+    just build-windows-physical-template-release "{{jobs}}"
+    @echo "✅ Both Windows templates built successfully on physical machine"
+
+# Package templates from physical machine to macOS (NEW)
+build-windows-physical-templates-package:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    echo "📦 Packaging Windows templates from physical machine..."
+    mkdir -p templates
+    WIN_BIN_PATH="/C:/gametwo/godot/bin"
+    echo "📥 Copying debug template..."
+    scp "{{WIN_PHYSICAL_USER}}@{{WIN_PHYSICAL_HOST}}:${WIN_BIN_PATH}/godot.windows.template_debug.x86_64.exe" templates/
+    if ssh {{WIN_PHYSICAL_USER}}@{{WIN_PHYSICAL_HOST}} 'if exist {{WIN_PHYSICAL_REPO}}\godot\bin\godot.windows.template_release.x86_64.exe echo exists'; then
+        echo "📥 Copying release template..."
+        scp "{{WIN_PHYSICAL_USER}}@{{WIN_PHYSICAL_HOST}}:${WIN_BIN_PATH}/godot.windows.template_release.x86_64.exe" templates/
+    fi
+    echo "✅ Windows templates packaged in templates/ directory"
+
+# ================================
 # ALIGNED PLATFORM COMMANDS
 # ================================
 # These commands match the naming convention of other platforms
 # (Android: build-all-android, iOS: build-all-ios, macOS: build-macos-*)
 
-# Complete Windows build with templates and Sentry (aligned with build-all-android)
-build-all-windows force="no" jobs="6": win-vm-verify
+# Complete Windows build with templates and Sentry (default: VM)
+build-all-windows force="no" jobs="6": build-windows-vm-verify
     @echo "🪟 FULL BUILD - WINDOWS ONLY (via VM)"
     @echo "======================================"
     @echo "⏱️  Estimated time: 25-40 minutes"
     @echo "📡 Building on Windows VM: {{WIN_VM_HOST}}"
     @echo ""
-    just win-vm-sync
-    just win-vm-templates "{{jobs}}"
+    just build-windows-vm-sync
+    just build-windows-vm-templates "{{jobs}}"
     just build-sentry-native-windows-vm-build-all
-    just win-vm-templates-package
+    just build-windows-vm-templates-package
     @echo ""
     @echo "✅ Windows full build complete!"
     @echo "📁 Templates copied to: templates/"
 
-# Build Windows templates (aligned with build-android-templates, build-macos-templates)
-build-windows-templates force="no" jobs="6": win-vm-verify
+# Complete Windows build on physical machine (NEW)
+build-all-windows-physical force="no" jobs="6": build-windows-physical-verify
+    @echo "🪟 FULL BUILD - WINDOWS ONLY (via Physical Machine)"
+    @echo "=============================================="
+    @echo "⏱️  Estimated time: 25-40 minutes"
+    @echo "📡 Building on Windows physical: {{WIN_PHYSICAL_HOST}}"
+    @echo ""
+    just build-windows-physical-sync
+    just build-windows-physical-templates "{{jobs}}"
+    just build-sentry-native-windows-vm-build-all
+    just build-windows-physical-templates-package
+    @echo ""
+    @echo "✅ Windows full build complete!"
+    @echo "📁 Templates copied to: templates/"
+
+# Complete Windows build on VM (explicit variant)
+build-all-windows-vm force="no" jobs="6": build-windows-vm-verify
+    @echo "🪟 FULL BUILD - WINDOWS ONLY (via VM)"
+    @echo "======================================"
+    @echo "⏱️  Estimated time: 25-40 minutes"
+    @echo "📡 Building on Windows VM: {{WIN_VM_HOST}}"
+    @echo ""
+    just build-windows-vm-sync
+    just build-windows-vm-templates "{{jobs}}"
+    just build-sentry-native-windows-vm-build-all
+    just build-windows-vm-templates-package
+    @echo ""
+    @echo "✅ Windows full build complete!"
+    @echo "📁 Templates copied to: templates/"
+
+# Build Windows templates (default: VM, aligned with build-android-templates)
+build-windows-templates force="no" jobs="6": build-windows-vm-verify
     @echo "🔨 Building Windows templates on VM..."
-    just win-vm-templates "{{jobs}}"
-    just win-vm-templates-package
+    just build-windows-vm-templates "{{jobs}}"
+    just build-windows-vm-templates-package
+
+# Build Windows templates on physical machine (NEW)
+build-windows-templates-physical force="no" jobs="6": build-windows-physical-verify
+    @echo "🔨 Building Windows templates on physical machine..."
+    just build-windows-physical-templates "{{jobs}}"
+    just build-windows-physical-templates-package
 
 # Export Windows Desktop - Debug only (aligned with export-macos-debug)
 export-windows-debug: win-vm-verify
@@ -477,12 +615,42 @@ help-windows:
     @echo "============================"
     @echo ""
     @echo "📋 TWO-MACHINE ARCHITECTURE (Task-368):"
-    @echo "  • win-vm-* → Building templates, headless ({{WIN_VM_HOST}})"
-    @echo "  • win-physical-* → Testing exports with GUI ({{WIN_PHYSICAL_HOST}})"
+    @echo "  • VM ({{WIN_VM_HOST}}) → Building templates (MSVC)"
+    @echo "  • Physical ({{WIN_PHYSICAL_HOST}}) → Can build OR test exports"
     @echo ""
-    @echo "📋 RECIPE NAMING:"
-    @echo "  • test-windows-* → Tests on VM (headless capable)"
-    @echo "  • test-windows-physical-* → Tests on physical machine (GUI mode)"
+    @echo "📋 NAMING CONVENTION: <action>-<platform>-<target>"
+    @echo "  • build-windows-vm-*           - Build on VM (standard naming)"
+    @echo "  • build-windows-physical-*     - Build on physical (NEW)"
+    @echo "  • win-vm-*                     - Backward compatibility aliases"
+    @echo "  • test-windows-physical-*      - Test on physical (GUI mode)"
+    @echo ""
+    @echo "─────────────────────────────────────────────────────────────"
+    @echo "🔨 TEMPLATE BUILD (Standard Naming)"
+    @echo "─────────────────────────────────────────────────────────────"
+    @echo ""
+    @echo "VM BUILD:"
+    @echo "  just build-windows-vm-verify           - Verify VM build environment"
+    @echo "  just build-windows-vm-sync             - Sync repo to VM"
+    @echo "  just build-windows-vm-templates         - Build both templates"
+    @echo "  just build-windows-vm-templates-package - Copy templates to Mac"
+    @echo ""
+    @echo "PHYSICAL MACHINE BUILD (NEW):"
+    @echo "  just build-windows-physical-verify           - Verify physical build env"
+    @echo "  just build-windows-physical-sync             - Sync repo to physical"
+    @echo "  just build-windows-physical-templates         - Build both templates"
+    @echo "  just build-windows-physical-templates-package - Copy templates to Mac"
+    @echo ""
+    @echo "UNIFIED BUILD COMMANDS:"
+    @echo "  just build-all-windows             - Build on VM (default)"
+    @echo "  just build-all-windows-vm         - Build on VM (explicit)"
+    @echo "  just build-all-windows-physical   - Build on physical machine"
+    @echo "  just build-windows-templates       - Build templates on VM"
+    @echo "  just build-windows-templates-physical - Build templates on physical"
+    @echo ""
+    @echo "BACKWARD COMPATIBILITY (old names still work):"
+    @echo "  just win-vm-verify                  - Same as build-windows-vm-verify"
+    @echo "  just win-vm-sync                    - Same as build-windows-vm-sync"
+    @echo "  just win-vm-templates                - Same as build-windows-vm-templates"
     @echo ""
     @echo "─────────────────────────────────────────────────────────────"
     @echo "🖥️  PHYSICAL MACHINE TESTING ({{WIN_PHYSICAL_HOST}})"
@@ -511,75 +679,50 @@ help-windows:
     @echo "  just logs-windows-physical-errors TEST_ID - Error-focused analysis"
     @echo ""
     @echo "─────────────────────────────────────────────────────────────"
-    @echo "🔧 VM BUILD SYSTEM ({{WIN_VM_HOST}})"
-    @echo "─────────────────────────────────────────────────────────────"
-    @echo ""
-    @echo "ALIGNED PLATFORM COMMANDS:"
-    @echo "  just build-all-windows       - Complete build: templates + sentry + package"
-    @echo "  just build-windows-templates - Build templates and copy to macOS"
-    @echo "  just export-windows-debug    - Export debug build"
-    @echo "  just export-windows-release  - Export release build"
-    @echo "  just export-windows-all      - Export both debug and release"
-    @echo "  just validate-windows-export - Validate Firebase/Sentry integration"
-    @echo ""
-    @echo "TESTING (VM, headless):"
-    @echo "  just test-windows-target CONFIG  - Run automated test on Windows VM"
-    @echo "  just test-windows-manual CONFIG  - Run test manually (stays open)"
-    @echo "  just test-windows-update CONFIG  - Update checksum baseline"
-    @echo "  just test-windows-reset CONFIG   - Reset checksum baseline"
-    @echo "  just clear-test-windows          - Clear test config on VM"
-    @echo ""
-    @echo "VM MANAGEMENT:"
-    @echo "  just win-vm-verify           - Verify VM connectivity and environment"
-    @echo "  just win-vm-status           - Check build status on VM"
-    @echo "  just win-vm-sync             - Sync git repository to VM"
-    @echo ""
-    @echo "LOW-LEVEL VM BUILDS:"
-    @echo "  just win-vm-template-debug   - Build debug template (~14 min)"
-    @echo "  just win-vm-template-release - Build release template (~18 min)"
-    @echo "  just win-vm-templates        - Build both templates"
-    @echo "  just win-vm-templates-package - Copy templates to macOS"
-    @echo "  just build-sentry-native-windows-vm-build-all - Build Sentry DLLs on VM"
-    @echo "  just win-vm-full-pipeline    - Full pipeline: sync → build → package"
-    @echo ""
-    @echo "─────────────────────────────────────────────────────────────"
     @echo "🔄 DEVELOPMENT WORKFLOWS"
     @echo "─────────────────────────────────────────────────────────────"
     @echo ""
     @echo "📦 FULL BUILD + TEST (code changes → validation):"
-    @echo "  1. just win-vm-sync                  # Sync repo + submodules to VM"
-    @echo "  2. just win-vm-template-debug         # Rebuild templates with changes (~14 min)"
-    @echo "  3. just win-vm-templates-package      # Copy templates from VM"
-    @echo "  4. just export-windows-debug          # Export Windows app"
-    @echo "  5. just win-physical-deploy           # Deploy to physical machine"
-    @echo "  6. just test-windows-physical-target CONFIG  # Run automated tests"
+    @echo "  # Using VM (default)"
+    @echo "  1. just build-all-windows              # Sync + build templates + package"
+    @echo "  2. just export-windows-debug            # Export Windows app"
+    @echo "  3. just win-physical-deploy             # Deploy to physical machine"
+    @echo "  4. just test-windows-physical-target CONFIG  # Run automated tests"
+    @echo ""
+    @echo "  # Using Physical Machine for building"
+    @echo "  1. just build-all-windows-physical      # Sync + build templates + package"
+    @echo "  2. just export-windows-debug            # Export Windows app"
+    @echo "  3. just win-physical-deploy             # Deploy to physical machine"
+    @echo "  4. just test-windows-physical-target CONFIG  # Run automated tests"
     @echo ""
     @echo "⚡ QUICK TEMPLATE UPDATE (C++/Firebase changes):"
-    @echo "  just win-vm-sync && just win-vm-template-debug && just win-vm-templates-package"
+    @echo "  # VM"
+    @echo "  just build-windows-vm-sync && just build-windows-vm-templates && just build-windows-vm-templates-package"
+    @echo ""
+    @echo "  # Physical"
+    @echo "  just build-windows-physical-sync && just build-windows-physical-templates && just build-windows-physical-templates-package"
     @echo ""
     @echo "⚡ QUICK TEST CYCLE (GDScript changes, templates current):"
     @echo "  rm export/windows/gametwo_debug.pck && just export-windows-debug"
     @echo "  just win-physical-deploy && just test-windows-physical-target CONFIG"
-    @echo ""
-    @echo "🔍 VM SUBMODULE ISSUES? If godot submodule fails to sync:"
-    @echo "  ssh runner@192.168.50.92 'cd C:/gametwo/godot && git clean -fd && git pull origin newgametwo'"
-    @echo "  just win-vm-template-debug    # Rebuild with updated module"
     @echo ""
     @echo "─────────────────────────────────────────────────────────────"
     @echo "⚙️  CONFIGURATION"
     @echo "─────────────────────────────────────────────────────────────"
     @echo ""
     @echo "Physical Machine:"
-    @echo "  WIN_PHYSICAL_HOST: {{WIN_PHYSICAL_HOST}}"
-    @echo "  WIN_PHYSICAL_USER: {{WIN_PHYSICAL_USER}}"
-    @echo "  WIN_PHYSICAL_MAC:  {{WIN_PHYSICAL_MAC}} (Wake-on-LAN)"
+    @echo "  WIN_PHYSICAL_HOST:    {{WIN_PHYSICAL_HOST}}"
+    @echo "  WIN_PHYSICAL_USER:    {{WIN_PHYSICAL_USER}}"
+    @echo "  WIN_PHYSICAL_MAC:     {{WIN_PHYSICAL_MAC}} (Wake-on-LAN)"
+    @echo "  WIN_PHYSICAL_REPO:    {{WIN_PHYSICAL_REPO}}"
     @echo ""
     @echo "VM Machine:"
-    @echo "  WIN_VM_HOST: {{WIN_VM_HOST}}"
-    @echo "  WIN_VM_USER: {{WIN_VM_USER}}"
-    @echo "  WIN_VM_REPO: {{WIN_VM_REPO}}"
+    @echo "  WIN_VM_HOST:          {{WIN_VM_HOST}}"
+    @echo "  WIN_VM_USER:          {{WIN_VM_USER}}"
+    @echo "  WIN_VM_REPO:          {{WIN_VM_REPO}}"
     @echo ""
     @echo "💡 TIP: Physical machine may be sleeping. Use 'just win-physical-wake' first."
+    @echo "💡 TIP: Use 'just build-all-windows-physical' if VM is unavailable."
 
 # Alias for backward compatibility
 win-vm-help: help-windows

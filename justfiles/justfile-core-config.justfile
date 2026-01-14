@@ -36,11 +36,17 @@ ANDROID_DEVICE_IP := env_var_or_default("ANDROID_DEVICE_IP", "192.168.1.100")
 # Windows Machines
 # win-vm-* recipes use WIN_VM (building templates)
 # win-physical-* recipes use WIN_PHYSICAL (testing exports)
+# build-windows-vm-* = Build templates on VM (aliases for win-vm-*)
+# build-windows-physical-* = Build templates on physical machine (NEW)
 WIN_VM_HOST := env_var_or_default("WIN_VM_HOST", "192.168.50.92")
 WIN_VM_USER := env_var_or_default("WIN_VM_USER", "runner")
+WIN_VM_REPO := "C:\\gametwo"
+WIN_VM_VCVARS := '"C:\\Program Files (x86)\\Microsoft Visual Studio\\2022\\BuildTools\\VC\\Auxiliary\\Build\\vcvars64.bat"'
 WIN_PHYSICAL_HOST := env_var_or_default("WIN_PHYSICAL_HOST", "192.168.50.80")
 WIN_PHYSICAL_USER := env_var_or_default("WIN_PHYSICAL_USER", "matti")
 WIN_PHYSICAL_MAC := env_var_or_default("WIN_PHYSICAL_MAC", "74:56:3C:CC:80:1D")
+WIN_PHYSICAL_REPO := "C:\\gametwo"
+WIN_PHYSICAL_VCVARS := '"C:\\Program Files (x86)\\Microsoft Visual Studio\\2022\\BuildTools\\VC\\Auxiliary\\Build\\vcvars64.bat"'
 
 # ================================
 # PLATFORM IDENTIFIERS
