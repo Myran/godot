@@ -90,15 +90,24 @@ elif env['platform'] == 'windows':
     print("Firebase: Windows platform")
     # Link Firebase C++ SDK libraries for Windows (MSVC)
     # Libraries built with VS2019/MT (static runtime) for x64
+    # IMPORTANT: Use Debug libs for debug builds, Release libs for release builds (Task-434)
     if env['arch'] == 'x86_64':
-        env.Prepend(LIBS=[File("#/../firebase/firebase_cpp_sdk/libs/windows/VS2019/MT/x64/Release/firebase_app.lib")])
-        env.Prepend(LIBS=[File("#/../firebase/firebase_cpp_sdk/libs/windows/VS2019/MT/x64/Release/firebase_analytics.lib")])
-        env.Prepend(LIBS=[File("#/../firebase/firebase_cpp_sdk/libs/windows/VS2019/MT/x64/Release/firebase_remote_config.lib")])
-        env.Prepend(LIBS=[File("#/../firebase/firebase_cpp_sdk/libs/windows/VS2019/MT/x64/Release/firebase_database.lib")])
-        env.Prepend(LIBS=[File("#/../firebase/firebase_cpp_sdk/libs/windows/VS2019/MT/x64/Release/firebase_firestore.lib")])
-        env.Prepend(LIBS=[File("#/../firebase/firebase_cpp_sdk/libs/windows/VS2019/MT/x64/Release/firebase_auth.lib")])
-        env.Prepend(LIBS=[File("#/../firebase/firebase_cpp_sdk/libs/windows/VS2019/MT/x64/Release/firebase_functions.lib")])
-        env.Prepend(LIBS=[File("#/../firebase/firebase_cpp_sdk/libs/windows/VS2019/MT/x64/Release/firebase_messaging.lib")])
+        # Select library variant based on build target
+        if env['target'] == 'template_debug':
+            lib_variant = 'Debug'
+        else:
+            lib_variant = 'Release'
+        print("Firebase: Using " + lib_variant + " libraries for target: " + env['target'])
+
+        lib_base = "#/../firebase/firebase_cpp_sdk/libs/windows/VS2019/MT/x64/" + lib_variant + "/"
+        env.Prepend(LIBS=[File(lib_base + "firebase_app.lib")])
+        env.Prepend(LIBS=[File(lib_base + "firebase_analytics.lib")])
+        env.Prepend(LIBS=[File(lib_base + "firebase_remote_config.lib")])
+        env.Prepend(LIBS=[File(lib_base + "firebase_database.lib")])
+        env.Prepend(LIBS=[File(lib_base + "firebase_firestore.lib")])
+        env.Prepend(LIBS=[File(lib_base + "firebase_auth.lib")])
+        env.Prepend(LIBS=[File(lib_base + "firebase_functions.lib")])
+        env.Prepend(LIBS=[File(lib_base + "firebase_messaging.lib")])
         # Windows system libraries required by Firebase SDK (Task-434)
         # Use LINKFLAGS to pass system libraries directly to linker (avoids SCons name mangling)
         # Reference: https://firebase.google.com/docs/database/cpp/start
