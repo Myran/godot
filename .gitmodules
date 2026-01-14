@@ -4,6 +4,7 @@
 [submodule "godot"]
 	path = godot
 	url = https://github.com/Myran/godot.git
+	branch = newgametwo
 [submodule "extras/sentry-godot"]
 	path = extras/sentry-godot
 	url = https://github.com/Myran/sentry-godot.git
