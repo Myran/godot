@@ -304,16 +304,16 @@ void set_defaults(Dictionary defaults);
 ```bash
 # RECOMMENDED: One-command C++ workflow
 just cpp-dev
-# Combines: build templates → install template → fastbuild-android
+# Combines: build templates → install template → deploy-android
 
 # Manual workflow (alternative)
 just build-android-templates     # 1. Compile C++ → .aar (3-15 min)
 just install-android-template    # 2. Extract to project/android/build/
-just fastbuild-android           # 3. Package + deploy (REQUIRED)
+just deploy-android           # 3. Package + deploy (REQUIRED)
 ```
 
 **Critical**:
-- **After ANY C++ changes**: `just fastbuild-android` **MANDATORY** before Android testing
+- **After ANY C++ changes**: `just deploy-android` **MANDATORY** before Android testing
 - **Reason**: Android uses compiled/cached templates that don't auto-update
 - **iOS**: Similar workflow with `just build-install-ios`
 
@@ -660,7 +660,7 @@ just ios-retrieve-logs-iphone
 just cpp-dev                      # One-command C++ workflow
 just build-android-templates      # Build C++ module
 just install-android-template     # Install to project
-just fastbuild-android            # Deploy (REQUIRED)
+just deploy-android            # Deploy (REQUIRED)
 
 just build-install-ios            # iOS build + deploy
 ```
