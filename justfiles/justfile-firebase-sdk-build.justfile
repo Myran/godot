@@ -159,7 +159,9 @@ build-firebase-sdk-windows-build-debug:
 
     # Run CMake configuration
     echo "📋 Configuring CMake for Debug build..."
-    CMAKE_CMD="cd {{FIREBASE_WINDOWS_BUILD_DIR}}\\build-debug && cmake .. -A x64 -DCMAKE_BUILD_TYPE=Debug -DFIREBASE_INCLUDE_DATABASE=ON -DFIREBASE_INCLUDE_AUTH=ON -DFIREBASE_INCLUDE_ANALYTICS=ON -DFIREBASE_INCLUDE_REMOTE_CONFIG=ON -DFIREBASE_INCLUDE_MESSAGING=ON -DFIREBASE_INCLUDE_FUNCTIONS=ON -DFIREBASE_INCLUDE_STORAGE=ON -DFIREBASE_INCLUDE_FIRESTORE=ON -DOPENSSL_ROOT_DIR=\"{{FIREBASE_WINDOWS_OPENSSL}}\" -DCMAKE_C_FLAGS_DEBUG=\"/Zi /Od\" -DCMAKE_CXX_FLAGS_DEBUG=\"/Zi /Od\" -DCMAKE_EXE_LINKER_FLAGS_DEBUG=\"/DEBUG /INCREMENTAL:NO\" -DCMAKE_SHARED_LINKER_FLAGS_DEBUG=\"/DEBUG /INCREMENTAL:NO\""
+    # Note: Requires CMake 3.x (not 4.x) for compatibility with Firebase SDK external dependencies
+    # Firestore is disabled due to missing external project sources in this build workflow
+    CMAKE_CMD="cd {{FIREBASE_WINDOWS_BUILD_DIR}}\\build-debug && cmake .. -A x64 -DCMAKE_BUILD_TYPE=Debug -DFIREBASE_INCLUDE_DATABASE=ON -DFIREBASE_INCLUDE_AUTH=ON -DFIREBASE_INCLUDE_ANALYTICS=ON -DFIREBASE_INCLUDE_REMOTE_CONFIG=ON -DFIREBASE_INCLUDE_MESSAGING=ON -DFIREBASE_INCLUDE_FUNCTIONS=ON -DFIREBASE_INCLUDE_STORAGE=ON -DFIREBASE_INCLUDE_FIRESTORE=OFF -DOPENSSL_ROOT_DIR=\"{{FIREBASE_WINDOWS_OPENSSL}}\" -DCMAKE_C_FLAGS_DEBUG=\"/Zi /Od\" -DCMAKE_CXX_FLAGS_DEBUG=\"/Zi /Od\" -DCMAKE_EXE_LINKER_FLAGS_DEBUG=\"/DEBUG /INCREMENTAL:NO\" -DCMAKE_SHARED_LINKER_FLAGS_DEBUG=\"/DEBUG /INCREMENTAL:NO\""
 
     if ! ssh {{WIN_PHYSICAL_USER}}@{{WIN_PHYSICAL_HOST}} "${CMAKE_CMD}"; then
         echo "❌ CMake configuration failed"
@@ -202,7 +204,9 @@ build-firebase-sdk-windows-build-release:
 
     # Run CMake configuration
     echo "📋 Configuring CMake for Release build..."
-    CMAKE_CMD="cd {{FIREBASE_WINDOWS_BUILD_DIR}}\\build-release && cmake .. -A x64 -DCMAKE_BUILD_TYPE=Release -DFIREBASE_INCLUDE_DATABASE=ON -DFIREBASE_INCLUDE_AUTH=ON -DFIREBASE_INCLUDE_ANALYTICS=ON -DFIREBASE_INCLUDE_REMOTE_CONFIG=ON -DFIREBASE_INCLUDE_MESSAGING=ON -DFIREBASE_INCLUDE_FUNCTIONS=ON -DFIREBASE_INCLUDE_STORAGE=ON -DFIREBASE_INCLUDE_FIRESTORE=ON -DOPENSSL_ROOT_DIR=\"{{FIREBASE_WINDOWS_OPENSSL}}\""
+    # Note: Requires CMake 3.x (not 4.x) for compatibility with Firebase SDK external dependencies
+    # Firestore is disabled due to missing external project sources in this build workflow
+    CMAKE_CMD="cd {{FIREBASE_WINDOWS_BUILD_DIR}}\\build-release && cmake .. -A x64 -DCMAKE_BUILD_TYPE=Release -DFIREBASE_INCLUDE_DATABASE=ON -DFIREBASE_INCLUDE_AUTH=ON -DFIREBASE_INCLUDE_ANALYTICS=ON -DFIREBASE_INCLUDE_REMOTE_CONFIG=ON -DFIREBASE_INCLUDE_MESSAGING=ON -DFIREBASE_INCLUDE_FUNCTIONS=ON -DFIREBASE_INCLUDE_STORAGE=ON -DFIREBASE_INCLUDE_FIRESTORE=OFF -DOPENSSL_ROOT_DIR=\"{{FIREBASE_WINDOWS_OPENSSL}}\""
 
     if ! ssh {{WIN_PHYSICAL_USER}}@{{WIN_PHYSICAL_HOST}} "${CMAKE_CMD}"; then
         echo "❌ CMake configuration failed"
@@ -236,26 +240,56 @@ build-firebase-sdk-windows-package-debug:
     echo ""
 
     # Ensure local output directory exists
-    mkdir -p "{{FIREBASE_SDK_OUTPUT}}/libs/windows/VS2019/MT/x64/Debug"
-    mkdir -p "{{FIREBASE_SDK_OUTPUT}}/libs/windows/VS2019/MT/x64/Debug/symbols"
+    OUTPUT_DIR="{{FIREBASE_SDK_OUTPUT}}/libs/windows/VS2019/MT/x64/Debug"
+    mkdir -p "$OUTPUT_DIR"
+    mkdir -p "$OUTPUT_DIR/symbols"
 
-    # Copy .lib files
+    # Firebase modules to package (built in subdirectories)
+    MODULES="analytics app app_check auth database functions installations messaging remote_config storage"
+
+    # Copy .lib files from module subdirectories
     echo "📥 Copying Debug libraries..."
-    scp "{{WIN_PHYSICAL_USER}}@{{WIN_PHYSICAL_HOST}}:{{FIREBASE_WINDOWS_BUILD_DIR}}/build-debug/*.lib" \
-        "{{FIREBASE_SDK_OUTPUT}}/libs/windows/VS2019/MT/x64/Debug/" 2>/dev/null || echo "   No .lib files in root build dir"
+    for module in $MODULES; do
+        LIB_PATH="{{FIREBASE_WINDOWS_BUILD_DIR}}/build-debug/${module}/Debug/firebase_${module}.lib"
+        if ssh {{WIN_PHYSICAL_USER}}@{{WIN_PHYSICAL_HOST}} "if exist \"${LIB_PATH}\" echo exists" | grep -q exists; then
+            echo "   ✅ firebase_${module}.lib"
+            scp "{{WIN_PHYSICAL_USER}}@{{WIN_PHYSICAL_HOST}}:/C:/firebase-sdk-build/build-debug/${module}/Debug/firebase_${module}.lib" "$OUTPUT_DIR/"
+        fi
+    done
 
-    # Copy .pdb files (debug symbols)
+    # Copy app rest lib (nested directory)
+    REST_LIB="{{FIREBASE_WINDOWS_BUILD_DIR}}/build-debug/app/rest/Debug/firebase_rest_lib.lib"
+    if ssh {{WIN_PHYSICAL_USER}}@{{WIN_PHYSICAL_HOST}} "if exist \"${REST_LIB}\" echo exists" | grep -q exists; then
+        echo "   ✅ firebase_rest_lib.lib"
+        scp "{{WIN_PHYSICAL_USER}}@{{WIN_PHYSICAL_HOST}}:/C:/firebase-sdk-build/build-debug/app/rest/Debug/firebase_rest_lib.lib" "$OUTPUT_DIR/"
+    fi
+
+    # Copy .pdb files from module subdirectories
+    echo ""
     echo "📥 Copying Debug symbols (PDB)..."
-    scp "{{WIN_PHYSICAL_USER}}@{{WIN_PHYSICAL_HOST}}:{{FIREBASE_WINDOWS_BUILD_DIR}}/build-debug/*.pdb" \
-        "{{FIREBASE_SDK_OUTPUT}}/libs/windows/VS2019/MT/x64/Debug/symbols/" 2>/dev/null || echo "   No .pdb files in root build dir"
+    for module in $MODULES; do
+        PDB_PATH="{{FIREBASE_WINDOWS_BUILD_DIR}}/build-debug/${module}/Debug/firebase_${module}.pdb"
+        if ssh {{WIN_PHYSICAL_USER}}@{{WIN_PHYSICAL_HOST}} "if exist \"${PDB_PATH}\" echo exists" | grep -q exists; then
+            echo "   ✅ firebase_${module}.pdb"
+            scp "{{WIN_PHYSICAL_USER}}@{{WIN_PHYSICAL_HOST}}:/C:/firebase-sdk-build/build-debug/${module}/Debug/firebase_${module}.pdb" "$OUTPUT_DIR/symbols/"
+        fi
+    done
 
+    # Copy app rest pdb
+    REST_PDB="{{FIREBASE_WINDOWS_BUILD_DIR}}/build-debug/app/rest/Debug/firebase_rest_lib.pdb"
+    if ssh {{WIN_PHYSICAL_USER}}@{{WIN_PHYSICAL_HOST}} "if exist \"${REST_PDB}\" echo exists" | grep -q exists; then
+        echo "   ✅ firebase_rest_lib.pdb"
+        scp "{{WIN_PHYSICAL_USER}}@{{WIN_PHYSICAL_HOST}}:/C:/firebase-sdk-build/build-debug/app/rest/Debug/firebase_rest_lib.pdb" "$OUTPUT_DIR/symbols/"
+    fi
+
+    echo ""
     echo "✅ Debug libraries packaged"
     echo ""
-    echo "📁 Contents:"
-    ls -la "{{FIREBASE_SDK_OUTPUT}}/libs/windows/VS2019/MT/x64/Debug/" 2>/dev/null | head -20 || echo "   (empty)"
+    echo "📁 Libraries:"
+    ls -la "$OUTPUT_DIR"/*.lib 2>/dev/null | awk '{print "   " $NF " (" $5 " bytes)"}' || echo "   (none)"
     echo ""
     echo "🔍 Debug symbols:"
-    ls -la "{{FIREBASE_SDK_OUTPUT}}/libs/windows/VS2019/MT/x64/Debug/symbols/" 2>/dev/null | head -10 || echo "   (none)"
+    ls -la "$OUTPUT_DIR/symbols"/*.pdb 2>/dev/null | awk '{print "   " $NF}' || echo "   (none)"
 
 # Package release libraries
 build-firebase-sdk-windows-package-release:
