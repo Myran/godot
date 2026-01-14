@@ -90,15 +90,10 @@ elif env['platform'] == 'windows':
     print("Firebase: Windows platform")
     # Link Firebase C++ SDK libraries for Windows (MSVC)
     # Libraries built with VS2019/MT (static runtime) for x64
-    # Debug libs built from source with PDB symbols for crash debugging (Task-436)
-    # Release libs are prebuilt from Firebase SDK distribution (August 2024)
+    # NOTE: Always use Release libs - Debug libs (/MTd) incompatible with Godot's debug_crt=/MDd (Task-434)
     if env['arch'] == 'x86_64':
-        # Select library variant based on build target
-        if env['target'] in ['editor', 'template_debug']:
-            lib_variant = 'Debug'
-        else:
-            lib_variant = 'Release'
-        print("Firebase: Using " + lib_variant + " libraries for target=" + env['target'])
+        lib_variant = 'Release'
+        print("Firebase: Using " + lib_variant + " libraries for all Windows targets")
 
         lib_base = "#/../firebase/firebase_cpp_sdk/libs/windows/VS2019/MT/x64/" + lib_variant + "/"
         env.Prepend(LIBS=[File(lib_base + "firebase_app.lib")])
