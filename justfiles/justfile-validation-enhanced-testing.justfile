@@ -2946,9 +2946,11 @@ _execute-test-with-analysis config_name platform session="":
             ;;
         "windows-physical")
             # Deploy and execute Windows test on physical machine (GUI mode)
+            # Build type (debug/release) controlled by WIN_PHYSICAL_BUILD_TYPE env var
             just _deploy-config-windows-physical "$TEMP_CONFIG_PATH" || TEST_RESULT=$?
             if [[ $TEST_RESULT -eq 0 ]]; then
-                just _execute-test-windows-physical "$CONFIG_NAME" "$TEST_ID" || TEST_RESULT=$?
+                BUILD_TYPE="${WIN_PHYSICAL_BUILD_TYPE:-debug}"
+                just _execute-test-windows-physical "$CONFIG_NAME" "$TEST_ID" "$BUILD_TYPE" || TEST_RESULT=$?
             fi
             ;;
         *)

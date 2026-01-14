@@ -55,6 +55,9 @@ const CPPGetValueDiagnosticActionClass = preload(
 const CPPSetValueDiagnosticActionClass = preload(
 	"res://debug/actions/firebase_rtdb/cpp_rtdb_set_value_diagnostic_action.gd"
 )
+const CPPRTDBBlockingGetValueActionClass = preload(
+	"res://debug/actions/firebase_rtdb/cpp_rtdb_blocking_get_value_action.gd"
+)
 
 
 static func register_all(registry: DebugActionRegistry) -> void:
@@ -83,5 +86,6 @@ static func register_all(registry: DebugActionRegistry) -> void:
 	# Task-434: RTDB diagnostic tests
 	helper.register(CPPGetValueDiagnosticActionClass.new())
 	helper.register(CPPSetValueDiagnosticActionClass.new())
+	helper.register(CPPRTDBBlockingGetValueActionClass.new())
 
 	helper.complete()

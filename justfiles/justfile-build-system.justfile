@@ -356,8 +356,8 @@ cpp-dev:
     @echo "Step 2: Installing Android template..."
     just install-android-template
     @echo ""
-    @echo "Step 3: Fast build and deploy to device..."
-    just fastbuild-android
+    @echo "Step 3: Deploy to device..."
+    just deploy-android
     @echo ""
     @echo "✅ C++ development workflow complete - app deployed to device"
     @echo "📱 Android: Deployed to device"

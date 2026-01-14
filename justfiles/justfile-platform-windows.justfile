@@ -1049,15 +1049,26 @@ _deploy-config-windows-physical config_path:
 
     CONFIG_PATH="{{config_path}}"
 
+    # Determine which executable to check for based on build type
+    BUILD_TYPE="${WIN_PHYSICAL_BUILD_TYPE:-debug}"
+    if [ "$BUILD_TYPE" = "release" ]; then
+        EXE_NAME="{{GAME_NAME}}.exe"
+        DEPLOY_HINT="win-physical-deploy-release"
+    else
+        EXE_NAME="{{GAME_NAME}}_debug.exe"
+        DEPLOY_HINT="win-physical-deploy"
+    fi
+
     echo "🪟 Deploying configuration to Windows physical machine..."
+    echo "📦 Build: $BUILD_TYPE"
 
     # Ensure physical machine is awake
     just _win-physical-ensure-awake
 
     # Check export is deployed
-    if ! ssh {{WIN_PHYSICAL_USER}}@{{WIN_PHYSICAL_HOST}} "if exist \"{{WIN_PHYSICAL_DIR}}\\builds\\{{GAME_NAME}}_debug.exe\" echo exists" | grep -q exists; then
+    if ! ssh {{WIN_PHYSICAL_USER}}@{{WIN_PHYSICAL_HOST}} "if exist \"{{WIN_PHYSICAL_DIR}}\\builds\\${EXE_NAME}\" echo exists" | grep -q exists; then
         echo "❌ Windows export not deployed to physical machine"
-        echo "💡 Run 'just win-physical-deploy' first"
+        echo "💡 Run 'just $DEPLOY_HINT' first"
         exit 1
     fi
 
@@ -1069,27 +1080,37 @@ _deploy-config-windows-physical config_path:
     ssh {{WIN_PHYSICAL_USER}}@{{WIN_PHYSICAL_HOST}} "del \"{{WIN_PHYSICAL_USER_DATA}}\\logs\\*.log\" 2>nul || echo No old logs"
 
 # Execute test on Windows physical machine (shared helper interface)
-_execute-test-windows-physical config_name test_id:
+# BUILD_TYPE: "debug" or "release" - which executable to run
+_execute-test-windows-physical config_name test_id build_type="debug":
     #!/usr/bin/env bash
     set -euo pipefail
 
     CONFIG_NAME="{{config_name}}"
     TEST_ID="{{test_id}}"
+    BUILD_TYPE="{{build_type}}"
 
     echo "🪟 Starting Windows physical machine test execution..."
     echo "📍 Target: {{WIN_PHYSICAL_HOST}} (GUI mode)"
+    echo "📦 Build: $BUILD_TYPE"
     echo ""
 
     # Ensure machine is awake before running test (checks first, wakes if needed)
     just win-physical-wake-wait
     echo ""
 
+    # Determine executable based on build type
+    if [ "$BUILD_TYPE" = "release" ]; then
+        EXE_NAME="{{GAME_NAME}}.exe"
+    else
+        EXE_NAME="{{GAME_NAME}}_debug.exe"
+    fi
+
     # Run test with GUI using PowerShell Start-Process
     echo "🚀 Starting test with GUI..."
     echo ""
 
     # Use PowerShell to start the process and wait for it
-    ssh {{WIN_PHYSICAL_USER}}@{{WIN_PHYSICAL_HOST}} "powershell -Command \"Start-Process -FilePath '{{WIN_PHYSICAL_DIR}}\\builds\\{{GAME_NAME}}_debug.exe' -ArgumentList '--test-mode','--auto-quit' -WorkingDirectory '{{WIN_PHYSICAL_DIR}}\\builds' -Wait\""
+    ssh {{WIN_PHYSICAL_USER}}@{{WIN_PHYSICAL_HOST}} "powershell -Command \"Start-Process -FilePath '{{WIN_PHYSICAL_DIR}}\\builds\\${EXE_NAME}' -ArgumentList '--test-mode','--auto-quit' -WorkingDirectory '{{WIN_PHYSICAL_DIR}}\\builds' -Wait\""
 
     TEST_EXIT_CODE=$?
 
@@ -1208,6 +1229,103 @@ test-windows-physical-manual config_name:
 
     echo ""
     echo "✅ App launched on Windows physical machine"
+    echo "💡 The app will stay open for manual inspection"
+    echo "💡 Connect via RDP to interact: {{WIN_PHYSICAL_HOST}}"
+    echo "🛑 To stop: just _win-physical-stop-app"
+
+# ================================
+# WINDOWS PHYSICAL RELEASE TESTING
+# ================================
+# Test with release build to check for debug-specific crashes (Task-434)
+# Uses shared _execute-test-windows-physical with build_type="release"
+
+# Run test on physical machine with GUI (automated mode, RELEASE build)
+# Uses shared _execute-test-with-analysis for consistent config resolution
+# Platform: windows-physical (same as debug, just different executable)
+test-windows-physical-release-target config_name="":
+    #!/usr/bin/env bash
+    set -euo pipefail
+
+    # If no config provided, show fzf selection
+    if [ -z "{{config_name}}" ]; then
+        selected=$(just _fzf-select-config "windows" "all")
+        if [ "$?" -eq 0 ] && [ -n "$selected" ]; then
+            CONFIG_NAME="$selected"
+        else
+            echo "❌ No selection made"
+            exit 1
+        fi
+    else
+        CONFIG_NAME="{{config_name}}"
+    fi
+
+    echo "🖥️  Windows Physical Machine RELEASE Testing: $CONFIG_NAME"
+    echo "======================================================"
+    echo ""
+    echo "📍 Target: {{WIN_PHYSICAL_HOST}} (GUI mode)"
+    echo "📦 Build: RELEASE"
+    echo "📦 Using shared config resolution (supports test lists, @ refs, folders)"
+    echo ""
+
+    # Create session timestamp for multi-config orchestration
+    if [[ -n "${MULTI_PLATFORM_SESSION:-}" ]]; then
+        TEST_SESSION="$MULTI_PLATFORM_SESSION"
+    else
+        TEST_SESSION="$(date +%s)"
+    fi
+
+    # Export build type for the executor to use
+    export WIN_PHYSICAL_BUILD_TYPE="release"
+
+    # Use the shared unified execution pattern with windows-physical platform
+    # The executor will use WIN_PHYSICAL_BUILD_TYPE to select the executable
+    just _execute-test-with-analysis "$CONFIG_NAME" "windows-physical" "$TEST_SESSION"
+
+# Run test on physical machine in manual mode (stays open, RELEASE build)
+test-windows-physical-release-manual config_name:
+    #!/usr/bin/env bash
+    set -euo pipefail
+
+    CONFIG_NAME="{{config_name}}"
+
+    echo "🖥️  Windows Physical Machine RELEASE Testing (Manual Mode): $CONFIG_NAME"
+    echo "======================================================================"
+    echo ""
+    echo "📍 Target: {{WIN_PHYSICAL_HOST}} (GUI mode - stays open)"
+    echo "📦 Build: RELEASE"
+    echo ""
+
+    # Ensure physical machine is awake
+    just _win-physical-ensure-awake
+
+    # Validate config exists
+    CONFIG_PATH="{{DEBUG_CONFIG_DIR}}/${CONFIG_NAME}.json"
+    if [ ! -f "$CONFIG_PATH" ]; then
+        echo "❌ Config not found: $CONFIG_PATH"
+        exit 1
+    fi
+
+    # Check release export is deployed
+    if ! ssh {{WIN_PHYSICAL_USER}}@{{WIN_PHYSICAL_HOST}} "if exist \"{{WIN_PHYSICAL_DIR}}\\builds\\{{GAME_NAME}}.exe\" echo exists" | grep -q exists; then
+        echo "❌ Windows RELEASE export not deployed to physical machine"
+        echo "💡 Run 'just win-physical-deploy-release' first"
+        exit 1
+    fi
+
+    # Create temp config with auto_quit=false
+    TEMP_CONFIG_PATH="{{DEBUG_CONFIG_DIR}}/${CONFIG_NAME}_physical_manual.json"
+    just _inject-auto-quit-metadata "$CONFIG_PATH" "$TEMP_CONFIG_PATH" "false"
+
+    # Deploy config
+    just _win-physical-deploy-config "$TEMP_CONFIG_PATH"
+    rm -f "$TEMP_CONFIG_PATH"
+
+    # Launch release app in background (doesn't wait)
+    echo "🚀 Launching RELEASE app in manual mode..."
+    ssh {{WIN_PHYSICAL_USER}}@{{WIN_PHYSICAL_HOST}} "powershell -Command \"Start-Process -FilePath '{{WIN_PHYSICAL_DIR}}\\builds\\{{GAME_NAME}}.exe' -ArgumentList '--test-mode' -WorkingDirectory '{{WIN_PHYSICAL_DIR}}\\builds'\""
+
+    echo ""
+    echo "✅ RELEASE app launched on Windows physical machine"
     echo "💡 The app will stay open for manual inspection"
     echo "💡 Connect via RDP to interact: {{WIN_PHYSICAL_HOST}}"
     echo "🛑 To stop: just _win-physical-stop-app"

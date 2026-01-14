@@ -4,7 +4,7 @@ title: Fix Windows Firebase RTDB GetValue() crash
 status: Open
 assignee: []
 created_date: '2025-01-13 14:35'
-updated_date: '2026-01-14 13:18'
+updated_date: '2026-01-14 14:09'
 labels:
   - windows
   - firebase
@@ -147,20 +147,15 @@ All Firebase initialization succeeds, but the `GetValue()` call crashes immediat
 - [x] #3 Implement and verify force_local_data workaround
 
 - [ ] #4 [x] #4 Fix Windows justfile refactoring (syntax, quoting, CRT compatibility)
+
+- [ ] #5 [x] #4 Fix Windows justfile refactoring (syntax, quoting, CRT compatibility)
+- [ ] #6 [x] #5 Verify RTDB works with Release Firebase libs (CRT match confirmed)
 <!-- AC:END -->
 
 ## Implementation Plan
 
 <!-- SECTION:PLAN:BEGIN -->
-## Justfile Refactoring Fixes (2026-01-14)
-
-**Issue**: Windows recipe refactoring broke template builds
-
-**Fixes**: (1) Syntax `recipe("arg")` → `recipe "arg"`, (2) Escaped quotes for paths with (x86), (3) Use Release Firebase libs (CRT incompatibility resolved)
-
-**CRT Incompatibility**: Firebase Debug /MTd vs Godot /MDd - cannot mix static/dynamic CRT
-
-**Verification**: Debug template 95MB, Release 71MB, Firebase loads with 32+ actions
+["## CRT Root Cause (CORRECTED 2026-01-14)", "**ORIGINAL HYPOTHESIS (WRONG)**: Firebase SDK bug in Windows RTDB", "**ACTUAL ROOT CAUSE**: CRT mismatch between Godot and Firebase Debug libraries", "", "**The CRT Mismatch**:", "- Godot template_debug: Uses /MT (static Release CRT) by default", "- Firebase Debug libs: Built with /MTd (static Debug CRT)", "- Result: Runtime crash when Firebase calls debug-only CRT functions", "", "**Timeline**:", "- Before 3fd15857d5: Release Firebase libs (/MT) - Working!", "- After 3fd15857d5: Debug Firebase libs (/MTd) - RTDB crashes!", "- Current fix: Back to Release Firebase libs (/MT) - Should work!", "", "**Key Insight**: The \"Debug libs for debug builds\" change INTRODUCED the bug!", "**Next Step**: Test RTDB with new build to confirm crash is fixed"]
 <!-- SECTION:PLAN:END -->
 
 ## Implementation Notes

@@ -165,12 +165,6 @@ fastbuild: export-install-android-launch-debug
     @echo "⚡ Fast Android build (2x faster than old implementation)..."
     @echo "✅ Complete Sentry integration enabled"
 
-# Alias for backward compatibility
-fastbuild-android: export-install-android-launch-debug
-
-# Note: Original fastbuild-android removed - alias to export-install-android-launch-debug
-# Why: export-install-android-launch-debug is 2x faster (36s vs 75s) and has complete Sentry integration
-
 # Android template building
 build-android-templates force="no":
     #!/usr/bin/env bash
@@ -587,10 +581,6 @@ restart-android-app: _validate-android-workflow
     sleep 1
     adb -s {{ANDROID_DEVICE_ID}} shell am start -n {{ANDROID_PACKAGE_NAME}}/com.godot.game.GodotApp
     echo "✅ Android app restarted"
-
-# Note: _gradle-build-install-android removed - was only used by old fastbuild-android
-# Why: fastbuild-android now uses 'export-install-android-launch-debug' for better performance
-
 
 # Internal helper: Push any file to Android app private directory
 _push-file-android SOURCE_FILE TARGET_FILENAME:

@@ -825,6 +825,108 @@ build-export-test-windows CONFIG="":
     echo ""
     echo "✅ Windows build-export-test complete!"
 
+# Build, export, and test Windows RELEASE build (to check for debug-specific crashes like Task-434)
+build-export-test-windows-release CONFIG="":
+    #!/usr/bin/env bash
+    set -euo pipefail
+
+    CONFIG="{{CONFIG}}"
+    if [ -z "$CONFIG" ]; then
+        CONFIG="main"
+    fi
+
+    echo "🪟 Windows RELEASE: Build + Export + Test"
+    echo "========================================="
+    echo "🎯 Target configuration: $CONFIG"
+    echo "📦 Build: RELEASE (template_release)"
+    echo ""
+
+    # Resolve test input: auto-detects test list vs config (with or without @ prefix)
+    RESOLVED=$(just _resolve-test-input "$CONFIG")
+
+    # Check if resolved output contains multiple lines (test list expansion)
+    LINE_COUNT=$(echo "$RESOLVED" | wc -l | tr -d ' ')
+    if [[ $LINE_COUNT -gt 1 ]]; then
+        # It's a test list - iterate through configs
+        echo "🔄 Detected test list: $CONFIG"
+        echo "📋 Found $LINE_COUNT config(s)"
+        echo ""
+        echo "💡 First config will rebuild templates, remaining configs will use cached templates"
+        echo ""
+
+        INDEX=0
+        while IFS= read -r config; do
+            if [[ -n "$config" ]]; then
+                INDEX=$((INDEX + 1))
+                echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+                echo "📋 Config $INDEX/$LINE_COUNT: $config"
+                if [[ $INDEX -eq 1 ]]; then
+                    echo "🔧 Full rebuild + test"
+                else
+                    echo "⚡ Using cached templates"
+                fi
+                echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+                echo ""
+
+                if [[ $INDEX -eq 1 ]]; then
+                    # First config: rebuild templates + Sentry (via shared build-all-windows)
+                    echo "📦 Step 1: Building Windows RELEASE templates and Sentry..."
+                    just build-all-windows yes
+                    echo ""
+
+                    echo "📤 Step 2: Exporting Windows RELEASE app..."
+                    rm -f export/windows/gametwo.pck
+                    just export-windows-release
+                    echo ""
+
+                    echo "📲 Step 3: Deploying RELEASE to Windows physical machine..."
+                    just win-physical-deploy-release
+                    echo ""
+
+                    echo "🧪 Step 4: Testing RELEASE config: $config"
+                    just test-windows-physical-release-target "$config"
+                else
+                    # Remaining configs: use cached templates, just export + deploy + test
+                    echo "📤 Step 1: Exporting Windows RELEASE app..."
+                    rm -f export/windows/gametwo.pck
+                    just export-windows-release
+                    echo ""
+
+                    echo "📲 Step 2: Deploying RELEASE to Windows physical machine..."
+                    just win-physical-deploy-release
+                    echo ""
+
+                    echo "🧪 Step 3: Testing RELEASE config: $config"
+                    just test-windows-physical-release-target "$config"
+                fi
+
+                echo ""
+            fi
+        done <<< "$RESOLVED"
+    else
+        # Single config
+        # Build templates + Sentry (via shared build-all-windows)
+        echo "📦 Step 1: Building Windows RELEASE templates and Sentry..."
+        just build-all-windows yes
+        echo ""
+
+        # Export and test single config (release variant)
+        echo "📤 Step 2: Exporting Windows RELEASE app..."
+        rm -f export/windows/gametwo.pck
+        just export-windows-release
+        echo ""
+
+        echo "📲 Step 3: Deploying RELEASE to Windows physical machine..."
+        just win-physical-deploy-release
+        echo ""
+
+        echo "🧪 Step 4: Testing RELEASE config: $RESOLVED"
+        just test-windows-physical-release-target "$RESOLVED"
+    fi
+
+    echo ""
+    echo "✅ Windows RELEASE build-export-test complete!"
+
 # ================================
 # ALL PLATFORMS
 # ================================
