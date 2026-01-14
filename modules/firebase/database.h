@@ -157,6 +157,8 @@ public:
 	// Task-434: Diagnostic tests to isolate Windows RTDB issues
 	void test_get_value_diagnostic();
 	void test_set_value_diagnostic();
+	// Task-434: Test GetValue using blocking wait (Firebase example pattern)
+	void test_get_value_blocking();
 };
 
 #endif // FirebaseDatabase_h

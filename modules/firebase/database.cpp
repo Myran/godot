@@ -28,6 +28,11 @@
 #include "firebase/variant.h"
 // #include "firebase/database/server_value.h" // Not used in v11.1.0
 
+// Platform-specific includes
+#ifdef _WIN32
+#include <windows.h>  // For Sleep() (Task-434 blocking test)
+#endif
+
 // --- Thread-Safe Singleton Member Initialization (Task-213 critical fix) ---
 std::mutex FirebaseDatabase::initialization_mutex;
 std::atomic<bool> FirebaseDatabase::inited(false);
@@ -960,6 +965,117 @@ void FirebaseDatabase::test_set_value_diagnostic() {
 	print_line("=== RTDB SETVALUE DIAGNOSTIC COMPLETE ===");
 }
 
+// Task-434: Test GetValue using BLOCKING wait (like Firebase example)
+// The Firebase example works on Windows using WaitForCompletion() which blocks
+// This tests if the blocking approach works while OnCompletion crashes
+void FirebaseDatabase::test_get_value_blocking() {
+	print_line("=== RTDB BLOCKING GETVALUE TEST START (Task-434) ===");
+	print_line("=== Using Firebase example's WaitForCompletion pattern ===");
+
+	// Step 0: Check initialization
+	print_line(String("[BLOCK] Step 0: Check RTDB initialization"));
+	print_line(String("[BLOCK]   inited=") + (inited.load() ? "true" : "false"));
+	print_line(String("[BLOCK]   database_instance=") + (database_instance ? "valid" : "NULL"));
+
+	if (!inited || !database_instance) {
+		print_error("[BLOCK] CANNOT CONTINUE: Database not initialized");
+		return;
+	}
+
+	// Step 1: Get root reference
+	print_line(String("[BLOCK] Step 1: Get root reference"));
+	firebase::database::DatabaseReference root_ref = database_instance->GetReference();
+	print_line(String("[BLOCK]   root_ref.is_valid()=") + (root_ref.is_valid() ? "true" : "false"));
+
+	// Step 2: Create child reference
+	print_line(String("[BLOCK] Step 2: Create child reference ('blocking_test')"));
+	CharString test_path_cs = String("blocking_test").utf8();
+	firebase::database::DatabaseReference child_ref = root_ref.Child(test_path_cs.get_data());
+	print_line(String("[BLOCK]   child_ref.url()=") + String(child_ref.url().c_str()));
+
+	// Step 3: First, set a value so we have something to read
+	print_line(String("[BLOCK] Step 3: Set a test value first"));
+	firebase::Variant test_value = firebase::Variant::FromInt(42);
+	firebase::Future<void> set_future = child_ref.SetValue(test_value);
+	print_line(String("[BLOCK]   SetValue called, waiting..."));
+
+	// Blocking wait for SetValue (like Firebase example)
+	int timeout_ms = 0;
+	const int max_timeout = 10000; // 10 seconds
+	while (set_future.status() == firebase::kFutureStatusPending && timeout_ms < max_timeout) {
+#ifdef _WIN32
+		Sleep(100);
+#else
+		usleep(100000);
+#endif
+		timeout_ms += 100;
+	}
+
+	if (set_future.status() != firebase::kFutureStatusComplete) {
+		print_error(String("[BLOCK] SetValue did not complete, status=") + itos(set_future.status()));
+		return;
+	}
+	if (set_future.error() != firebase::database::kErrorNone) {
+		print_error(String("[BLOCK] SetValue failed: ") + itos(set_future.error()));
+		return;
+	}
+	print_line(String("[BLOCK]   SetValue SUCCESS"));
+
+	// Step 4: Now call GetValue (the critical test)
+	print_line(String("[BLOCK] Step 4: Call GetValue - CRITICAL POINT"));
+	print_line(String("[BLOCK]   *** Calling child_ref.GetValue() ***"));
+
+	firebase::Future<firebase::database::DataSnapshot> get_future = child_ref.GetValue();
+
+	print_line(String("[BLOCK]   *** GetValue RETURNED (no immediate crash!) ***"));
+	print_line(String("[BLOCK]   get_future.status()=") + itos(get_future.status()));
+
+	// Step 5: Blocking wait for completion (like Firebase example's WaitForCompletion)
+	print_line(String("[BLOCK] Step 5: Blocking wait for completion (WaitForCompletion pattern)"));
+	timeout_ms = 0;
+	while (get_future.status() == firebase::kFutureStatusPending && timeout_ms < max_timeout) {
+#ifdef _WIN32
+		Sleep(100);
+#else
+		usleep(100000);
+#endif
+		timeout_ms += 100;
+		print_line(String("[BLOCK]   Waiting... status=") + itos(get_future.status()) + " timeout=" + itos(timeout_ms));
+	}
+
+	print_line(String("[BLOCK]   Wait finished, final status=") + itos(get_future.status()));
+
+	// Step 6: Check result
+	if (get_future.status() == firebase::kFutureStatusComplete) {
+		print_line(String("[BLOCK]   Future completed!"));
+		if (get_future.error() == firebase::database::kErrorNone) {
+			print_line(String("[BLOCK]   *** GetValue SUCCESS! No error ***"));
+			const firebase::database::DataSnapshot* snapshot = get_future.result();
+			if (snapshot) {
+				print_line(String("[BLOCK]   snapshot valid=true"));
+				print_line(String("[BLOCK]   snapshot.exists()=") + (snapshot->exists() ? "true" : "false"));
+				if (snapshot->exists()) {
+					firebase::Variant value = snapshot->value();
+					print_line(String("[BLOCK]   value type=") + itos((int)value.type()));
+					if (value.is_int64()) {
+						print_line(String("[BLOCK]   value=") + itos(value.AsInt64().int64_value()));
+					}
+				}
+			} else {
+				print_error("[BLOCK]   snapshot is NULL");
+			}
+		} else {
+			print_error(String("[BLOCK]   GetValue error: ") + itos(get_future.error()));
+			const char* msg = get_future.error_message();
+			print_error(String("[BLOCK]   Error message: ") + String(msg ? msg : "(null)"));
+		}
+	} else {
+		print_error(String("[BLOCK]   Future did not complete, status=") + itos(get_future.status()));
+	}
+
+	print_line("=== RTDB BLOCKING GETVALUE TEST COMPLETE ===");
+}
+
 // --- Main Thread Callback Handlers (Task-207 SIGBUS Fix) ---
 // These methods execute on Godot's main thread via MessageQueue marshalling
 // ensuring all Godot operations (Variant conversion, signal emission) are thread-safe
@@ -1208,6 +1324,8 @@ void FirebaseDatabase::_bind_methods() {
 	// Task-434: Diagnostic test methods
 	ClassDB::bind_method(D_METHOD("test_get_value_diagnostic"), &FirebaseDatabase::test_get_value_diagnostic);
 	ClassDB::bind_method(D_METHOD("test_set_value_diagnostic"), &FirebaseDatabase::test_set_value_diagnostic);
+	// Task-434: Test GetValue using blocking wait (Firebase example pattern)
+	ClassDB::bind_method(D_METHOD("test_get_value_blocking"), &FirebaseDatabase::test_get_value_blocking);
 
 	ADD_SIGNAL(MethodInfo("get_value_completed", PropertyInfo(Variant::INT, "request_id"), PropertyInfo(Variant::STRING, "key"), PropertyInfo(Variant::NIL, "value", PROPERTY_HINT_NONE, "", PROPERTY_USAGE_NIL_IS_VARIANT)));
 	ADD_SIGNAL(MethodInfo("get_value_error", PropertyInfo(Variant::INT, "request_id"), PropertyInfo(Variant::STRING, "key"), PropertyInfo(Variant::STRING, "error_code"), PropertyInfo(Variant::STRING, "error_message")));
