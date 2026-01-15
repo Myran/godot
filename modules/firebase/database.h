@@ -153,12 +153,6 @@ public:
 	void remove_listener_at_path(const Array &keys);
 	void monitor_connection_state();
 	void on_connection_state_changed(const firebase::database::DataSnapshot &snapshot);
-
-	// Task-434: Diagnostic tests to isolate Windows RTDB issues
-	void test_get_value_diagnostic();
-	void test_set_value_diagnostic();
-	// Task-434: Test GetValue using blocking wait (Firebase example pattern)
-	void test_get_value_blocking();
 };
 
 #endif // FirebaseDatabase_h
