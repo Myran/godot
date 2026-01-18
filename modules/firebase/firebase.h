@@ -3,7 +3,6 @@
 
 #include "core/object/ref_counted.h"
 #include "firebase/app.h"
-#include "firebase/gma/types.h"
 
 #if defined(__ANDROID__)
 /// An Android Activity from Java.
