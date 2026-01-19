@@ -29,7 +29,8 @@ class ListenerRegistration;
 #include <mutex>
 #include <vector>
 
-// Include REQUIRED Firebase SDK headers for Firestore
+// Include Firebase SDK headers for Firestore
+// Note: firestore_errors.h is not available in from-source SDK builds
 #include "firebase/firestore.h"
 #include "firebase/firestore/collection_reference.h"
 #include "firebase/firestore/document_reference.h"
@@ -39,7 +40,6 @@ class ListenerRegistration;
 #include "firebase/firestore/query.h"
 #include "firebase/firestore/query_snapshot.h"
 #include "firebase/firestore/settings.h"
-#include "firebase/firestore/firestore_errors.h"
 #include "firebase/future.h"
 
 class FirebaseFirestore : public RefCounted {

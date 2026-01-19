@@ -22,11 +22,10 @@ namespace analytics {
 #include <mutex>
 #include <vector>
 
-// Include REQUIRED Firebase SDK headers for Analytics
+// Include Firebase SDK headers for Analytics
+// Note: event_names.h, parameter_names.h, user_property_names.h are not needed
+// as we define our own constants for GDScript compatibility
 #include "firebase/analytics.h"
-#include "firebase/analytics/event_names.h"
-#include "firebase/analytics/parameter_names.h"
-#include "firebase/analytics/user_property_names.h"
 
 class FirebaseAnalytics : public RefCounted {
 	GDCLASS(FirebaseAnalytics, RefCounted);

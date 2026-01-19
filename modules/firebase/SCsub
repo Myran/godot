@@ -42,6 +42,35 @@ elif env['platform'] == 'macos':
     # Link Firebase C++ SDK libraries for macOS (darwin)
     # SystemConfiguration framework required by Firestore (SCNetworkReachability symbols)
     env.Append(LINKFLAGS=['-framework', 'SystemConfiguration'])
+    # Security framework required for cryptographic operations
+    env.Append(LINKFLAGS=['-framework', 'Security'])
+    # CoreFoundation required by various Firebase components
+    env.Append(LINKFLAGS=['-framework', 'CoreFoundation'])
+    # GSS framework required by curl for Kerberos authentication (from-source build)
+    env.Append(LINKFLAGS=['-framework', 'GSS'])
+
+    # OpenSSL/BoringSSL linking (required for from-source Firebase SDK builds)
+    # The from-source build uses libcurl which links against system OpenSSL
+    import os
+    # Try Homebrew OpenSSL locations (ARM64 and Intel)
+    openssl_paths = [
+        '/opt/homebrew/opt/openssl/lib',  # ARM64 Homebrew
+        '/usr/local/opt/openssl/lib',      # Intel Homebrew
+        '/opt/homebrew/opt/openssl@3/lib', # Homebrew OpenSSL 3.x
+        '/usr/local/opt/openssl@3/lib',    # Intel Homebrew OpenSSL 3.x
+    ]
+    openssl_found = False
+    for openssl_path in openssl_paths:
+        if os.path.exists(os.path.join(openssl_path, 'libssl.a')):
+            print("Firebase: Using OpenSSL from " + openssl_path)
+            env.Prepend(LIBS=[File(os.path.join(openssl_path, 'libssl.a'))])
+            env.Prepend(LIBS=[File(os.path.join(openssl_path, 'libcrypto.a'))])
+            openssl_found = True
+            break
+    if not openssl_found:
+        print('WARN: OpenSSL not found. Firebase SDK from-source builds may fail to link.')
+        print('      Install OpenSSL via: brew install openssl')
+
     if env['arch'] == 'arm64':
         env.Prepend(LIBS=[File("#/../firebase/firebase_cpp_sdk/libs/darwin/arm64/libfirebase_app.a")])
         env.Prepend(LIBS=[File("#/../firebase/firebase_cpp_sdk/libs/darwin/arm64/libfirebase_analytics.a")])
