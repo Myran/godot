@@ -1,13 +1,13 @@
 def can_build(env, platform):
- if platform == "android":
-  return True
- if platform == "ios":
-  return True
- if platform == "macos":
-  return True
- if platform == "windows":
-  return True
- return False
+	# Skip for editor - not needed in editor play mode
+	# GDScript explicitly bypasses Firebase when OS.has_feature("editor")
+	if env.get('target') == 'editor':
+		return False
+
+	# Build for export templates only (production features)
+	if platform in ["android", "ios", "macos", "windows"]:
+		return True
+	return False
 
 def configure(env):
  if (env['platform'] == 'android'):
