@@ -613,23 +613,23 @@ void FirebaseFirestore::query_collection_async(int p_request_id, const String& c
 // --- Main Thread Callback Handlers ---
 
 void FirebaseFirestore::_handle_document_get_on_main_thread(int req_id, bool success, bool exists, Dictionary data, int error_code, String error_msg) {
-	emit_signal("document_get_completed", req_id, success, exists, data, error_code, error_msg);
+	emit_signal("get_document_completed", req_id, success, exists, data, error_code, error_msg);
 }
 
 void FirebaseFirestore::_handle_document_set_on_main_thread(int req_id, bool success, int error_code, String error_msg) {
-	emit_signal("document_set_completed", req_id, success, error_code, error_msg);
+	emit_signal("set_document_completed", req_id, success, error_code, error_msg);
 }
 
 void FirebaseFirestore::_handle_document_update_on_main_thread(int req_id, bool success, int error_code, String error_msg) {
-	emit_signal("document_update_completed", req_id, success, error_code, error_msg);
+	emit_signal("update_document_completed", req_id, success, error_code, error_msg);
 }
 
 void FirebaseFirestore::_handle_document_delete_on_main_thread(int req_id, bool success, int error_code, String error_msg) {
-	emit_signal("document_delete_completed", req_id, success, error_code, error_msg);
+	emit_signal("delete_document_completed", req_id, success, error_code, error_msg);
 }
 
 void FirebaseFirestore::_handle_collection_query_on_main_thread(int req_id, bool success, Array documents, int error_code, String error_msg) {
-	emit_signal("collection_query_completed", req_id, success, documents, error_code, error_msg);
+	emit_signal("query_collection_completed", req_id, success, documents, error_code, error_msg);
 }
 
 // --- GDScript Binding ---
@@ -654,7 +654,7 @@ void FirebaseFirestore::_bind_methods() {
 	ClassDB::bind_method(D_METHOD("query_collection_async", "request_id", "collection_path", "query_params"), &FirebaseFirestore::query_collection_async);
 
 	// Signals
-	ADD_SIGNAL(MethodInfo("document_get_completed",
+	ADD_SIGNAL(MethodInfo("get_document_completed",
 		PropertyInfo(Variant::INT, "request_id"),
 		PropertyInfo(Variant::BOOL, "success"),
 		PropertyInfo(Variant::BOOL, "exists"),
@@ -662,25 +662,25 @@ void FirebaseFirestore::_bind_methods() {
 		PropertyInfo(Variant::INT, "error_code"),
 		PropertyInfo(Variant::STRING, "error_message")));
 
-	ADD_SIGNAL(MethodInfo("document_set_completed",
+	ADD_SIGNAL(MethodInfo("set_document_completed",
 		PropertyInfo(Variant::INT, "request_id"),
 		PropertyInfo(Variant::BOOL, "success"),
 		PropertyInfo(Variant::INT, "error_code"),
 		PropertyInfo(Variant::STRING, "error_message")));
 
-	ADD_SIGNAL(MethodInfo("document_update_completed",
+	ADD_SIGNAL(MethodInfo("update_document_completed",
 		PropertyInfo(Variant::INT, "request_id"),
 		PropertyInfo(Variant::BOOL, "success"),
 		PropertyInfo(Variant::INT, "error_code"),
 		PropertyInfo(Variant::STRING, "error_message")));
 
-	ADD_SIGNAL(MethodInfo("document_delete_completed",
+	ADD_SIGNAL(MethodInfo("delete_document_completed",
 		PropertyInfo(Variant::INT, "request_id"),
 		PropertyInfo(Variant::BOOL, "success"),
 		PropertyInfo(Variant::INT, "error_code"),
 		PropertyInfo(Variant::STRING, "error_message")));
 
-	ADD_SIGNAL(MethodInfo("collection_query_completed",
+	ADD_SIGNAL(MethodInfo("query_collection_completed",
 		PropertyInfo(Variant::INT, "request_id"),
 		PropertyInfo(Variant::BOOL, "success"),
 		PropertyInfo(Variant::ARRAY, "documents"),
