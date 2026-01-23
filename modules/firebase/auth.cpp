@@ -157,7 +157,10 @@ void FirebaseAuth::_handle_sign_in_on_main_thread(int req_id, bool success, Stri
         print_line("[Auth] Ignoring sign_in callback during shutdown");
         return;
     }
-    print_line(String("[Auth] Sign in completed on main thread. ReqID: ") + itos(req_id) + " Success: " + (success ? "true" : "false"));
+    print_line(String("[Auth] Sign in completed on main thread. ReqID: ") + itos(req_id) + " Success: " + (success ? "true" : "false") + " Error code: " + itos(error));
+    if (!success) {
+        print_line(String("[Auth] Sign in error details - Code: ") + itos(error) + " Message: " + error_msg);
+    }
     emit_signal("sign_in_completed", req_id, success, uid, error_msg);
 }
 

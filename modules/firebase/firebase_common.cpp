@@ -53,6 +53,7 @@ void Firebase::cleanup_firebase() {
 void Firebase::_bind_methods() {
     ClassDB::bind_method(D_METHOD("quit_app"), &Firebase::quit_app);
     ClassDB::bind_method(D_METHOD("cleanup_firebase"), &Firebase::cleanup_firebase);
+    ClassDB::bind_method(D_METHOD("process_notifications"), &Firebase::process_notifications);
 }
 
 // Note: createApplication() and quit_app() are platform-specific
