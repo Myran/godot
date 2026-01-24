@@ -536,9 +536,7 @@ void FirebaseDatabase::push_and_update_async(int p_request_id, const Array &keys
 
 	print_verbose(String("[RTDB C++] PushUpdate ReqID:") + itos(p_request_id) + " Path: " + String(Variant(keys)) + " PushKey: " + String(String(push_key_std.c_str())));
 	firebase::Future<void> future = new_child_ref.UpdateChildren(firebase_data);
-	// CRITICAL FIX: Remove dangerous 'this' capture (Task-213 lambda safety)
-	// Use singleton reference instead of 'this' to prevent use-after-free
-	future.OnCompletion([p_request_id, push_key_std](const firebase::Future<void> &result) {
+	future.OnCompletion([this, p_request_id, push_key_std](const firebase::Future<void> &result) {
 		// WORKER THREAD - Extract thread-safe data only (Task-207 SIGBUS fix)
 		bool success = (result.status() == firebase::kFutureStatusComplete &&
 					   result.error() == firebase::database::kErrorNone);
@@ -549,12 +547,11 @@ void FirebaseDatabase::push_and_update_async(int p_request_id, const Array &keys
 		// WORKER THREAD - Convert std::string to Godot String (safe for data conversion)
 		String push_key_str = String(push_key_std.c_str());
 
-		// Marshal to main thread using singleton reference (safer than 'this' capture)
-		// Get singleton reference on main thread through MessageQueue to avoid threading issues
-		MessageQueue::get_singleton()->push_callable(callable_mp(
-			&FirebaseDatabase::get_instance(),
-			&FirebaseDatabase::_handle_push_and_update_on_main_thread
-		).bind(p_request_id, push_key_str, success, status, error, error_msg));
+		// Marshal to main thread (NO Godot operations on worker thread!)
+		MessageQueue::get_singleton()->push_callable(
+			callable_mp(this, &FirebaseDatabase::_handle_push_and_update_on_main_thread)
+				.bind(p_request_id, push_key_str, success, status, error, error_msg)
+		);
 	});
 }
 
@@ -572,8 +569,7 @@ void FirebaseDatabase::remove_value_async(int p_request_id, const Array &keys) {
 	}
 	print_verbose(String("[RTDB C++] RemoveValue ReqID:") + itos(p_request_id) + " Path: " + String(Variant(keys)));
 	firebase::Future<void> future = ref.RemoveValue();
-	// CRITICAL FIX: Remove dangerous 'this' capture (Task-213 lambda safety)
-	future.OnCompletion([p_request_id](const firebase::Future<void> &result) {
+	future.OnCompletion([this, p_request_id](const firebase::Future<void> &result) {
 		// WORKER THREAD - Extract thread-safe data only (Task-207 SIGBUS fix)
 		bool success = (result.status() == firebase::kFutureStatusComplete &&
 					   result.error() == firebase::database::kErrorNone);
@@ -581,11 +577,11 @@ void FirebaseDatabase::remove_value_async(int p_request_id, const Array &keys) {
 		int status = result.status();
 		String error_msg = result.error_message() ? String(result.error_message()) : "";
 
-		// Marshal to main thread using singleton reference (safer than 'this' capture)
-		MessageQueue::get_singleton()->push_callable(callable_mp(
-			&FirebaseDatabase::get_instance(),
-			&FirebaseDatabase::_handle_remove_value_on_main_thread
-		).bind(p_request_id, success, status, error, error_msg));
+		// Marshal to main thread (NO Godot operations on worker thread!)
+		MessageQueue::get_singleton()->push_callable(
+			callable_mp(this, &FirebaseDatabase::_handle_remove_value_on_main_thread)
+				.bind(p_request_id, success, status, error, error_msg)
+		);
 	});
 }
 
