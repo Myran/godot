@@ -27,4 +27,9 @@ void Firebase::quit_app() {
     _exit(0);
 }
 
+void Firebase::process_notifications() {
+    // Windows: No-op - Windows doesn't use NSRunLoop like Apple platforms
+    // Firebase C++ SDK on Windows uses its own internal threading for callbacks
+}
+
 #endif // _WIN32
