@@ -167,54 +167,8 @@ bool FirebaseAnalytics::is_initialized() const {
 }
 
 // --- Helper: Convert Dictionary to Firebase Parameters ---
-std::vector<firebase::analytics::Parameter> FirebaseAnalytics::_convert_dict_to_parameters(const Dictionary& params) {
-	std::vector<firebase::analytics::Parameter> fb_params;
-
-	Array keys = params.keys();
-	for (int i = 0; i < keys.size(); i++) {
-		Variant key_var = keys[i];
-		Variant value_var = params[key_var];
-
-		// CRITICAL FIX: Store CharString objects to prevent dangling pointers
-		// String::utf8() returns a temporary CharString; storing it ensures the data
-		// persists until after the Parameter constructor is called.
-		String key_str = key_var;
-		CharString key_cs = key_str.utf8();
-		const char* key_cstr = key_cs.get_data();
-
-		// Convert value based on type
-		if (value_var.get_type() == Variant::STRING) {
-			String value_str = value_var;
-			CharString value_cs = value_str.utf8();
-			fb_params.push_back(firebase::analytics::Parameter(key_cstr, value_cs.get_data()));
-		} else if (value_var.get_type() == Variant::INT) {
-			int64_t value_int = value_var;
-			fb_params.push_back(firebase::analytics::Parameter(
-				key_cstr,
-				static_cast<int64_t>(value_int)
-			));
-		} else if (value_var.get_type() == Variant::FLOAT) {
-			double value_double = value_var;
-			fb_params.push_back(firebase::analytics::Parameter(
-				key_cstr,
-				value_double
-			));
-		} else if (value_var.get_type() == Variant::BOOL) {
-			bool value_bool = value_var;
-			fb_params.push_back(firebase::analytics::Parameter(
-				key_cstr,
-				static_cast<int64_t>(value_bool ? 1LL : 0LL)
-			));
-		} else {
-			// For unsupported types, convert to string representation
-			String value_str = String(value_var);
-			CharString value_cs = value_str.utf8();
-			fb_params.push_back(firebase::analytics::Parameter(key_cstr, value_cs.get_data()));
-		}
-	}
-
-	return fb_params;
-}
+// NOTE: This function is now inline-only in log_event_params to ensure CharStrings
+// live in the same scope as the Parameters that reference them.
 
 // --- Core Analytics Methods (Fire-and-Forget) ---
 
@@ -299,9 +253,53 @@ void FirebaseAnalytics::log_event_params(const String& event_name, const Diction
 		return;
 	}
 
-	// Convert Dictionary to Firebase Parameter array
-	std::vector<firebase::analytics::Parameter> fb_params = _convert_dict_to_parameters(params);
+	// CRITICAL: All CharStrings MUST be declared here to ensure they live until
+	// firebase::analytics::LogEvent completes. The Parameter objects store pointers
+	// to this data, so the CharStrings must outlive the Parameters.
+	std::vector<CharString> key_strings;
+	std::vector<CharString> value_strings;
+	std::vector<firebase::analytics::Parameter> fb_params;
 
+	Array keys = params.keys();
+	key_strings.reserve(keys.size());
+	value_strings.reserve(keys.size());
+	fb_params.reserve(keys.size());
+
+	// Convert Dictionary to Firebase Parameters (inlined to ensure CharString lifetime)
+	for (int i = 0; i < keys.size(); i++) {
+		Variant key_var = keys[i];
+		Variant value_var = params[key_var];
+
+		// Convert key to CharString and store in vector
+		String key_str = key_var;
+		key_strings.push_back(key_str.utf8());
+		const char* key_cstr = key_strings.back().get_data();
+
+		// Convert value based on type and create Parameter
+		if (value_var.get_type() == Variant::STRING) {
+			String value_str = value_var;
+			value_strings.push_back(value_str.utf8());
+			const char* value_cstr = value_strings.back().get_data();
+			fb_params.push_back(firebase::analytics::Parameter(key_cstr, value_cstr));
+		} else if (value_var.get_type() == Variant::INT) {
+			int64_t value_int = value_var;
+			fb_params.push_back(firebase::analytics::Parameter(key_cstr, static_cast<int64_t>(value_int)));
+		} else if (value_var.get_type() == Variant::FLOAT) {
+			double value_double = value_var;
+			fb_params.push_back(firebase::analytics::Parameter(key_cstr, value_double));
+		} else if (value_var.get_type() == Variant::BOOL) {
+			bool value_bool = value_var;
+			fb_params.push_back(firebase::analytics::Parameter(key_cstr, static_cast<int64_t>(value_bool ? 1LL : 0LL)));
+		} else {
+			// For unsupported types, convert to string representation
+			String value_str = String(value_var);
+			value_strings.push_back(value_str.utf8());
+			const char* value_cstr = value_strings.back().get_data();
+			fb_params.push_back(firebase::analytics::Parameter(key_cstr, value_cstr));
+		}
+	}
+
+	// Now call LogEvent - all CharStrings are still valid in this scope
 	firebase::analytics::LogEvent(event_cs.get_data(), fb_params.data(), fb_params.size());
 	print_verbose(String("[Analytics C++] Logged event: ") + event_name + " with " + itos(fb_params.size()) + " params.");
 }

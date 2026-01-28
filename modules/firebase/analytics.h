@@ -44,9 +44,6 @@ private:
 protected:
 	static void _bind_methods();
 
-	// Helper: Convert Godot Dictionary to Firebase Parameter array
-	std::vector<firebase::analytics::Parameter> _convert_dict_to_parameters(const Dictionary& params);
-
 public:
 	// Thread-safe singleton access methods
 	static FirebaseAnalytics& get_instance();
