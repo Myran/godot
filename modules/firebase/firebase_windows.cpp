@@ -8,6 +8,14 @@
 
 void Firebase::createApplication() {
     // Windows desktop initialization
+
+    // Check if app already exists before creating (prevents double init warning)
+    app_ptr = firebase::App::GetInstance();
+    if (app_ptr != nullptr) {
+        print_line(String("[Firebase] Using existing Firebase app instance (Windows)"));
+        return;
+    }
+
     // Firebase C++ SDK automatically looks for google-services-desktop.json in current directory
     print_line(String("[Firebase] Creating app (Windows)"));
     // Match Firebase example: no app name argument for desktop (Task-434)

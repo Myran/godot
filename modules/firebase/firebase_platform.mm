@@ -44,12 +44,31 @@ void Firebase::createApplication() {
     print_line(String("[Firebase] Success creating app"));
 #elif TARGET_OS_IPHONE
     // iOS initialization with UI context
+
+    // Check if app already exists before creating (same pattern as macOS)
+    app_ptr = firebase::App::GetInstance();
+    if (app_ptr != NULL) {
+        print_line(String("[Firebase] Using existing Firebase app instance (iOS)"));
+        _instance = (__bridge void *)[GDTAppDelegateService viewController].view;
+        return;
+    }
+
     print_line(String("[Firebase] Creating app (iOS)"));
     app_ptr = firebase::App::Create();
     _instance = (__bridge void *)[GDTAppDelegateService viewController].view;
     print_line(String("[Firebase] Success creating app"));
 #elif TARGET_OS_OSX
     // macOS desktop initialization - try to load config from app bundle Resources
+
+    // CRITICAL FIX (task-486): Check if app already exists before creating
+    // This prevents "App __FIRAPP_DEFAULT already created" warning when
+    // Firebase is re-initialized (e.g., during test cycles or app restarts)
+    app_ptr = firebase::App::GetInstance();
+    if (app_ptr != NULL) {
+        print_line(String("[Firebase] Using existing Firebase app instance (macOS)"));
+        return;
+    }
+
     NSBundle* mainBundle = [NSBundle mainBundle];
     NSString* resourcePath = [mainBundle resourcePath];
     NSString* configPath = [resourcePath stringByAppendingString:@"/google-services-desktop.json"];
