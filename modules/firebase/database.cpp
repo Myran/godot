@@ -845,7 +845,14 @@ void FirebaseDatabase::_handle_get_value_on_main_thread(
 	}
 
 	if (status == firebase::kFutureStatusComplete && error == firebase::database::kErrorNone) {
-		if (snapshot_valid && exists) {
+		// Task-516: Windows Firebase SDK bug workaround
+		// On Windows, the SDK sometimes returns error code 0 but still populates error_message
+		// when there's a permission denied or other error. Check for this case.
+		if (!error_msg.is_empty()) {
+			// Error message present despite error code 0 - treat as error (Windows SDK bug)
+			print_error(String("[RTDB C++] GetValue ReqID:") + itos(req_id) + " Main thread handler - Error (SDK returned code 0 with message): " + error_msg);
+			call_deferred(SNAME("emit_signal"), SNAME("get_value_error"), req_id, path_str, "SDK_ERROR_MSG", error_msg);
+		} else if (snapshot_valid && exists) {
 			// Value already converted to Godot Variant on worker thread
 			String signal_key = !key.is_empty() ? key : "";
 
@@ -981,7 +988,13 @@ void FirebaseDatabase::_handle_query_ordered_data_on_main_thread(
 	}
 
 	if (status == firebase::kFutureStatusComplete && error == firebase::database::kErrorNone) {
-		if (snapshot_valid) {
+		// Task-516: Windows Firebase SDK bug workaround
+		// On Windows, the SDK sometimes returns error code 0 but still populates error_message
+		if (!error_msg.is_empty()) {
+			// Error message present despite error code 0 - treat as error (Windows SDK bug)
+			print_error(String("[RTDB C++] Query ReqID:") + itos(req_id) + " Main thread handler - Error (SDK returned code 0 with message): " + error_msg);
+			call_deferred(SNAME("emit_signal"), SNAME("query_error"), req_id, path_str, "SDK_ERROR_MSG", error_msg);
+		} else if (snapshot_valid) {
 			// Value already converted to Godot Variant on worker thread
 			Variant value = exists ? godot_value : Variant();
 			String result_key = !key.is_empty() ? key : path_str;
@@ -1024,7 +1037,14 @@ void FirebaseDatabase::_handle_transaction_on_main_thread(
 	}
 
 	if (status == firebase::kFutureStatusComplete && error == firebase::database::kErrorNone) {
-		if (snapshot_valid && exists) {
+		// Task-516: Windows Firebase SDK bug workaround
+		// On Windows, the SDK sometimes returns error code 0 but still populates error_message
+		if (!error_msg.is_empty()) {
+			// Error message present despite error code 0 - treat as error (Windows SDK bug)
+			print_error(String("[RTDB C++] Transaction ReqID:") + itos(req_id) + " Main thread handler - Error (SDK returned code 0 with message): " + error_msg);
+			call_deferred(SNAME("emit_signal"), SNAME("transaction_completed"), req_id, "", Variant(), false, error_msg);
+			call_deferred(SNAME("emit_signal"), SNAME("db_error"), "SDK_ERROR_MSG", error_msg);
+		} else if (snapshot_valid && exists) {
 			// Value already converted to Godot Variant on worker thread
 			String result_key = !key.is_empty() ? key : "";
 
