@@ -5,6 +5,7 @@
 
 #include "firebase.h"
 #include <cstdlib>  // For _exit()
+#include <cstdio>   // For fflush(), _flushall()
 
 void Firebase::createApplication() {
     // Windows desktop initialization
@@ -32,6 +33,10 @@ void Firebase::quit_app() {
     cleanup_firebase();
 
     // Windows: Use _exit() for immediate termination for testing/CI
+    // Task-520: Flush all file buffers before _exit() to ensure logs are written to disk.
+    // _exit() bypasses ALL cleanup including OS file buffer flushing, causing log truncation.
+    fflush(NULL);
+    _flushall();  // Windows-specific: flush all streams including those without buffers
     _exit(0);
 }
 

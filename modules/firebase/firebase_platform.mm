@@ -100,11 +100,21 @@ void Firebase::quit_app() {
     cleanup_firebase();
 
 #if TARGET_OS_IPHONE
-    // iOS quit for testing/CI only
+    // iOS quit for testing/CI only (Task-290)
     // Use _exit() instead of exit() to bypass cleanup handlers and terminate immediately
+    //
+    // Task-520: Flush all file buffers before _exit() to ensure logs are written to disk.
+    // _exit() bypasses ALL cleanup including OS file buffer flushing, causing log truncation.
+    // fflush(NULL) flushes all open output streams (stdout, stderr, and file handles).
+    // sync() forces kernel to flush filesystem buffers to physical storage.
+    fflush(NULL);
+    sync();
     _exit(0);
 #elif TARGET_OS_OSX
     // macOS: Use _exit() for immediate termination (same as iOS for testing/CI)
+    // Task-520: Same flush pattern as iOS
+    fflush(NULL);
+    sync();
     _exit(0);
 #else
     // Android/other platforms: no-op (they use Engine.get_main_loop().quit())
