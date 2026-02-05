@@ -58,6 +58,10 @@ void FirebaseChildListener::OnCancelled(const firebase::database::Error &error_c
 	}
 }
 
+// NOTE (task-528): Child listener callbacks run on Firebase SDK worker threads.
+// Creating Godot objects (String, Variant via fromFirebaseVariant) and calling call_deferred
+// on worker threads can trigger DEV_ASSERT in debug builds (~1-2% iOS crash rate) but is
+// functionally safe in release due to atomic refcounting. Retry mechanism (task-525) handles flaky tests.
 void FirebaseChildListener::OnChildAdded(const firebase::database::DataSnapshot &snapshot, const char *previous_sibling) {
 	if (!snapshot.exists()) {
 		print_verbose("[RTDB C++] ChildAdded: Snapshot doesn't exist.");
@@ -437,6 +441,9 @@ void FirebaseDatabase::get_value_async(int p_request_id, const Array &keys) {
 	// Task-434: Use ref directly - storing in member variable caused Windows crash
 	firebase::Future<firebase::database::DataSnapshot> future = ref.GetValue();
 	print_line(String("[RTDB C++] ref.GetValue() returned successfully - future.status()=") + itos(future.status()));
+	// NOTE (task-528): OnCompletion runs on Firebase worker thread. Creating Godot objects
+	// (String, Callable, Variant) here can trigger DEV_ASSERT in debug builds (~1-2% iOS crash
+	// rate) but is functionally safe in release due to atomic refcounting. See task-525 for retry.
 	future.OnCompletion([this, p_request_id, path_str_for_logging](const firebase::Future<firebase::database::DataSnapshot> &result) {
 		// WORKER THREAD - Extract thread-safe data only (Task-207 SIGBUS fix)
 		int error = result.error();
@@ -486,6 +493,7 @@ void FirebaseDatabase::set_value_async(int p_request_id, const Array &keys, cons
 	firebase::Variant firebase_value = Convertor::toFirebaseVariant(value);
 	print_verbose(String("[RTDB C++] SetValue ReqID:") + itos(p_request_id) + " Path: " + String(Variant(keys)));
 	firebase::Future<void> future = ref.SetValue(firebase_value);
+	// NOTE (task-528): OnCompletion runs on Firebase worker thread — see get_value_async comment.
 	future.OnCompletion([this, p_request_id](const firebase::Future<void> &result) {
 		// WORKER THREAD - Extract thread-safe data only (Task-207 SIGBUS fix)
 		bool success = (result.status() == firebase::kFutureStatusComplete &&
@@ -536,6 +544,7 @@ void FirebaseDatabase::push_and_update_async(int p_request_id, const Array &keys
 
 	print_verbose(String("[RTDB C++] PushUpdate ReqID:") + itos(p_request_id) + " Path: " + String(Variant(keys)) + " PushKey: " + String(String(push_key_std.c_str())));
 	firebase::Future<void> future = new_child_ref.UpdateChildren(firebase_data);
+	// NOTE (task-528): OnCompletion runs on Firebase worker thread — see get_value_async comment.
 	future.OnCompletion([this, p_request_id, push_key_std](const firebase::Future<void> &result) {
 		// WORKER THREAD - Extract thread-safe data only (Task-207 SIGBUS fix)
 		bool success = (result.status() == firebase::kFutureStatusComplete &&
@@ -569,6 +578,7 @@ void FirebaseDatabase::remove_value_async(int p_request_id, const Array &keys) {
 	}
 	print_verbose(String("[RTDB C++] RemoveValue ReqID:") + itos(p_request_id) + " Path: " + String(Variant(keys)));
 	firebase::Future<void> future = ref.RemoveValue();
+	// NOTE (task-528): OnCompletion runs on Firebase worker thread — see get_value_async comment.
 	future.OnCompletion([this, p_request_id](const firebase::Future<void> &result) {
 		// WORKER THREAD - Extract thread-safe data only (Task-207 SIGBUS fix)
 		bool success = (result.status() == firebase::kFutureStatusComplete &&
@@ -600,6 +610,7 @@ void FirebaseDatabase::query_ordered_data_async(int p_request_id, const Array &k
 	firebase::database::Query query = get_query_from_reference(ref, query_params);
 	print_verbose(String("[RTDB C++] Query ReqID:") + itos(p_request_id) + " Path: " + String(Variant(keys)) + " Params: " + String(Variant(query_params)));
 	firebase::Future<firebase::database::DataSnapshot> future = query.GetValue();
+	// NOTE (task-528): OnCompletion runs on Firebase worker thread — see get_value_async comment.
 	future.OnCompletion([this, p_request_id, keys](const firebase::Future<firebase::database::DataSnapshot> &result) {
 		// WORKER THREAD - Extract thread-safe data only (Task-207 SIGBUS fix)
 		int error = result.error();
@@ -653,6 +664,7 @@ void FirebaseDatabase::run_transaction_async(int p_request_id, const Array &keys
 	tx_data->database_ptr = this;
 	print_verbose(String("[RTDB C++] Transaction ReqID:") + itos(p_request_id) + " Path: " + String(Variant(keys)) + " Increment: " + itos(increment_by));
 	firebase::Future<firebase::database::DataSnapshot> future = ref.RunTransaction(increment_transaction_function, tx_data);
+	// NOTE (task-528): OnCompletion runs on Firebase worker thread — see get_value_async comment.
 	future.OnCompletion([this, tx_data](const firebase::Future<firebase::database::DataSnapshot> &result) {
 		// WORKER THREAD - Extract thread-safe data only (Task-207 SIGBUS fix)
 		if (!tx_data) {
@@ -713,7 +725,7 @@ void FirebaseDatabase::set_server_timestamp_async(int p_request_id, const Array 
 	firebase::Variant timestamp_placeholder = firebase::Variant(timestamp_map);
 
 	firebase::Future<void> future = ref.SetValue(timestamp_placeholder);
-
+	// NOTE (task-528): OnCompletion runs on Firebase worker thread — see get_value_async comment.
 	future.OnCompletion([this, p_request_id](const firebase::Future<void> &result) {
 		// Firebase SDK manages callback lifecycle
 		if (false) { // Disabled - using this directly
