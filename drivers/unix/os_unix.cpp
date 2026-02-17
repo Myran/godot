@@ -161,6 +161,12 @@ int OS_Unix::unix_initialize_audio(int p_audio_driver) {
 }
 
 void OS_Unix::initialize_core() {
+	// Ignore SIGPIPE globally — prevents broken pipe from killing the process
+	// during headless exports when stdout is piped through commands that close early.
+	// Standard practice: Python, Go, Node.js, nginx all do this.
+	// See: https://github.com/godotengine/godot/issues/111110
+	signal(SIGPIPE, SIG_IGN);
+
 #ifdef THREADS_ENABLED
 	init_thread_posix();
 #endif
