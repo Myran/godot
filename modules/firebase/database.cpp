@@ -51,75 +51,65 @@ FirebaseChildListener::FirebaseChildListener() {
 }
 
 void FirebaseChildListener::OnCancelled(const firebase::database::Error &error_code, const char *error_message) {
-	print_error(String("[RTDB C++] Child listener cancelled. Error: ") + itos(error_code) + " Msg: " + (error_message ? error_message : "Unknown reason"));
-	if (singleton) {
-		const char *msg = error_message ? error_message : "Listener cancelled";
-		singleton->call_deferred(SNAME("emit_signal"), SNAME("db_error"), String::num_int64(error_code), String(msg));
+	if (!singleton) {
+		return;
 	}
+	PendingFirebaseResult pending;
+	pending.error = static_cast<int>(error_code);
+	pending.error_msg = error_message ? error_message : "Listener cancelled";
+	pending.event_type = "child_listener_cancelled";
+	singleton->_queue_listener_error(std::move(pending));
 }
 
-// NOTE (task-528): Child listener callbacks run on Firebase SDK worker threads.
-// Creating Godot objects (String, Variant via fromFirebaseVariant) and calling call_deferred
-// on worker threads can trigger DEV_ASSERT in debug builds (~1-2% iOS crash rate) but is
-// functionally safe in release due to atomic refcounting. Retry mechanism (task-525) handles flaky tests.
+// Child listener callbacks fire on Firebase SDK worker threads.
+// All Godot object creation (String, Variant via fromFirebaseVariant) MUST happen
+// on the main thread to prevent null _p pointer corruption.
 void FirebaseChildListener::OnChildAdded(const firebase::database::DataSnapshot &snapshot, const char *previous_sibling) {
-	if (!snapshot.exists()) {
-		print_verbose("[RTDB C++] ChildAdded: Snapshot doesn't exist.");
+	if (!snapshot.exists() || !singleton) {
 		return;
 	}
-	if (!singleton) {
-		print_verbose("[RTDB C++] ChildAdded: DB instance not set.");
-		return;
-	}
-	Variant value = Convertor::fromFirebaseVariant(snapshot.value());
-	String key = snapshot.key() ? String(snapshot.key()) : "";
-	print_verbose(String("[RTDB C++] Child Added: Key='") + key + "'");
-	singleton->call_deferred(SNAME("emit_signal"), SNAME("child_added"), key, value);
+	PendingFirebaseResult pending;
+	pending.fb_value = snapshot.value();
+	pending.key = snapshot.key() ? snapshot.key() : "";
+	pending.event_type = "child_added";
+	pending.exists = true;
+	singleton->_queue_child_event(std::move(pending));
 }
 
 void FirebaseChildListener::OnChildChanged(const firebase::database::DataSnapshot &snapshot, const char *previous_sibling) {
-	if (!snapshot.exists()) {
-		print_verbose("[RTDB C++] ChildChanged: Snapshot doesn't exist.");
+	if (!snapshot.exists() || !singleton) {
 		return;
 	}
-	if (!singleton) {
-		print_verbose("[RTDB C++] ChildChanged: DB instance not set.");
-		return;
-	}
-	Variant value = Convertor::fromFirebaseVariant(snapshot.value());
-	String key = snapshot.key() ? String(snapshot.key()) : "";
-	print_verbose(String("[RTDB C++] Child Changed: Key='") + key + "'");
-	singleton->call_deferred(SNAME("emit_signal"), SNAME("child_changed"), key, value);
+	PendingFirebaseResult pending;
+	pending.fb_value = snapshot.value();
+	pending.key = snapshot.key() ? snapshot.key() : "";
+	pending.event_type = "child_changed";
+	pending.exists = true;
+	singleton->_queue_child_event(std::move(pending));
 }
 
 void FirebaseChildListener::OnChildMoved(const firebase::database::DataSnapshot &snapshot, const char *previous_sibling) {
-	if (!snapshot.exists()) {
-		print_verbose("[RTDB C++] ChildMoved: Snapshot doesn't exist.");
+	if (!snapshot.exists() || !singleton) {
 		return;
 	}
-	if (!singleton) {
-		print_verbose("[RTDB C++] ChildMoved: DB instance not set.");
-		return;
-	}
-	Variant value = Convertor::fromFirebaseVariant(snapshot.value());
-	String key = snapshot.key() ? String(snapshot.key()) : "";
-	print_verbose(String("[RTDB C++] Child Moved: Key='") + key + "'");
-	singleton->call_deferred(SNAME("emit_signal"), SNAME("child_moved"), key, value);
+	PendingFirebaseResult pending;
+	pending.fb_value = snapshot.value();
+	pending.key = snapshot.key() ? snapshot.key() : "";
+	pending.event_type = "child_moved";
+	pending.exists = true;
+	singleton->_queue_child_event(std::move(pending));
 }
 
 void FirebaseChildListener::OnChildRemoved(const firebase::database::DataSnapshot &snapshot) {
-	if (!snapshot.exists()) {
-		print_verbose("[RTDB C++] ChildRemoved: Snapshot doesn't exist.");
+	if (!snapshot.exists() || !singleton) {
 		return;
 	}
-	if (!singleton) {
-		print_verbose("[RTDB C++] ChildRemoved: DB instance not set.");
-		return;
-	}
-	Variant value = Convertor::fromFirebaseVariant(snapshot.value());
-	String key = snapshot.key() ? String(snapshot.key()) : "";
-	print_verbose(String("[RTDB C++] Child Removed: Key='") + key + "'");
-	singleton->call_deferred(SNAME("emit_signal"), SNAME("child_removed"), key, value);
+	PendingFirebaseResult pending;
+	pending.fb_value = snapshot.value();
+	pending.key = snapshot.key() ? snapshot.key() : "";
+	pending.event_type = "child_removed";
+	pending.exists = true;
+	singleton->_queue_child_event(std::move(pending));
 }
 
 // --- ConnectionStateListener Implementation ---
@@ -128,17 +118,30 @@ ConnectionStateListener::ConnectionStateListener() {
 }
 
 void ConnectionStateListener::OnValueChanged(const firebase::database::DataSnapshot &snapshot) {
-	if (singleton) {
-		singleton->on_connection_state_changed(snapshot);
+	if (!singleton) {
+		return;
 	}
+	PendingFirebaseResult pending;
+	pending.event_type = "connection_state";
+	if (snapshot.exists() && snapshot.value().is_bool()) {
+		pending.is_connected = snapshot.value().bool_value();
+		pending.exists = true;
+	} else {
+		pending.is_connected = false;
+		pending.exists = false;
+	}
+	singleton->_queue_connection_state_event(std::move(pending));
 }
 
 void ConnectionStateListener::OnCancelled(const firebase::database::Error &error_code, const char *error_message) {
-	print_error(String("[RTDB C++] Connection monitoring listener cancelled. Error: ") + itos(error_code) + " Msg: " + (error_message ? error_message : "Unknown reason"));
-	if (singleton) {
-		const char *msg = error_message ? error_message : "Connection listener cancelled";
-		singleton->call_deferred(SNAME("emit_signal"), SNAME("db_error"), String::num_int64(error_code), String(msg));
+	if (!singleton) {
+		return;
 	}
+	PendingFirebaseResult pending;
+	pending.error = static_cast<int>(error_code);
+	pending.error_msg = error_message ? error_message : "Connection listener cancelled";
+	pending.event_type = "connection_listener_cancelled";
+	singleton->_queue_listener_error(std::move(pending));
 }
 
 // --- Transaction Callbacks ---
@@ -826,21 +829,34 @@ void FirebaseDatabase::monitor_connection_state() {
 	connected_ref.AddValueListener(connection_listener_instance);
 }
 
-void FirebaseDatabase::on_connection_state_changed(const firebase::database::DataSnapshot &snapshot) {
-	// Part 2 of crash fix: Skip callback if app is shutting down (Task-331)
-	if (is_app_shutting_down()) {
-		print_line("[RTDB C++] on_connection_state_changed skipped - app shutting down");
-		return;
-	}
+// --- Queue Methods for Listener Events ---
+// Called from worker threads. Store raw C++ data and schedule main thread handler.
 
-	if (snapshot.exists() && snapshot.value().is_bool()) {
-		bool connected = snapshot.value().bool_value();
-		print_verbose(String("[RTDB C++] Connection state changed: ") + (connected ? "Connected" : "Disconnected"));
-		call_deferred(SNAME("emit_signal"), SNAME("connection_state_changed"), connected);
-	} else {
-		WARN_PRINT("[RTDB C++] Received unexpected value for .info/connected state.");
-		call_deferred(SNAME("emit_signal"), SNAME("connection_state_changed"), false);
+void FirebaseDatabase::_queue_child_event(PendingFirebaseResult &&result) {
+	int event_id = --_listener_event_counter;
+	{
+		std::lock_guard<std::mutex> lock(_pending_results_mutex);
+		_pending_results[event_id] = std::move(result);
 	}
+	callable_mp(this, &FirebaseDatabase::_handle_child_event_on_main_thread).call_deferred(event_id);
+}
+
+void FirebaseDatabase::_queue_connection_state_event(PendingFirebaseResult &&result) {
+	int event_id = --_listener_event_counter;
+	{
+		std::lock_guard<std::mutex> lock(_pending_results_mutex);
+		_pending_results[event_id] = std::move(result);
+	}
+	callable_mp(this, &FirebaseDatabase::_handle_connection_state_on_main_thread).call_deferred(event_id);
+}
+
+void FirebaseDatabase::_queue_listener_error(PendingFirebaseResult &&result) {
+	int event_id = --_listener_event_counter;
+	{
+		std::lock_guard<std::mutex> lock(_pending_results_mutex);
+		_pending_results[event_id] = std::move(result);
+	}
+	callable_mp(this, &FirebaseDatabase::_handle_listener_error_on_main_thread).call_deferred(event_id);
 }
 
 // --- Main Thread Callback Handlers (Task-207 SIGBUS Fix) ---
@@ -1135,6 +1151,99 @@ void FirebaseDatabase::_handle_transaction_on_main_thread(int req_id) {
 		call_deferred(SNAME("emit_signal"), SNAME("transaction_completed"), req_id, "", Variant(), false, "Firebase Future did not complete.");
 		call_deferred(SNAME("emit_signal"), SNAME("db_error"), "FUTURE_INVALID_STATUS", "Transaction future failed to complete.");
 	}
+}
+
+// --- Listener Main Thread Handlers ---
+// These handlers execute on the main thread, safely creating Godot objects
+// from raw C++ data stored by listener callbacks on worker threads.
+
+void FirebaseDatabase::_handle_child_event_on_main_thread(int event_id) {
+	if (is_app_shutting_down()) {
+		std::lock_guard<std::mutex> lock(_pending_results_mutex);
+		_pending_results.erase(event_id);
+		return;
+	}
+
+	PendingFirebaseResult pending;
+	{
+		std::lock_guard<std::mutex> lock(_pending_results_mutex);
+		auto it = _pending_results.find(event_id);
+		if (it == _pending_results.end()) {
+			return;
+		}
+		pending = std::move(it->second);
+		_pending_results.erase(it);
+	}
+
+	// Create Godot objects ON MAIN THREAD (root cause fix for listener crashes)
+	Variant godot_value = Convertor::fromFirebaseVariant(pending.fb_value);
+	String key = String(pending.key.c_str());
+
+	// Determine signal name from event type
+	if (pending.event_type == "child_added") {
+		print_verbose(String("[RTDB C++] Child Added (main thread): Key='") + key + "'");
+		call_deferred(SNAME("emit_signal"), SNAME("child_added"), key, godot_value);
+	} else if (pending.event_type == "child_changed") {
+		print_verbose(String("[RTDB C++] Child Changed (main thread): Key='") + key + "'");
+		call_deferred(SNAME("emit_signal"), SNAME("child_changed"), key, godot_value);
+	} else if (pending.event_type == "child_moved") {
+		print_verbose(String("[RTDB C++] Child Moved (main thread): Key='") + key + "'");
+		call_deferred(SNAME("emit_signal"), SNAME("child_moved"), key, godot_value);
+	} else if (pending.event_type == "child_removed") {
+		print_verbose(String("[RTDB C++] Child Removed (main thread): Key='") + key + "'");
+		call_deferred(SNAME("emit_signal"), SNAME("child_removed"), key, godot_value);
+	}
+}
+
+void FirebaseDatabase::_handle_connection_state_on_main_thread(int event_id) {
+	if (is_app_shutting_down()) {
+		std::lock_guard<std::mutex> lock(_pending_results_mutex);
+		_pending_results.erase(event_id);
+		return;
+	}
+
+	PendingFirebaseResult pending;
+	{
+		std::lock_guard<std::mutex> lock(_pending_results_mutex);
+		auto it = _pending_results.find(event_id);
+		if (it == _pending_results.end()) {
+			return;
+		}
+		pending = std::move(it->second);
+		_pending_results.erase(it);
+	}
+
+	if (pending.exists) {
+		print_verbose(String("[RTDB C++] Connection state changed (main thread): ") + (pending.is_connected ? "Connected" : "Disconnected"));
+	} else {
+		WARN_PRINT("[RTDB C++] Received unexpected value for .info/connected state.");
+	}
+	call_deferred(SNAME("emit_signal"), SNAME("connection_state_changed"), pending.is_connected);
+}
+
+void FirebaseDatabase::_handle_listener_error_on_main_thread(int event_id) {
+	if (is_app_shutting_down()) {
+		std::lock_guard<std::mutex> lock(_pending_results_mutex);
+		_pending_results.erase(event_id);
+		return;
+	}
+
+	PendingFirebaseResult pending;
+	{
+		std::lock_guard<std::mutex> lock(_pending_results_mutex);
+		auto it = _pending_results.find(event_id);
+		if (it == _pending_results.end()) {
+			return;
+		}
+		pending = std::move(it->second);
+		_pending_results.erase(it);
+	}
+
+	// Create Godot Strings ON MAIN THREAD
+	String error_code_str = String::num_int64(pending.error);
+	String error_msg = String(pending.error_msg.c_str());
+	print_error(String("[RTDB C++] ") + String(pending.event_type.c_str()) + " Error: " + error_code_str + " Msg: " + error_msg);
+	call_deferred(SNAME("emit_signal"), SNAME("db_error"), error_code_str, error_msg);
 }
 
 // --- Bind Methods ---

@@ -91,9 +91,11 @@ struct PendingFirebaseResult {
 	std::string error_msg;
 	std::string path_str;
 	std::string push_key;           // For push_and_update operations
+	std::string event_type;         // For listener events: "child_added", "child_changed", etc.
 	bool exists = false;
 	bool snapshot_valid = false;
 	bool success = false;           // For set/push/remove operations
+	bool is_connected = false;      // For connection state events
 	int status = 0;
 	int error = 0;
 };
@@ -129,6 +131,10 @@ private:
 	std::mutex _pending_results_mutex;
 	std::map<int, PendingFirebaseResult> _pending_results;
 
+	// Atomic counter for listener event IDs (negative values to avoid collision
+	// with positive GDScript request IDs used by async operations).
+	std::atomic<int> _listener_event_counter{0};
+
 protected:
 	static void _bind_methods();
 
@@ -152,6 +158,13 @@ protected:
 	void _handle_query_ordered_data_on_main_thread(int req_id);
 	void _handle_transaction_on_main_thread(int req_id);
 
+	// Listener main thread handlers — same pattern as async handlers above.
+	// Listener callbacks fire on Firebase worker threads; these handlers
+	// safely create Godot objects on the main thread.
+	void _handle_child_event_on_main_thread(int event_id);
+	void _handle_connection_state_on_main_thread(int event_id);
+	void _handle_listener_error_on_main_thread(int event_id);
+
 public:
 	// Thread-safe singleton access methods (Task-213 critical fix)
 	static FirebaseDatabase& get_instance();
@@ -161,7 +174,13 @@ public:
 	static void begin_shutdown();
 	static bool is_app_shutting_down();
 
-	
+	// Queue listener events from worker threads → main thread handlers.
+	// Called from listener callbacks; stores raw C++ data and schedules
+	// the appropriate main thread handler via callable_mp.
+	void _queue_child_event(PendingFirebaseResult &&result);
+	void _queue_connection_state_event(PendingFirebaseResult &&result);
+	void _queue_listener_error(PendingFirebaseResult &&result);
+
 	// Delete copy constructor for singleton pattern (assignment operator handled by GDCLASS)
 	FirebaseDatabase(const FirebaseDatabase&) = delete;
 
@@ -177,7 +196,6 @@ public:
 	void add_listener_at_path(const Array &keys);
 	void remove_listener_at_path(const Array &keys);
 	void monitor_connection_state();
-	void on_connection_state_changed(const firebase::database::DataSnapshot &snapshot);
 };
 
 #endif // FirebaseDatabase_h
