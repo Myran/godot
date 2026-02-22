@@ -80,6 +80,24 @@ struct TransactionData {
 	FirebaseDatabase* database_ptr;
 };
 
+// --- Pending Firebase Result ---
+// Thread-safe storage for Firebase worker thread data.
+// Worker threads store raw C++ data here; main thread retrieves and converts to Godot types.
+// This prevents creating Godot objects (Dictionary, Array, String) on worker threads,
+// which causes null _p pointer corruption in Dictionary variants.
+struct PendingFirebaseResult {
+	firebase::Variant fb_value;     // Raw Firebase data — converted to Godot Variant on main thread
+	std::string key;
+	std::string error_msg;
+	std::string path_str;
+	std::string push_key;           // For push_and_update operations
+	bool exists = false;
+	bool snapshot_valid = false;
+	bool success = false;           // For set/push/remove operations
+	int status = 0;
+	int error = 0;
+};
+
 // --- Main Database Class ---
 class FirebaseDatabase : public RefCounted {
 	GDCLASS(FirebaseDatabase, RefCounted);
@@ -106,6 +124,11 @@ private:
 	uint64_t _listener_path_ref_count;
 	firebase::database::DatabaseReference _active_child_listener_ref;
 
+	// Thread-safe storage for worker thread → main thread data transfer.
+	// Worker threads store raw C++ data; main thread retrieves and creates Godot objects.
+	std::mutex _pending_results_mutex;
+	std::map<int, PendingFirebaseResult> _pending_results;
+
 protected:
 	static void _bind_methods();
 
@@ -118,14 +141,16 @@ protected:
 	static void transaction_completion_callback(
 			const firebase::Future<firebase::database::DataSnapshot> &result, void *transaction_data);
 
-	// Main thread callback handlers (Task-207 SIGBUS fix)
-	// These methods execute on Godot's main thread via MessageQueue marshalling
-	void _handle_get_value_on_main_thread(int req_id, String path_str, String key, Variant godot_value, bool exists, bool snapshot_valid, int status, int error, String error_msg);
-	void _handle_set_value_on_main_thread(int req_id, bool success, int status, int error, String error_msg);
-	void _handle_push_and_update_on_main_thread(int req_id, String push_key, bool success, int status, int error, String error_msg);
-	void _handle_remove_value_on_main_thread(int req_id, bool success, int status, int error, String error_msg);
-	void _handle_query_ordered_data_on_main_thread(int req_id, String path_str, String key, Variant godot_value, bool exists, bool snapshot_valid, int status, int error, String error_msg);
-	void _handle_transaction_on_main_thread(int req_id, String key, Variant godot_value, bool exists, bool snapshot_valid, int status, int error, String error_msg);
+	// Main thread callback handlers
+	// These methods execute on Godot's main thread via MessageQueue marshalling.
+	// They retrieve raw C++ data from _pending_results and create Godot objects (Dictionary,
+	// Array, String) on the main thread — preventing worker-thread object corruption.
+	void _handle_get_value_on_main_thread(int req_id);
+	void _handle_set_value_on_main_thread(int req_id);
+	void _handle_push_and_update_on_main_thread(int req_id);
+	void _handle_remove_value_on_main_thread(int req_id);
+	void _handle_query_ordered_data_on_main_thread(int req_id);
+	void _handle_transaction_on_main_thread(int req_id);
 
 public:
 	// Thread-safe singleton access methods (Task-213 critical fix)

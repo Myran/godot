@@ -441,39 +441,44 @@ void FirebaseDatabase::get_value_async(int p_request_id, const Array &keys) {
 	// Task-434: Use ref directly - storing in member variable caused Windows crash
 	firebase::Future<firebase::database::DataSnapshot> future = ref.GetValue();
 	print_line(String("[RTDB C++] ref.GetValue() returned successfully - future.status()=") + itos(future.status()));
-	// NOTE (task-528): OnCompletion runs on Firebase worker thread. Creating Godot objects
-	// (String, Callable, Variant) here can trigger DEV_ASSERT in debug builds (~1-2% iOS crash
-	// rate) but is functionally safe in release due to atomic refcounting. See task-525 for retry.
-	future.OnCompletion([this, p_request_id, path_str_for_logging](const firebase::Future<firebase::database::DataSnapshot> &result) {
-		// WORKER THREAD - Extract thread-safe data only (Task-207 SIGBUS fix)
-		int error = result.error();
-		int status = result.status();
-		String error_msg = result.error_message() ? String(result.error_message()) : "";
 
-		String key = "";
-		firebase::Variant fb_value; // Default null
-		bool exists = false;
-		bool snapshot_valid = false;
+	// Convert path to std::string before lambda capture to avoid Godot String on worker thread
+	std::string path_std = path_str_for_logging.utf8().get_data();
 
-		if (status == firebase::kFutureStatusComplete && error == firebase::database::kErrorNone) {
+	// OnCompletion runs on Firebase worker thread.
+	// CRITICAL: Only use C++ types here — NO Godot objects (String, Dictionary, Variant).
+	// Godot objects created on worker threads can have corrupted internal pointers (null _p).
+	// All data is stored in PendingFirebaseResult and converted to Godot types on main thread.
+	future.OnCompletion([this, p_request_id, path_std](const firebase::Future<firebase::database::DataSnapshot> &result) {
+		// WORKER THREAD — Only C++ types, no Godot objects
+		PendingFirebaseResult pending;
+		pending.error = result.error();
+		pending.status = result.status();
+		pending.error_msg = result.error_message() ? std::string(result.error_message()) : "";
+		pending.path_str = path_std;
+
+		if (pending.status == firebase::kFutureStatusComplete && pending.error == firebase::database::kErrorNone) {
 			const firebase::database::DataSnapshot* snapshot = result.result();
 			if (snapshot) {
-				snapshot_valid = true;
-				key = snapshot->key() ? String(snapshot->key()) : "";
+				pending.snapshot_valid = true;
+				pending.key = snapshot->key() ? std::string(snapshot->key()) : "";
 				if (snapshot->exists()) {
-					fb_value = snapshot->value(); // Thread-safe copy
-					exists = true;
+					pending.fb_value = snapshot->value(); // firebase::Variant copy (C++ type, thread-safe)
+					pending.exists = true;
 				}
 			}
 		}
 
-		// Convert firebase::Variant to Godot Variant on worker thread (SAFE - doesn't touch Godot internals)
-		Variant godot_value = Convertor::fromFirebaseVariant(fb_value);
+		// Store in thread-safe map — main thread will retrieve and convert to Godot types
+		{
+			std::lock_guard<std::mutex> lock(_pending_results_mutex);
+			_pending_results[p_request_id] = std::move(pending);
+		}
 
-		// Marshal to main thread (NO Godot operations on worker thread!)
+		// Marshal minimal notification to main thread (only int, no Godot objects)
 		MessageQueue::get_singleton()->push_callable(
 			callable_mp(this, &FirebaseDatabase::_handle_get_value_on_main_thread)
-				.bind(p_request_id, path_str_for_logging, key, godot_value, exists, snapshot_valid, status, error, error_msg)
+				.bind(p_request_id)
 		);
 	});
 }
@@ -493,19 +498,23 @@ void FirebaseDatabase::set_value_async(int p_request_id, const Array &keys, cons
 	firebase::Variant firebase_value = Convertor::toFirebaseVariant(value);
 	print_verbose(String("[RTDB C++] SetValue ReqID:") + itos(p_request_id) + " Path: " + String(Variant(keys)));
 	firebase::Future<void> future = ref.SetValue(firebase_value);
-	// NOTE (task-528): OnCompletion runs on Firebase worker thread — see get_value_async comment.
 	future.OnCompletion([this, p_request_id](const firebase::Future<void> &result) {
-		// WORKER THREAD - Extract thread-safe data only (Task-207 SIGBUS fix)
-		bool success = (result.status() == firebase::kFutureStatusComplete &&
+		// WORKER THREAD — Only C++ types, no Godot objects
+		PendingFirebaseResult pending;
+		pending.success = (result.status() == firebase::kFutureStatusComplete &&
 					   result.error() == firebase::database::kErrorNone);
-		int error = result.error();
-		int status = result.status();
-		String error_msg = result.error_message() ? String(result.error_message()) : "";
+		pending.error = result.error();
+		pending.status = result.status();
+		pending.error_msg = result.error_message() ? std::string(result.error_message()) : "";
 
-		// Marshal to main thread (NO Godot operations on worker thread!)
+		{
+			std::lock_guard<std::mutex> lock(_pending_results_mutex);
+			_pending_results[p_request_id] = std::move(pending);
+		}
+
 		MessageQueue::get_singleton()->push_callable(
 			callable_mp(this, &FirebaseDatabase::_handle_set_value_on_main_thread)
-				.bind(p_request_id, success, status, error, error_msg)
+				.bind(p_request_id)
 		);
 	});
 }
@@ -544,22 +553,24 @@ void FirebaseDatabase::push_and_update_async(int p_request_id, const Array &keys
 
 	print_verbose(String("[RTDB C++] PushUpdate ReqID:") + itos(p_request_id) + " Path: " + String(Variant(keys)) + " PushKey: " + String(String(push_key_std.c_str())));
 	firebase::Future<void> future = new_child_ref.UpdateChildren(firebase_data);
-	// NOTE (task-528): OnCompletion runs on Firebase worker thread — see get_value_async comment.
 	future.OnCompletion([this, p_request_id, push_key_std](const firebase::Future<void> &result) {
-		// WORKER THREAD - Extract thread-safe data only (Task-207 SIGBUS fix)
-		bool success = (result.status() == firebase::kFutureStatusComplete &&
+		// WORKER THREAD — Only C++ types, no Godot objects
+		PendingFirebaseResult pending;
+		pending.success = (result.status() == firebase::kFutureStatusComplete &&
 					   result.error() == firebase::database::kErrorNone);
-		int error = result.error();
-		int status = result.status();
-		String error_msg = result.error_message() ? String(result.error_message()) : "";
+		pending.error = result.error();
+		pending.status = result.status();
+		pending.error_msg = result.error_message() ? std::string(result.error_message()) : "";
+		pending.push_key = push_key_std;
 
-		// WORKER THREAD - Convert std::string to Godot String (safe for data conversion)
-		String push_key_str = String(push_key_std.c_str());
+		{
+			std::lock_guard<std::mutex> lock(_pending_results_mutex);
+			_pending_results[p_request_id] = std::move(pending);
+		}
 
-		// Marshal to main thread (NO Godot operations on worker thread!)
 		MessageQueue::get_singleton()->push_callable(
 			callable_mp(this, &FirebaseDatabase::_handle_push_and_update_on_main_thread)
-				.bind(p_request_id, push_key_str, success, status, error, error_msg)
+				.bind(p_request_id)
 		);
 	});
 }
@@ -578,19 +589,23 @@ void FirebaseDatabase::remove_value_async(int p_request_id, const Array &keys) {
 	}
 	print_verbose(String("[RTDB C++] RemoveValue ReqID:") + itos(p_request_id) + " Path: " + String(Variant(keys)));
 	firebase::Future<void> future = ref.RemoveValue();
-	// NOTE (task-528): OnCompletion runs on Firebase worker thread — see get_value_async comment.
 	future.OnCompletion([this, p_request_id](const firebase::Future<void> &result) {
-		// WORKER THREAD - Extract thread-safe data only (Task-207 SIGBUS fix)
-		bool success = (result.status() == firebase::kFutureStatusComplete &&
+		// WORKER THREAD — Only C++ types, no Godot objects
+		PendingFirebaseResult pending;
+		pending.success = (result.status() == firebase::kFutureStatusComplete &&
 					   result.error() == firebase::database::kErrorNone);
-		int error = result.error();
-		int status = result.status();
-		String error_msg = result.error_message() ? String(result.error_message()) : "";
+		pending.error = result.error();
+		pending.status = result.status();
+		pending.error_msg = result.error_message() ? std::string(result.error_message()) : "";
 
-		// Marshal to main thread (NO Godot operations on worker thread!)
+		{
+			std::lock_guard<std::mutex> lock(_pending_results_mutex);
+			_pending_results[p_request_id] = std::move(pending);
+		}
+
 		MessageQueue::get_singleton()->push_callable(
 			callable_mp(this, &FirebaseDatabase::_handle_remove_value_on_main_thread)
-				.bind(p_request_id, success, status, error, error_msg)
+				.bind(p_request_id)
 		);
 	});
 }
@@ -608,40 +623,41 @@ void FirebaseDatabase::query_ordered_data_async(int p_request_id, const Array &k
 		return;
 	}
 	firebase::database::Query query = get_query_from_reference(ref, query_params);
-	print_verbose(String("[RTDB C++] Query ReqID:") + itos(p_request_id) + " Path: " + String(Variant(keys)) + " Params: " + String(Variant(query_params)));
+	String path_str_for_logging = String(Variant(keys));
+	print_verbose(String("[RTDB C++] Query ReqID:") + itos(p_request_id) + " Path: " + path_str_for_logging + " Params: " + String(Variant(query_params)));
+
+	// Convert path to std::string before lambda capture to avoid Godot Array on worker thread
+	std::string query_path_std = path_str_for_logging.utf8().get_data();
+
 	firebase::Future<firebase::database::DataSnapshot> future = query.GetValue();
-	// NOTE (task-528): OnCompletion runs on Firebase worker thread — see get_value_async comment.
-	future.OnCompletion([this, p_request_id, keys](const firebase::Future<firebase::database::DataSnapshot> &result) {
-		// WORKER THREAD - Extract thread-safe data only (Task-207 SIGBUS fix)
-		int error = result.error();
-		int status = result.status();
-		String error_msg = result.error_message() ? String(result.error_message()) : "";
-		String path_str = String(Variant(keys));
+	future.OnCompletion([this, p_request_id, query_path_std](const firebase::Future<firebase::database::DataSnapshot> &result) {
+		// WORKER THREAD — Only C++ types, no Godot objects
+		PendingFirebaseResult pending;
+		pending.error = result.error();
+		pending.status = result.status();
+		pending.error_msg = result.error_message() ? std::string(result.error_message()) : "";
+		pending.path_str = query_path_std;
 
-		String key = "";
-		firebase::Variant fb_value; // Default null
-		bool exists = false;
-		bool snapshot_valid = false;
-
-		if (status == firebase::kFutureStatusComplete && error == firebase::database::kErrorNone) {
+		if (pending.status == firebase::kFutureStatusComplete && pending.error == firebase::database::kErrorNone) {
 			const firebase::database::DataSnapshot* snapshot = result.result();
 			if (snapshot) {
-				snapshot_valid = true;
-				key = snapshot->key() ? String(snapshot->key()) : "";
+				pending.snapshot_valid = true;
+				pending.key = snapshot->key() ? std::string(snapshot->key()) : "";
 				if (snapshot->exists()) {
-					fb_value = snapshot->value(); // Thread-safe copy
-					exists = true;
+					pending.fb_value = snapshot->value(); // firebase::Variant copy (C++ type, thread-safe)
+					pending.exists = true;
 				}
 			}
 		}
 
-		// Convert firebase::Variant to Godot Variant on worker thread (SAFE - doesn't touch Godot internals)
-		Variant godot_value = Convertor::fromFirebaseVariant(fb_value);
+		{
+			std::lock_guard<std::mutex> lock(_pending_results_mutex);
+			_pending_results[p_request_id] = std::move(pending);
+		}
 
-		// Marshal to main thread (NO Godot operations on worker thread!)
 		MessageQueue::get_singleton()->push_callable(
 			callable_mp(this, &FirebaseDatabase::_handle_query_ordered_data_on_main_thread)
-				.bind(p_request_id, path_str, key, godot_value, exists, snapshot_valid, status, error, error_msg)
+				.bind(p_request_id)
 		);
 	});
 }
@@ -664,42 +680,39 @@ void FirebaseDatabase::run_transaction_async(int p_request_id, const Array &keys
 	tx_data->database_ptr = this;
 	print_verbose(String("[RTDB C++] Transaction ReqID:") + itos(p_request_id) + " Path: " + String(Variant(keys)) + " Increment: " + itos(increment_by));
 	firebase::Future<firebase::database::DataSnapshot> future = ref.RunTransaction(increment_transaction_function, tx_data);
-	// NOTE (task-528): OnCompletion runs on Firebase worker thread — see get_value_async comment.
 	future.OnCompletion([this, tx_data](const firebase::Future<firebase::database::DataSnapshot> &result) {
-		// WORKER THREAD - Extract thread-safe data only (Task-207 SIGBUS fix)
+		// WORKER THREAD — Only C++ types, no Godot objects
 		if (!tx_data) {
 			return;
 		}
 
 		int request_id = tx_data->request_id;
-		int error = result.error();
-		int status = result.status();
-		String error_msg = result.error_message() ? String(result.error_message()) : "";
 
-		String key = "";
-		firebase::Variant fb_value; // Default null
-		bool exists = false;
-		bool snapshot_valid = false;
+		PendingFirebaseResult pending;
+		pending.error = result.error();
+		pending.status = result.status();
+		pending.error_msg = result.error_message() ? std::string(result.error_message()) : "";
 
-		if (status == firebase::kFutureStatusComplete && error == firebase::database::kErrorNone) {
+		if (pending.status == firebase::kFutureStatusComplete && pending.error == firebase::database::kErrorNone) {
 			const firebase::database::DataSnapshot* snapshot = result.result();
 			if (snapshot) {
-				snapshot_valid = true;
-				key = snapshot->key() ? String(snapshot->key()) : "";
+				pending.snapshot_valid = true;
+				pending.key = snapshot->key() ? std::string(snapshot->key()) : "";
 				if (snapshot->exists()) {
-					fb_value = snapshot->value(); // Thread-safe copy
-					exists = true;
+					pending.fb_value = snapshot->value(); // firebase::Variant copy (C++ type, thread-safe)
+					pending.exists = true;
 				}
 			}
 		}
 
-			// Convert firebase::Variant to Godot Variant on worker thread (SAFE - doesn't touch Godot internals)
-		Variant godot_value = Convertor::fromFirebaseVariant(fb_value);
+		{
+			std::lock_guard<std::mutex> lock(_pending_results_mutex);
+			_pending_results[request_id] = std::move(pending);
+		}
 
-		// Marshal to main thread (NO Godot operations on worker thread!)
 		MessageQueue::get_singleton()->push_callable(
 			callable_mp(this, &FirebaseDatabase::_handle_transaction_on_main_thread)
-				.bind(request_id, key, godot_value, exists, snapshot_valid, status, error, error_msg)
+				.bind(request_id)
 		);
 
 		delete tx_data;
@@ -725,29 +738,25 @@ void FirebaseDatabase::set_server_timestamp_async(int p_request_id, const Array 
 	firebase::Variant timestamp_placeholder = firebase::Variant(timestamp_map);
 
 	firebase::Future<void> future = ref.SetValue(timestamp_placeholder);
-	// NOTE (task-528): OnCompletion runs on Firebase worker thread — see get_value_async comment.
 	future.OnCompletion([this, p_request_id](const firebase::Future<void> &result) {
-		// Firebase SDK manages callback lifecycle
-		if (false) { // Disabled - using this directly
-			WARN_PRINT("[RTDB C++] Callback ignored: FirebaseDatabase instance destroyed.");
-			return;
+		// WORKER THREAD — Only C++ types, no Godot objects
+		PendingFirebaseResult pending;
+		pending.success = (result.status() == firebase::kFutureStatusComplete &&
+					   result.error() == firebase::database::kErrorNone);
+		pending.error = result.error();
+		pending.status = result.status();
+		pending.error_msg = result.error_message() ? std::string(result.error_message()) : "";
+
+		{
+			std::lock_guard<std::mutex> lock(_pending_results_mutex);
+			_pending_results[p_request_id] = std::move(pending);
 		}
-		
-		if (result.status() == firebase::kFutureStatusComplete) {
-			if (result.error() == firebase::database::kErrorNone) {
-				print_verbose(String("[RTDB C++] SetServerTimestamp ReqID:") + itos(p_request_id) + " Success.");
-				this->call_deferred(SNAME("emit_signal"), SNAME("set_value_completed"), p_request_id, true, "");
-			} else {
-				String error_code_str = String::num_int64(result.error());
-				const char *sdk_msg = result.error_message();
-				String error_message = sdk_msg ? String(sdk_msg) : "Unknown Firebase error setting timestamp.";
-				print_error(String("[RTDB C++] SetServerTimestamp ReqID:") + itos(p_request_id) + " Error: " + error_code_str + " Msg: " + error_message);
-				this->call_deferred(SNAME("emit_signal"), SNAME("set_value_completed"), p_request_id, false, error_message);
-			}
-		} else {
-			print_error(String("[RTDB C++] SetServerTimestamp ReqID:") + itos(p_request_id) + " Future did not complete. Status: " + itos(result.status()));
-			this->call_deferred(SNAME("emit_signal"), SNAME("set_value_completed"), p_request_id, false, "Firebase Future did not complete.");
-		}
+
+		// Reuse set_value handler — same signal signature
+		MessageQueue::get_singleton()->push_callable(
+			callable_mp(this, &FirebaseDatabase::_handle_set_value_on_main_thread)
+				.bind(p_request_id)
+		);
 	});
 }
 
@@ -838,182 +847,218 @@ void FirebaseDatabase::on_connection_state_changed(const firebase::database::Dat
 // These methods execute on Godot's main thread via MessageQueue marshalling
 // ensuring all Godot operations (Variant conversion, signal emission) are thread-safe
 
-void FirebaseDatabase::_handle_get_value_on_main_thread(
-		int req_id,
-		String path_str,
-		String key,
-		Variant godot_value,
-		bool exists,
-		bool snapshot_valid,
-		int status,
-		int error,
-		String error_msg) {
+void FirebaseDatabase::_handle_get_value_on_main_thread(int req_id) {
 	// NOW ON MAIN THREAD - Safe for all Godot operations
 
 	// Part 2 of crash fix: Skip callback if app is shutting down (Task-331)
 	if (is_app_shutting_down()) {
+		std::lock_guard<std::mutex> lock(_pending_results_mutex);
+		_pending_results.erase(req_id);
 		print_line("[RTDB C++] _handle_get_value_on_main_thread skipped - app shutting down");
 		return;
 	}
 
-	if (status == firebase::kFutureStatusComplete && error == firebase::database::kErrorNone) {
+	// Retrieve raw C++ data stored by worker thread
+	PendingFirebaseResult pending;
+	{
+		std::lock_guard<std::mutex> lock(_pending_results_mutex);
+		auto it = _pending_results.find(req_id);
+		if (it == _pending_results.end()) {
+			print_error(String("[RTDB C++] GetValue ReqID:") + itos(req_id) + " Main thread handler - CRITICAL: No pending result found");
+			return;
+		}
+		pending = std::move(it->second);
+		_pending_results.erase(it);
+	}
+
+	// Convert C++ strings to Godot Strings ON MAIN THREAD (safe)
+	String path_str = String(pending.path_str.c_str());
+	String error_msg = String(pending.error_msg.c_str());
+
+	if (pending.status == firebase::kFutureStatusComplete && pending.error == firebase::database::kErrorNone) {
 		// Task-516: Windows Firebase SDK bug workaround
-		// On Windows, the SDK sometimes returns error code 0 but still populates error_message
-		// when there's a permission denied or other error. Check for this case.
 		if (!error_msg.is_empty()) {
-			// Error message present despite error code 0 - treat as error (Windows SDK bug)
 			print_error(String("[RTDB C++] GetValue ReqID:") + itos(req_id) + " Main thread handler - Error (SDK returned code 0 with message): " + error_msg);
 			call_deferred(SNAME("emit_signal"), SNAME("get_value_error"), req_id, path_str, "SDK_ERROR_MSG", error_msg);
-		} else if (snapshot_valid && exists) {
-			// Value already converted to Godot Variant on worker thread
-			String signal_key = !key.is_empty() ? key : "";
-
-			// CRITICAL SAFETY: Deep copy to prevent ARM64 alignment crashes
-			// Firebase C++ SDK returns misaligned memory that causes SIGBUS when accessed by GDScript
+		} else if (pending.snapshot_valid && pending.exists) {
+			// Convert firebase::Variant to Godot Variant ON MAIN THREAD
+			// This is the critical fix: creating Dictionary/Array objects on the main thread
+			// prevents null _p pointer corruption that occurred when created on worker threads.
+			Variant godot_value = Convertor::fromFirebaseVariant(pending.fb_value);
 			Variant safe_value = Convertor::deepCopyVariant(godot_value);
 
+			String signal_key = !pending.key.empty() ? String(pending.key.c_str()) : "";
 			print_verbose(String("[RTDB C++] GetValue ReqID:") + itos(req_id) + " Main thread handler - Success. Key='" + signal_key + "'");
 			call_deferred(SNAME("emit_signal"), SNAME("get_value_completed"), req_id, signal_key, safe_value);
-		} else if (snapshot_valid) {
-			// Snapshot valid but data doesn't exist
+		} else if (pending.snapshot_valid) {
 			print_verbose(String("[RTDB C++] GetValue ReqID:") + itos(req_id) + " Main thread handler - Data doesn't exist at path: " + path_str);
 			call_deferred(SNAME("emit_signal"), SNAME("get_value_completed"), req_id, path_str, Variant());
 		} else {
-			// Snapshot pointer was null
 			print_error(String("[RTDB C++] GetValue ReqID:") + itos(req_id) + " Main thread handler - CRITICAL: Snapshot pointer null");
 			call_deferred(SNAME("emit_signal"), SNAME("get_value_error"), req_id, path_str, "SNAPSHOT_PTR_NULL", "Snapshot pointer was null");
 		}
-	} else if (status == firebase::kFutureStatusComplete) {
-		// Error from Firebase
-		String error_code_str = String::num_int64(error);
+	} else if (pending.status == firebase::kFutureStatusComplete) {
+		String error_code_str = String::num_int64(pending.error);
 		print_error(String("[RTDB C++] GetValue ReqID:") + itos(req_id) + " Main thread handler - Error: " + error_code_str + " Msg: " + error_msg);
 		call_deferred(SNAME("emit_signal"), SNAME("get_value_error"), req_id, path_str, error_code_str, error_msg);
 	} else {
-		// Future did not complete
-		print_error(String("[RTDB C++] GetValue ReqID:") + itos(req_id) + " Main thread handler - Future did not complete. Status: " + itos(status));
+		print_error(String("[RTDB C++] GetValue ReqID:") + itos(req_id) + " Main thread handler - Future did not complete. Status: " + itos(pending.status));
 		call_deferred(SNAME("emit_signal"), SNAME("get_value_error"), req_id, path_str, "FUTURE_INVALID_STATUS", "Firebase Future did not complete.");
 	}
 }
 
-void FirebaseDatabase::_handle_set_value_on_main_thread(
-		int req_id,
-		bool success,
-		int status,
-		int error,
-		String error_msg) {
+void FirebaseDatabase::_handle_set_value_on_main_thread(int req_id) {
 	// NOW ON MAIN THREAD
 
-	// Part 2 of crash fix: Skip callback if app is shutting down (Task-331)
 	if (is_app_shutting_down()) {
+		std::lock_guard<std::mutex> lock(_pending_results_mutex);
+		_pending_results.erase(req_id);
 		print_line("[RTDB C++] _handle_set_value_on_main_thread skipped - app shutting down");
 		return;
 	}
 
-	if (success) {
+	PendingFirebaseResult pending;
+	{
+		std::lock_guard<std::mutex> lock(_pending_results_mutex);
+		auto it = _pending_results.find(req_id);
+		if (it == _pending_results.end()) {
+			print_error(String("[RTDB C++] SetValue ReqID:") + itos(req_id) + " Main thread handler - CRITICAL: No pending result found");
+			return;
+		}
+		pending = std::move(it->second);
+		_pending_results.erase(it);
+	}
+
+	String error_msg = String(pending.error_msg.c_str());
+
+	if (pending.success) {
 		print_verbose(String("[RTDB C++] SetValue ReqID:") + itos(req_id) + " Main thread handler - Success.");
 		call_deferred(SNAME("emit_signal"), SNAME("set_value_completed"), req_id, true, "");
-	} else if (status == firebase::kFutureStatusComplete) {
-		String error_code_str = String::num_int64(error);
+	} else if (pending.status == firebase::kFutureStatusComplete) {
+		String error_code_str = String::num_int64(pending.error);
 		print_error(String("[RTDB C++] SetValue ReqID:") + itos(req_id) + " Main thread handler - Error: " + error_code_str + " Msg: " + error_msg);
 		call_deferred(SNAME("emit_signal"), SNAME("set_value_completed"), req_id, false, error_msg);
 	} else {
-		print_error(String("[RTDB C++] SetValue ReqID:") + itos(req_id) + " Main thread handler - Future did not complete. Status: " + itos(status));
+		print_error(String("[RTDB C++] SetValue ReqID:") + itos(req_id) + " Main thread handler - Future did not complete. Status: " + itos(pending.status));
 		call_deferred(SNAME("emit_signal"), SNAME("set_value_completed"), req_id, false, "Firebase Future did not complete.");
 	}
 }
 
-void FirebaseDatabase::_handle_push_and_update_on_main_thread(
-		int req_id,
-		String push_key,
-		bool success,
-		int status,
-		int error,
-		String error_msg) {
+void FirebaseDatabase::_handle_push_and_update_on_main_thread(int req_id) {
 	// NOW ON MAIN THREAD
 
-	// Part 2 of crash fix: Skip callback if app is shutting down (Task-331)
 	if (is_app_shutting_down()) {
+		std::lock_guard<std::mutex> lock(_pending_results_mutex);
+		_pending_results.erase(req_id);
 		print_line("[RTDB C++] _handle_push_and_update_on_main_thread skipped - app shutting down");
 		return;
 	}
 
-	// CRITICAL SAFETY: Deep copy to prevent ARM64 alignment crashes
-	// Firebase C++ SDK returns misaligned memory that causes SIGBUS when accessed by GDScript
-	Variant safe_push_key = Convertor::deepCopyVariant(Variant(push_key));
+	PendingFirebaseResult pending;
+	{
+		std::lock_guard<std::mutex> lock(_pending_results_mutex);
+		auto it = _pending_results.find(req_id);
+		if (it == _pending_results.end()) {
+			print_error(String("[RTDB C++] PushUpdate ReqID:") + itos(req_id) + " Main thread handler - CRITICAL: No pending result found");
+			return;
+		}
+		pending = std::move(it->second);
+		_pending_results.erase(it);
+	}
 
-	if (success) {
-		print_verbose(String("[RTDB C++] PushUpdate ReqID:") + itos(req_id) + " Main thread handler - Success. PushKey: " + String(safe_push_key));
-		call_deferred(SNAME("emit_signal"), SNAME("push_and_update_completed"), req_id, safe_push_key, true, "");
-	} else if (status == firebase::kFutureStatusComplete) {
-		String error_code_str = String::num_int64(error);
+	// Convert C++ strings to Godot Strings on main thread
+	String push_key = String(pending.push_key.c_str());
+	String error_msg = String(pending.error_msg.c_str());
+
+	if (pending.success) {
+		print_verbose(String("[RTDB C++] PushUpdate ReqID:") + itos(req_id) + " Main thread handler - Success. PushKey: " + push_key);
+		call_deferred(SNAME("emit_signal"), SNAME("push_and_update_completed"), req_id, push_key, true, "");
+	} else if (pending.status == firebase::kFutureStatusComplete) {
+		String error_code_str = String::num_int64(pending.error);
 		print_error(String("[RTDB C++] PushUpdate ReqID:") + itos(req_id) + " Main thread handler - Error: " + error_code_str + " Msg: " + error_msg);
-		call_deferred(SNAME("emit_signal"), SNAME("push_and_update_completed"), req_id, safe_push_key, false, error_msg);
+		call_deferred(SNAME("emit_signal"), SNAME("push_and_update_completed"), req_id, push_key, false, error_msg);
 	} else {
-		print_error(String("[RTDB C++] PushUpdate ReqID:") + itos(req_id) + " Main thread handler - Future did not complete. Status: " + itos(status));
-		call_deferred(SNAME("emit_signal"), SNAME("push_and_update_completed"), req_id, safe_push_key, false, "Firebase Future did not complete.");
+		print_error(String("[RTDB C++] PushUpdate ReqID:") + itos(req_id) + " Main thread handler - Future did not complete. Status: " + itos(pending.status));
+		call_deferred(SNAME("emit_signal"), SNAME("push_and_update_completed"), req_id, push_key, false, "Firebase Future did not complete.");
 	}
 }
 
-void FirebaseDatabase::_handle_remove_value_on_main_thread(
-		int req_id,
-		bool success,
-		int status,
-		int error,
-		String error_msg) {
+void FirebaseDatabase::_handle_remove_value_on_main_thread(int req_id) {
 	// NOW ON MAIN THREAD
 
-	// Part 2 of crash fix: Skip callback if app is shutting down (Task-331)
 	if (is_app_shutting_down()) {
+		std::lock_guard<std::mutex> lock(_pending_results_mutex);
+		_pending_results.erase(req_id);
 		print_line("[RTDB C++] _handle_remove_value_on_main_thread skipped - app shutting down");
 		return;
 	}
 
-	if (success) {
+	PendingFirebaseResult pending;
+	{
+		std::lock_guard<std::mutex> lock(_pending_results_mutex);
+		auto it = _pending_results.find(req_id);
+		if (it == _pending_results.end()) {
+			print_error(String("[RTDB C++] RemoveValue ReqID:") + itos(req_id) + " Main thread handler - CRITICAL: No pending result found");
+			return;
+		}
+		pending = std::move(it->second);
+		_pending_results.erase(it);
+	}
+
+	String error_msg = String(pending.error_msg.c_str());
+
+	if (pending.success) {
 		print_verbose(String("[RTDB C++] RemoveValue ReqID:") + itos(req_id) + " Main thread handler - Success.");
 		call_deferred(SNAME("emit_signal"), SNAME("remove_value_completed"), req_id, true, "");
-	} else if (status == firebase::kFutureStatusComplete) {
-		String error_code_str = String::num_int64(error);
+	} else if (pending.status == firebase::kFutureStatusComplete) {
+		String error_code_str = String::num_int64(pending.error);
 		print_error(String("[RTDB C++] RemoveValue ReqID:") + itos(req_id) + " Main thread handler - Error: " + error_code_str + " Msg: " + error_msg);
 		call_deferred(SNAME("emit_signal"), SNAME("remove_value_completed"), req_id, false, error_msg);
 	} else {
-		print_error(String("[RTDB C++] RemoveValue ReqID:") + itos(req_id) + " Main thread handler - Future did not complete. Status: " + itos(status));
+		print_error(String("[RTDB C++] RemoveValue ReqID:") + itos(req_id) + " Main thread handler - Future did not complete. Status: " + itos(pending.status));
 		call_deferred(SNAME("emit_signal"), SNAME("remove_value_completed"), req_id, false, "Firebase Future did not complete.");
 	}
 }
 
-void FirebaseDatabase::_handle_query_ordered_data_on_main_thread(
-		int req_id,
-		String path_str,
-		String key,
-		Variant godot_value,
-		bool exists,
-		bool snapshot_valid,
-		int status,
-		int error,
-		String error_msg) {
-	// NOW ON MAIN THREAD
+void FirebaseDatabase::_handle_query_ordered_data_on_main_thread(int req_id) {
+	// NOW ON MAIN THREAD — all Godot object creation happens here
 
-	// Part 2 of crash fix: Skip callback if app is shutting down (Task-331)
 	if (is_app_shutting_down()) {
+		std::lock_guard<std::mutex> lock(_pending_results_mutex);
+		_pending_results.erase(req_id);
 		print_line("[RTDB C++] _handle_query_ordered_data_on_main_thread skipped - app shutting down");
 		return;
 	}
 
-	if (status == firebase::kFutureStatusComplete && error == firebase::database::kErrorNone) {
+	PendingFirebaseResult pending;
+	{
+		std::lock_guard<std::mutex> lock(_pending_results_mutex);
+		auto it = _pending_results.find(req_id);
+		if (it == _pending_results.end()) {
+			print_error(String("[RTDB C++] Query ReqID:") + itos(req_id) + " Main thread handler - CRITICAL: No pending result found");
+			return;
+		}
+		pending = std::move(it->second);
+		_pending_results.erase(it);
+	}
+
+	// Convert C++ strings to Godot Strings ON MAIN THREAD
+	String path_str = String(pending.path_str.c_str());
+	String key = String(pending.key.c_str());
+	String error_msg = String(pending.error_msg.c_str());
+
+	if (pending.status == firebase::kFutureStatusComplete && pending.error == firebase::database::kErrorNone) {
 		// Task-516: Windows Firebase SDK bug workaround
-		// On Windows, the SDK sometimes returns error code 0 but still populates error_message
 		if (!error_msg.is_empty()) {
-			// Error message present despite error code 0 - treat as error (Windows SDK bug)
 			print_error(String("[RTDB C++] Query ReqID:") + itos(req_id) + " Main thread handler - Error (SDK returned code 0 with message): " + error_msg);
 			call_deferred(SNAME("emit_signal"), SNAME("query_error"), req_id, path_str, "SDK_ERROR_MSG", error_msg);
-		} else if (snapshot_valid) {
-			// Value already converted to Godot Variant on worker thread
-			Variant value = exists ? godot_value : Variant();
+		} else if (pending.snapshot_valid) {
+			// Convert firebase::Variant → Godot Variant ON MAIN THREAD (root cause fix)
+			Variant godot_value = pending.exists ? Convertor::fromFirebaseVariant(pending.fb_value) : Variant();
 			String result_key = !key.is_empty() ? key : path_str;
 
-			// CRITICAL SAFETY: Deep copy to prevent ARM64 alignment crashes
-			// Firebase C++ SDK returns misaligned memory that causes SIGBUS when accessed by GDScript
-			Variant safe_value = Convertor::deepCopyVariant(value);
+			// Deep copy for ARM64 alignment safety
+			Variant safe_value = Convertor::deepCopyVariant(godot_value);
 
 			print_verbose(String("[RTDB C++] Query ReqID:") + itos(req_id) + " Main thread handler - Success.");
 			call_deferred(SNAME("emit_signal"), SNAME("query_completed"), req_id, result_key, safe_value);
@@ -1021,66 +1066,72 @@ void FirebaseDatabase::_handle_query_ordered_data_on_main_thread(
 			print_error(String("[RTDB C++] Query ReqID:") + itos(req_id) + " Main thread handler - Snapshot pointer null");
 			call_deferred(SNAME("emit_signal"), SNAME("query_error"), req_id, path_str, "SNAPSHOT_PTR_NULL", "Snapshot pointer was null");
 		}
-	} else if (status == firebase::kFutureStatusComplete) {
-		String error_code_str = String::num_int64(error);
+	} else if (pending.status == firebase::kFutureStatusComplete) {
+		String error_code_str = String::num_int64(pending.error);
 		print_error(String("[RTDB C++] Query ReqID:") + itos(req_id) + " Main thread handler - Error: " + error_code_str + " Msg: " + error_msg);
 		call_deferred(SNAME("emit_signal"), SNAME("query_error"), req_id, path_str, error_code_str, error_msg);
 	} else {
-		print_error(String("[RTDB C++] Query ReqID:") + itos(req_id) + " Main thread handler - Future did not complete. Status: " + itos(status));
+		print_error(String("[RTDB C++] Query ReqID:") + itos(req_id) + " Main thread handler - Future did not complete. Status: " + itos(pending.status));
 		call_deferred(SNAME("emit_signal"), SNAME("query_error"), req_id, path_str, "FUTURE_INVALID_STATUS", "Firebase Future did not complete.");
 	}
 }
 
-void FirebaseDatabase::_handle_transaction_on_main_thread(
-		int req_id,
-		String key,
-		Variant godot_value,
-		bool exists,
-		bool snapshot_valid,
-		int status,
-		int error,
-		String error_msg) {
-	// NOW ON MAIN THREAD
+void FirebaseDatabase::_handle_transaction_on_main_thread(int req_id) {
+	// NOW ON MAIN THREAD — all Godot object creation happens here
 
-	// Part 2 of crash fix: Skip callback if app is shutting down (Task-331)
 	if (is_app_shutting_down()) {
+		std::lock_guard<std::mutex> lock(_pending_results_mutex);
+		_pending_results.erase(req_id);
 		print_line("[RTDB C++] _handle_transaction_on_main_thread skipped - app shutting down");
 		return;
 	}
 
-	if (status == firebase::kFutureStatusComplete && error == firebase::database::kErrorNone) {
+	PendingFirebaseResult pending;
+	{
+		std::lock_guard<std::mutex> lock(_pending_results_mutex);
+		auto it = _pending_results.find(req_id);
+		if (it == _pending_results.end()) {
+			print_error(String("[RTDB C++] Transaction ReqID:") + itos(req_id) + " Main thread handler - CRITICAL: No pending result found");
+			return;
+		}
+		pending = std::move(it->second);
+		_pending_results.erase(it);
+	}
+
+	// Convert C++ strings to Godot Strings ON MAIN THREAD
+	String key = String(pending.key.c_str());
+	String error_msg = String(pending.error_msg.c_str());
+
+	if (pending.status == firebase::kFutureStatusComplete && pending.error == firebase::database::kErrorNone) {
 		// Task-516: Windows Firebase SDK bug workaround
-		// On Windows, the SDK sometimes returns error code 0 but still populates error_message
 		if (!error_msg.is_empty()) {
-			// Error message present despite error code 0 - treat as error (Windows SDK bug)
 			print_error(String("[RTDB C++] Transaction ReqID:") + itos(req_id) + " Main thread handler - Error (SDK returned code 0 with message): " + error_msg);
 			call_deferred(SNAME("emit_signal"), SNAME("transaction_completed"), req_id, "", Variant(), false, error_msg);
 			call_deferred(SNAME("emit_signal"), SNAME("db_error"), "SDK_ERROR_MSG", error_msg);
-		} else if (snapshot_valid && exists) {
-			// Value already converted to Godot Variant on worker thread
+		} else if (pending.snapshot_valid && pending.exists) {
+			// Convert firebase::Variant → Godot Variant ON MAIN THREAD (root cause fix)
+			Variant godot_value = Convertor::fromFirebaseVariant(pending.fb_value);
 			String result_key = !key.is_empty() ? key : "";
 
-			// CRITICAL SAFETY: Deep copy to prevent ARM64 alignment crashes
-			// Firebase C++ SDK returns misaligned memory that causes SIGBUS when accessed by GDScript
+			// Deep copy for ARM64 alignment safety
 			Variant safe_transaction_value = Convertor::deepCopyVariant(godot_value);
 
 			print_verbose(String("[RTDB C++] Transaction ReqID:") + itos(req_id) + " Main thread handler - Success. Committed: Yes.");
 			call_deferred(SNAME("emit_signal"), SNAME("transaction_completed"), req_id, result_key, safe_transaction_value, true, "");
-		} else if (snapshot_valid) {
-			// Success but result is null/doesn't exist
+		} else if (pending.snapshot_valid) {
 			print_verbose(String("[RTDB C++] Transaction ReqID:") + itos(req_id) + " Main thread handler - Success (result null). Committed: Yes.");
 			call_deferred(SNAME("emit_signal"), SNAME("transaction_completed"), req_id, "", Variant(), true, "");
 		} else {
 			print_error(String("[RTDB C++] Transaction ReqID:") + itos(req_id) + " Main thread handler - Snapshot pointer null");
 			call_deferred(SNAME("emit_signal"), SNAME("transaction_completed"), req_id, "", Variant(), false, "Snapshot pointer was null");
 		}
-	} else if (status == firebase::kFutureStatusComplete) {
-		String error_code_str = String::num_int64(error);
+	} else if (pending.status == firebase::kFutureStatusComplete) {
+		String error_code_str = String::num_int64(pending.error);
 		print_error(String("[RTDB C++] Transaction ReqID:") + itos(req_id) + " Main thread handler - Error: " + error_code_str + " Msg: " + error_msg);
 		call_deferred(SNAME("emit_signal"), SNAME("transaction_completed"), req_id, "", Variant(), false, error_msg);
 		call_deferred(SNAME("emit_signal"), SNAME("db_error"), error_code_str, error_msg);
 	} else {
-		print_error(String("[RTDB C++] Transaction ReqID:") + itos(req_id) + " Main thread handler - Future did not complete. Status: " + itos(status));
+		print_error(String("[RTDB C++] Transaction ReqID:") + itos(req_id) + " Main thread handler - Future did not complete. Status: " + itos(pending.status));
 		call_deferred(SNAME("emit_signal"), SNAME("transaction_completed"), req_id, "", Variant(), false, "Firebase Future did not complete.");
 		call_deferred(SNAME("emit_signal"), SNAME("db_error"), "FUTURE_INVALID_STATUS", "Transaction future failed to complete.");
 	}
