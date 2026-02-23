@@ -1177,21 +1177,22 @@ void FirebaseDatabase::_handle_child_event_on_main_thread(int event_id) {
 
 	// Create Godot objects ON MAIN THREAD (root cause fix for listener crashes)
 	Variant godot_value = Convertor::fromFirebaseVariant(pending.fb_value);
+	Variant safe_value = Convertor::deepCopyVariant(godot_value);
 	String key = String(pending.key.c_str());
 
 	// Determine signal name from event type
 	if (pending.event_type == "child_added") {
 		print_verbose(String("[RTDB C++] Child Added (main thread): Key='") + key + "'");
-		call_deferred(SNAME("emit_signal"), SNAME("child_added"), key, godot_value);
+		call_deferred(SNAME("emit_signal"), SNAME("child_added"), key, safe_value);
 	} else if (pending.event_type == "child_changed") {
 		print_verbose(String("[RTDB C++] Child Changed (main thread): Key='") + key + "'");
-		call_deferred(SNAME("emit_signal"), SNAME("child_changed"), key, godot_value);
+		call_deferred(SNAME("emit_signal"), SNAME("child_changed"), key, safe_value);
 	} else if (pending.event_type == "child_moved") {
 		print_verbose(String("[RTDB C++] Child Moved (main thread): Key='") + key + "'");
-		call_deferred(SNAME("emit_signal"), SNAME("child_moved"), key, godot_value);
+		call_deferred(SNAME("emit_signal"), SNAME("child_moved"), key, safe_value);
 	} else if (pending.event_type == "child_removed") {
 		print_verbose(String("[RTDB C++] Child Removed (main thread): Key='") + key + "'");
-		call_deferred(SNAME("emit_signal"), SNAME("child_removed"), key, godot_value);
+		call_deferred(SNAME("emit_signal"), SNAME("child_removed"), key, safe_value);
 	}
 }
 
