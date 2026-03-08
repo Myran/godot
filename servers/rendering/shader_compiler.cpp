@@ -1288,7 +1288,16 @@ String ShaderCompiler::_dump_node_code(const SL::Node *p_node, int p_level, Gene
 										for (int j = 0; j < function->arguments.size(); j++) {
 											if (function->arguments[j].name == texture_uniform) {
 												if (function->arguments[j].tex_builtin_check) {
-													ERR_CONTINUE(!actions.custom_samplers.has(function->arguments[j].tex_builtin));
+													if (!actions.custom_samplers.has(function->arguments[j].tex_builtin)) {
+														// Built-in texture passed to custom function but sampler not registered
+														// (known Godot limitation — see godotengine/godot#54048).
+														// At runtime the canvas/scene renderer populates custom_samplers, so this
+														// only triggers during headless export where the GLSL is never executed.
+														WARN_PRINT_ONCE("Shader compiler: tex_builtin '" + String(function->arguments[j].tex_builtin) + "' not in custom_samplers, using default sampler.");
+														sampler_name = _get_sampler_name(ShaderLanguage::FILTER_DEFAULT, ShaderLanguage::REPEAT_DEFAULT);
+														found = true;
+														break;
+													}
 													sampler_name = actions.custom_samplers[function->arguments[j].tex_builtin];
 													found = true;
 													break;
