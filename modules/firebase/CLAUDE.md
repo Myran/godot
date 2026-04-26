@@ -4,6 +4,11 @@
 
 This module provides the C++ bridge between Firebase SDK and GDScript, enabling authentication, database, and cloud functions.
 
+## Architecture context (read first for non-trivial work)
+
+- [data-and-firebase.md](../../../docs/technical/architecture/data-and-firebase.md) — three-tier data model, ARM64 `_safe_copy_variant` at three sites, rate-limiter constants, FIREBASE_TIMEOUT_SEC=45.0
+- [build-and-deploy.md](../../../docs/technical/architecture/build-and-deploy.md) — Firebase SDK build-from-source (`build-firebase-libs`), SDK-injection markers (`//ADD_FIREBASE_BUILDSCRIPT_HERE_`, etc.), per-platform pipelines
+
 ---
 
 ## 📁 Module Structure
