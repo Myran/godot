@@ -67,7 +67,6 @@ std::mutex FirebaseAuth::instance_mutex;
 
 // Static Firebase resources
 firebase::auth::Auth* FirebaseAuth::auth = nullptr;
-firebase::auth::User::UserProfile FirebaseAuth::profile;
 
 // AuthStateListener resources (Task-420)
 GodotAuthStateListener* FirebaseAuth::auth_state_listener = nullptr;
@@ -210,165 +209,12 @@ void FirebaseAuth::_handle_auth_state_changed_on_main_thread(bool is_signed_in, 
 }
 
 
-// --- Legacy Callbacks (preserved for backward compatibility) ---
-
-void FirebaseAuth::OnCreateUserCallback(const firebase::Future<firebase::auth::AuthResult>& result, void* user_data) {
-    if (is_shutting_down.load()) {
-        print_line("[Auth] Ignoring OnCreateUserCallback during shutdown");
-        return;
-    }
-    if (result.error() == firebase::auth::kAuthErrorNone) {
-        const firebase::auth::AuthResult* auth_result = result.result();
-        if (auth_result) {
-          firebase::auth::User* user = const_cast<firebase::auth::User*>(&(auth_result->user));
-            if (user != nullptr) {
-                print_line(String("[Auth] Create/ Sign in user succeeded with name ") + user->display_name().c_str());
-                user->UpdateUserProfile(profile);
-            } else {
-                print_line(String("[Auth] User is null after successful creation"));
-            }
-        } else {
-            print_line(String("[Auth] AuthResult is null after successful creation"));
-        }
-    } else {
-        print_line(String("[Auth] Created user failed with error ") + result.error_message());
-    }
-    emit_signal("logged_in", result.error());
-}
-
-void FirebaseAuth::OnLinkUserCallback(const firebase::Future<firebase::auth::AuthResult>& result, void* user_data) {
-    if (is_shutting_down.load()) {
-        print_line("[Auth] Ignoring OnLinkUserCallback during shutdown");
-        return;
-    }
-    if (result.error() == firebase::auth::kAuthErrorNone) {
-        firebase::auth::User user = result.result()->user;
-        print_line(String("[Auth] Link user succeeded"));
-        user.UpdateUserProfile(profile);
-        emit_signal("account_linked",result.error());
-    } else {
-
-        print_line(String("[Auth] Link user failed with error message: ") + result.error_message());
-    }
-    emit_signal("account_linked",result.error());
-}
-
-void FirebaseAuth::OnUnLinkUserCallback(const firebase::Future<firebase::auth::AuthResult>& result, void* user_data) {
-    if (is_shutting_down.load()) {
-        print_line("[Auth] Ignoring OnUnLinkUserCallback during shutdown");
-        return;
-    }
-    if (result.error() == firebase::auth::kAuthErrorNone) {
-        firebase::auth::User user = result.result()->user;
-        print_line(String("[Auth] UnLink user succeeded"));
-        user.UpdateUserProfile(profile);
-    } else {
-        print_line(String("[Auth] UnLink user failed with error ") + result.error_message());
-    }
-    emit_signal("account_unlinked",result.error_message());
-}
-
+// Legacy unmarshalled callbacks + entry points deleted in task-1002 (FB-01).
+// They emitted signals from Firebase worker threads (no MessageQueue marshalling)
+// and were fully superseded by the *_async methods below. Future Apple/Facebook/
+// Steam login builds on the marshalled async API (doc-009, Gate 4/5).
 
 // --- Existing Methods (preserved, with CharString fixes) ---
-
-void FirebaseAuth::sign_in_anonymously()
-{
-    print_line("[Auth] Start anonymous sign in");
-    firebase::Future<firebase::auth::AuthResult> result = auth->SignInAnonymously();
-    result.OnCompletion([](const firebase::Future<firebase::auth::AuthResult>& result, void* user_data) {
-                            ((FirebaseAuth*)user_data)->OnCreateUserCallback(result, user_data);
-                        }, this);
-}
-
-
-void FirebaseAuth::sign_in_apple(String token, String nonce)
-{
-    print_line("[Auth] Start sign in to firebase with apple account");
-
-    // CRITICAL: Store CharString to extend lifetime and prevent dangling pointer (Task-399)
-    CharString token_cs = token.utf8();
-    CharString nonce_cs = nonce.utf8();
-
-    firebase::auth::Credential credential = firebase::auth::OAuthProvider::GetCredential(
-        /*provider_id=*/"apple.com", token_cs.get_data(), nonce_cs.get_data(),
-        /*access_token=*/nullptr);
-    sign_in_provider(credential);
-
-}
-
-void FirebaseAuth::link_to_apple(String token, String nonce)
-{
-    print_line("[Auth] Start link firebase in to Apple");
-
-    // CRITICAL: Store CharString to extend lifetime and prevent dangling pointer (Task-399)
-    CharString token_cs = token.utf8();
-    CharString nonce_cs = nonce.utf8();
-
-    firebase::auth::Credential credential = firebase::auth::OAuthProvider::GetCredential(
-        /*provider_id=*/"apple.com", token_cs.get_data(), nonce_cs.get_data(),
-        /*access_token=*/nullptr);
-    link_to_provider(credential);
-}
-
-
-void FirebaseAuth::sign_in_facebook(String token)
-{
-    print_line("[Auth] Start sign in to Firebase with Facebook");
-
-    // CRITICAL: Store CharString to extend lifetime and prevent dangling pointer (Task-399)
-    CharString token_cs = token.utf8();
-
-    firebase::auth::Credential credential = firebase::auth::FacebookAuthProvider::GetCredential(token_cs.get_data());
-    sign_in_provider(credential);
-}
-
-void FirebaseAuth::link_to_facebook(String token)
-{
-    print_line("[Auth] Start link firebase in to Facebook");
-
-    // CRITICAL: Store CharString to extend lifetime and prevent dangling pointer (Task-399)
-    CharString token_cs = token.utf8();
-
-    firebase::auth::Credential credential = firebase::auth::FacebookAuthProvider::GetCredential(token_cs.get_data());
-    link_to_provider(credential);
-}
-
-void FirebaseAuth::sign_in_provider(firebase::auth::Credential credential)
-{
-    firebase::Future<firebase::auth::AuthResult> result = auth->SignInAndRetrieveDataWithCredential(credential);
-    result.OnCompletion([](const firebase::Future<firebase::auth::AuthResult>& result, void* user_data) {
-                                ((FirebaseAuth*)user_data)->OnCreateUserCallback(result, user_data);
-                            }, this);
-}
-
-void FirebaseAuth::link_to_provider(firebase::auth::Credential credential)
-{
-    firebase::auth::User current_user = auth->current_user();
-    if(current_user.is_valid() == TRUE) {
-        firebase::Future<firebase::auth::AuthResult> result = current_user.LinkWithCredential(credential);
-        result.OnCompletion([](const firebase::Future<firebase::auth::AuthResult>& result, void* user_data) {
-                                ((FirebaseAuth*)user_data)->OnLinkUserCallback(result, user_data);
-                            }, this);
-    }else{
-        print_line("Cannot link to provider: no user logged in");
-    }
-}
-
-
-void FirebaseAuth::unlink_provider(String provider_name)
-{
-    firebase::auth::User current_user = auth->current_user();
-    print_line(String("[Auth] unlink attempt with provider: ") + provider_name);
-
-    // CRITICAL: Store CharString to extend lifetime and prevent dangling pointer (Task-399)
-    CharString provider_cs = provider_name.utf8();
-
-    firebase::Future<firebase::auth::AuthResult> result = current_user.Unlink(provider_cs.get_data());
-    result.OnCompletion([](const firebase::Future<firebase::auth::AuthResult>& result, void* user_data) {
-                            ((FirebaseAuth*)user_data)->OnUnLinkUserCallback(result, user_data);
-                            }, this);
-}
-
 
 Array FirebaseAuth::providers()
 {
@@ -818,10 +664,7 @@ bool FirebaseAuth::is_auth_state_listener_active() {
 // --- Binding Methods ---
 
 void FirebaseAuth::_bind_methods() {
-    // Existing methods (preserved for backward compatibility)
-    ClassDB::bind_method(D_METHOD("sign_in_anonymously"), &FirebaseAuth::sign_in_anonymously);
-    ClassDB::bind_method(D_METHOD("sign_in_facebook", "token"), &FirebaseAuth::sign_in_facebook);
-    ClassDB::bind_method(D_METHOD("sign_in_apple", "token", "nonce"), &FirebaseAuth::sign_in_apple);
+    // Sync state getters
     ClassDB::bind_method(D_METHOD("is_logged_in"), &FirebaseAuth::is_logged_in);
     ClassDB::bind_method(D_METHOD("user_name"), &FirebaseAuth::user_name);
     ClassDB::bind_method(D_METHOD("email"), &FirebaseAuth::email);
@@ -829,11 +672,8 @@ void FirebaseAuth::_bind_methods() {
     ClassDB::bind_method(D_METHOD("photo_url"), &FirebaseAuth::photo_url);
     ClassDB::bind_method(D_METHOD("sign_out"), &FirebaseAuth::sign_out);
     ClassDB::bind_method(D_METHOD("providers"), &FirebaseAuth::providers);
-    ClassDB::bind_method(D_METHOD("unlink_provider", "provider_name"), &FirebaseAuth::unlink_provider);
-    ClassDB::bind_method(D_METHOD("link_to_facebook", "token"), &FirebaseAuth::link_to_facebook);
-    ClassDB::bind_method(D_METHOD("link_to_apple", "token", "nonce"), &FirebaseAuth::link_to_apple);
 
-    // New async methods with request IDs
+    // Async methods with request IDs (the only sign-in/link surface since task-1002)
     ClassDB::bind_method(D_METHOD("sign_in_anonymously_async", "request_id"), &FirebaseAuth::sign_in_anonymously_async);
     ClassDB::bind_method(D_METHOD("sign_in_facebook_async", "request_id", "token"), &FirebaseAuth::sign_in_facebook_async);
     ClassDB::bind_method(D_METHOD("sign_in_apple_async", "request_id", "token", "nonce"), &FirebaseAuth::sign_in_apple_async);
@@ -849,12 +689,7 @@ void FirebaseAuth::_bind_methods() {
     ClassDB::bind_method(D_METHOD("stop_auth_state_listener"), &FirebaseAuth::stop_auth_state_listener);
     ClassDB::bind_method(D_METHOD("is_auth_state_listener_active"), &FirebaseAuth::is_auth_state_listener_active);
 
-    // Legacy signals (preserved for backward compatibility)
-    ADD_SIGNAL(MethodInfo("logged_in", PropertyInfo(Variant::INT, "error")));
-    ADD_SIGNAL(MethodInfo("account_linked", PropertyInfo(Variant::INT, "error")));
-    ADD_SIGNAL(MethodInfo("account_unlinked", PropertyInfo(Variant::STRING, "error_message")));
-
-    // New signals with request IDs (consistent format with database.h)
+    // Signals with request IDs (consistent format with database.h)
     ADD_SIGNAL(MethodInfo("sign_in_completed",
         PropertyInfo(Variant::INT, "request_id"),
         PropertyInfo(Variant::BOOL, "success"),
