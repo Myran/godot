@@ -735,7 +735,14 @@ bool WorkerThreadPool::is_group_task_completed(GroupID p_group) const {
 }
 
 void WorkerThreadPool::wait_for_group_task_completion(GroupID p_group) {
-#ifdef THREADS_ENABLED
+	// In single-threaded builds (THREADS_ENABLED off), group tasks have already
+	// run inline at post time (_post_tasks processes on the calling thread), but
+	// the waiter's share of the lifecycle below must still run or every group
+	// leaks: _add_group_task allocates the Group and registers it in `groups`
+	// unconditionally, and only the waiter's finished.increment() can reach
+	// max_users (tasks_used + 1) to free it (task-1018: PagedAllocator
+	// "Pages in use exist at exit" in web nothreads exports). Only the
+	// done-semaphore wait is thread-build-specific.
 	task_mutex.lock();
 	Group **groupp = groups.getptr(p_group);
 	task_mutex.unlock();
@@ -746,6 +753,7 @@ void WorkerThreadPool::wait_for_group_task_completion(GroupID p_group) {
 	{
 		Group *group = *groupp;
 
+#ifdef THREADS_ENABLED
 		if (this == singleton) {
 			_unlock_unlockable_mutexes();
 		}
@@ -753,6 +761,7 @@ void WorkerThreadPool::wait_for_group_task_completion(GroupID p_group) {
 		if (this == singleton) {
 			_lock_unlockable_mutexes();
 		}
+#endif
 
 		uint32_t max_users = group->tasks_used + 1; // Add 1 because the thread waiting for it is also user. Read before to avoid another thread freeing task after increment.
 		uint32_t finished_users = group->finished.increment(); // fetch happens before inc, so increment later.
@@ -766,7 +775,6 @@ void WorkerThreadPool::wait_for_group_task_completion(GroupID p_group) {
 
 	MutexLock task_lock(task_mutex); // This mutex is needed when Physics 2D and/or 3D is selected to run on a separate thread.
 	groups.erase(p_group);
-#endif
 }
 
 int WorkerThreadPool::get_thread_index() const {
