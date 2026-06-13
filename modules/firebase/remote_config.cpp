@@ -75,22 +75,23 @@ FirebaseRemoteConfig::FirebaseRemoteConfig() {
 				if (rc != nullptr) {
 					print_line("[RemConf] Remote Config instance obtained successfully.");
 
-					// Configure for development: zero cache expiration to force fresh fetches
+					// SDK-owned throttle (task-1009): release default 12h. Dev builds
+					// drop to 0 via set_instant_fetching() from the GDScript service
+					// (OS.is_debug_build). Canonical Firebase Strategy 3 — within the
+					// interval the SDK serves cache as success; the GDScript throttle
+					// reimplementation is deleted. Non-blocking OnCompletion (no busy
+					// wait — a hung settings future must never freeze boot).
 					firebase::remote_config::ConfigSettings settings;
-					settings.minimum_fetch_interval_in_milliseconds = 0;  // Force fresh fetch every time
-					firebase::Future<void> settings_future = rc->SetConfigSettings(settings);
-
-					// Wait briefly for settings to apply (synchronous wait for simplicity)
-					while (settings_future.status() == firebase::kFutureStatusPending) {
-						// Busy wait - settings are quick to apply
-					}
-
-					if (settings_future.error() == 0) {
-						print_line("[RemConf] Config settings applied: minimum_fetch_interval = 0ms (force fresh)");
-					} else {
-						print_error(String("[RemConf] Failed to set config settings: ") +
-							String::utf8(settings_future.error_message()));
-					}
+					settings.minimum_fetch_interval_in_milliseconds = 43200000;  // 12h release default
+					rc->SetConfigSettings(settings).OnCompletion(
+						[](const firebase::Future<void>& settings_future) {
+							if (settings_future.error() == 0) {
+								print_line("[RemConf] Config settings applied: minimum_fetch_interval = 12h (SDK-owned)");
+							} else {
+								print_error(String("[RemConf] Failed to set config settings: ") +
+									String::utf8(settings_future.error_message()));
+							}
+						});
 
 					inited.store(true);
 					print_line("[RemConf] Firebase Remote Config Module initialized successfully (thread-safe).");
@@ -364,10 +365,12 @@ void FirebaseRemoteConfig::fetch_async(int p_request_id) {
 		return;
 	}
 
-	print_line(String("[RemConf] Fetch ReqID:") + itos(p_request_id) + " started (cache_expiration=0 FORCE FRESH).");
+	print_line(String("[RemConf] Fetch ReqID:") + itos(p_request_id) + " started (SDK-owned interval; cache served as success within window).");
 
-	// Force fresh fetch with 0 cache expiration (bypasses all caching)
-	firebase::Future<void> future = rc->Fetch(0);
+	// Respect the configured minimum_fetch_interval (task-1009). Within the
+	// window the SDK serves cache as success — no force-fresh, no GDScript
+	// throttle. Dev builds set the interval to 0 via set_instant_fetching().
+	firebase::Future<void> future = rc->Fetch();
 	future.OnCompletion([this, p_request_id](const firebase::Future<void>& result) {
 		// WORKER THREAD - Extract thread-safe data only
 		int error = result.error();
