@@ -2,7 +2,7 @@
 
 **Custom Godot module** - Integrates Firebase C++ SDK with Godot Engine for GameTwo.
 
-This module provides the C++ bridge between Firebase SDK and GDScript, enabling authentication, database, and cloud functions.
+This module provides the C++ bridge between Firebase SDK and GDScript. **Fully wired services:** Auth, Realtime Database, Firestore, Remote Config, Analytics. **Partial:** Cloud Messaging (token + receive only). **Not built:** Cloud Functions (commented-out stub — see below).
 
 ## Architecture context (read first for non-trivial work)
 
@@ -27,8 +27,8 @@ godot/modules/firebase/
 ├── auth.h                 # Authentication header
 ├── auth.cpp               # Authentication service (ALL platforms)
 ├── database.h/cpp         # Realtime Database service
-├── functions.h            # Cloud Functions service
-├── messaging.h/cpp        # Cloud Messaging service
+├── functions.h            # Cloud Functions — STUB ONLY (no .cpp, commented out of register_types.cpp, not compiled)
+├── messaging.h/cpp        # Cloud Messaging — PARTIAL (FCM token + message receive; NO topic subscribe; no GDScript service layer)
 ├── remote_config.h/cpp    # Remote Config service
 └── AndroidManifest.xml    # Android permissions
 ```
@@ -254,34 +254,35 @@ firebase::database::DataSnapshot snapshot = future.result();
 Variant gd_result = Convertor::fromFirebaseVariant(snapshot.value());
 ```
 
-### **Cloud Functions (functions.h)**
+### **Cloud Functions (functions.h)** — NOT IMPLEMENTED
 
-**Exposed Methods:**
+⚠️ **Stub only — do not assume any of this works.** `functions.h` declares a `FirebaseFunctions` class whose `firebase/functions.h` include and `functions::Functions*` member are both commented out, there is no `functions.cpp`, and the `#include` + `register_class<FirebaseFunctions>()` are commented out in `register_types.cpp` (lines 14-18, 33-36). The class is not compiled, not registered, and not callable from GDScript. The method names below were a design sketch and were never implemented:
+
 ```cpp
-// Call cloud function
-void call_function(String function_name, Dictionary data);
-
-// Result callback
-signal function_result(String function_name, Dictionary result);
-signal function_error(String function_name, String error);
+// PLANNED ONLY — none of these exist as bound methods/signals:
+// void call_function(String function_name, Dictionary data);
+// signal function_result(String function_name, Dictionary result);
+// signal function_error(String function_name, String error);
 ```
 
-### **Cloud Messaging (messaging.h/cpp)**
+To actually wire Cloud Functions, follow the "Adding New Firebase Services" steps below (create `functions.cpp`, uncomment registration, link `libfirebase_functions`).
 
-**Exposed Methods:**
+**Decision (2026-06-16): keep this stub dormant — do NOT build it for parity.** This binding wraps the *callable* (`onCall`) client SDK, whose only value over a plain `HTTPRequest` is auto-attaching the caller's Auth + App Check context to a server RPC. GameTwo's planned server functions don't need that channel: Steam token-minting (task-559) is reached over plain `HTTPRequest` — no auth context exists yet at mint time (see `project/firebase/steam_auth_service.gd`) — and the RevenueCat receipt webhook (task-573) is server-to-server (the client never calls it). The deployed-functions backend itself lives in a separate `functions/` project (task-586), not in this C++ module. Finish this binding only when an already-signed-in client must invoke server-authoritative gameplay (e.g. server-side run scoring, validated opponent fetch) — the current design deliberately solves those client-side.
+
+### **Cloud Messaging (messaging.h/cpp)** — PARTIAL
+
+`FirebaseMessaging` is registered (`register_types.cpp:32`) and `messaging.cpp` initializes FCM with a listener. **Actual bound surface** (the only methods/signals that exist):
+
 ```cpp
-// Get FCM token
-String get_token();
+// Get the current FCM token (returns "" until OnTokenReceived fires)
+Variant get_token();
 
-// Subscribe to topic
-void subscribe_to_topic(String topic);
-
-// Unsubscribe from topic
-void unsubscribe_from_topic(String topic);
-
-// Message received
-signal message_received(Dictionary message);
+// Signals:
+signal token();                          // emitted when a token arrives
+signal message(Dictionary message_data); // emitted on incoming message
 ```
+
+**NOT implemented** (despite earlier docs): `subscribe_to_topic`, `unsubscribe_from_topic`, no `message_received` signal (the signal is `message`), and there is **no GDScript `MessagingService` wrapper** — so it is not usable from game code yet. Finishing this is gated on task-557 (push-notification retention feature).
 
 ### **Remote Config (remote_config.h/cpp)**
 
