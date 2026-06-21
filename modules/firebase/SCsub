@@ -121,182 +121,16 @@ elif env['platform'] == 'windows':
     # Libraries built with VS2019/MT (static runtime) for x64
     # NOTE: Always use Release libs - Debug libs (/MTd) incompatible with Godot's debug_crt=/MDd (Task-434)
     if env['arch'] == 'x86_64':
-        import os
-        import glob
-
         lib_variant = 'Release'
         print("Firebase: Using " + lib_variant + " libraries for all Windows targets")
 
         lib_base = "#/../firebase/firebase_cpp_sdk/libs/windows/VS2019/MT/x64/" + lib_variant + "/"
-        # Use SCons Dir to get absolute path (can't use __file__ in SConscript)
-        module_dir = Dir('.').abspath  # This SCsub's directory
-        lib_base_abs = os.path.join(module_dir, "..", "..", "..", "firebase", "firebase_cpp_sdk", "libs", "windows", "VS2019", "MT", "x64", lib_variant)
-        print("Firebase DEBUG: lib_base_abs = " + lib_base_abs)
-        print("Firebase DEBUG: lib_base_abs exists = " + str(os.path.exists(lib_base_abs)))
 
-        # Check if deps/ directory exists (from-source build)
-        deps_dir = os.path.join(lib_base_abs, "deps")
-        print("Firebase DEBUG: deps_dir = " + deps_dir)
-        print("Firebase DEBUG: deps_dir exists = " + str(os.path.exists(deps_dir)))
-
-        # NOTE: Dynamic loading disabled - we use explicit deps section below for reliability.
-        # The explicit section provides proper control over link order.
-        if not os.path.exists(deps_dir):
-            print("Firebase: WARNING - No deps/ directory found!")
-            print("  Expected: " + deps_dir)
-            print("  If using from-source Firebase SDK build, ensure:")
-            print("    1. Build completed successfully")
-            print("    2. Dependencies were copied to deps/ folder")
-            print("  This WILL cause linker errors for missing symbols")
-
-        # ============================================================================
-        # EXPLICIT DEPENDENCY LIBRARIES (from-source Firebase SDK build)
-        # These are transitive dependencies that SCons cannot automatically discover.
-        # Listed explicitly for reliability (dynamic loading was unreliable on Windows).
-        #
-        # LINK ORDER: MSVC resolves symbols left-to-right.
-        # We use Prepend for all libs. Since later Prepends go BEFORE earlier ones:
-        #   1. First we Prepend deps (they'll end up after Firebase libs)
-        #   2. Then we Prepend Firebase libs (they'll end up before deps)
-        # Final order: [Firebase module .obj] → [Firebase libs] → [deps] → [system libs]
-        # ============================================================================
-
-        deps_base = lib_base + "deps/"
-
-        # --- STEP 1: Prepend all dependency libraries (these go AFTER Firebase libs) ---
-        # Listed in reverse dependency order (most-depended-on libs first, so they end up last)
-
-        # Abseil logging and flags (most foundational)
-        env.Prepend(LIBS=[File(deps_base + "absl_flags_commandlineflag_internal.lib")])
-        env.Prepend(LIBS=[File(deps_base + "absl_flags_commandlineflag.lib")])
-        env.Prepend(LIBS=[File(deps_base + "absl_flags_private_handle_accessor.lib")])
-        env.Prepend(LIBS=[File(deps_base + "absl_flags_program_name.lib")])
-        env.Prepend(LIBS=[File(deps_base + "absl_flags_config.lib")])
-        env.Prepend(LIBS=[File(deps_base + "absl_flags_marshalling.lib")])
-        env.Prepend(LIBS=[File(deps_base + "absl_flags_internal.lib")])
-        env.Prepend(LIBS=[File(deps_base + "absl_flags_reflection.lib")])
-        env.Prepend(LIBS=[File(deps_base + "absl_vlog_config_internal.lib")])
-        env.Prepend(LIBS=[File(deps_base + "absl_leak_check.lib")])
-        env.Prepend(LIBS=[File(deps_base + "absl_examine_stack.lib")])
-        env.Prepend(LIBS=[File(deps_base + "absl_die_if_null.lib")])
-        env.Prepend(LIBS=[File(deps_base + "absl_log_initialize.lib")])
-        env.Prepend(LIBS=[File(deps_base + "absl_log_sink.lib")])
-        env.Prepend(LIBS=[File(deps_base + "absl_log_entry.lib")])
-        env.Prepend(LIBS=[File(deps_base + "absl_log_globals.lib")])
-        env.Prepend(LIBS=[File(deps_base + "absl_log_internal_proto.lib")])
-        env.Prepend(LIBS=[File(deps_base + "absl_log_internal_nullguard.lib")])
-        env.Prepend(LIBS=[File(deps_base + "absl_log_internal_fnmatch.lib")])
-        env.Prepend(LIBS=[File(deps_base + "absl_log_internal_globals.lib")])
-        env.Prepend(LIBS=[File(deps_base + "absl_log_internal_format.lib")])
-        env.Prepend(LIBS=[File(deps_base + "absl_log_internal_conditions.lib")])
-        env.Prepend(LIBS=[File(deps_base + "absl_log_internal_check_op.lib")])
-        env.Prepend(LIBS=[File(deps_base + "absl_log_internal_log_sink_set.lib")])
-        env.Prepend(LIBS=[File(deps_base + "absl_log_internal_message.lib")])
-
-        # Abseil random
-        env.Prepend(LIBS=[File(deps_base + "absl_random_seed_gen_exception.lib")])
-        env.Prepend(LIBS=[File(deps_base + "absl_random_internal_platform.lib")])
-        env.Prepend(LIBS=[File(deps_base + "absl_random_internal_seed_material.lib")])
-        env.Prepend(LIBS=[File(deps_base + "absl_random_internal_randen_hwaes_impl.lib")])
-        env.Prepend(LIBS=[File(deps_base + "absl_random_internal_randen_hwaes.lib")])
-        env.Prepend(LIBS=[File(deps_base + "absl_random_internal_randen_slow.lib")])
-        env.Prepend(LIBS=[File(deps_base + "absl_random_internal_randen.lib")])
-        env.Prepend(LIBS=[File(deps_base + "absl_random_internal_pool_urbg.lib")])
-        env.Prepend(LIBS=[File(deps_base + "absl_random_seed_sequences.lib")])
-        env.Prepend(LIBS=[File(deps_base + "absl_random_distributions.lib")])
-        env.Prepend(LIBS=[File(deps_base + "absl_exponential_biased.lib")])
-
-        # Abseil core
-        env.Prepend(LIBS=[File(deps_base + "absl_strerror.lib")])
-        env.Prepend(LIBS=[File(deps_base + "absl_bad_variant_access.lib")])
-        env.Prepend(LIBS=[File(deps_base + "absl_bad_optional_access.lib")])
-        env.Prepend(LIBS=[File(deps_base + "absl_debugging_internal.lib")])
-        env.Prepend(LIBS=[File(deps_base + "absl_demangle_internal.lib")])
-        env.Prepend(LIBS=[File(deps_base + "absl_symbolize.lib")])
-        env.Prepend(LIBS=[File(deps_base + "absl_stacktrace.lib")])
-        env.Prepend(LIBS=[File(deps_base + "absl_throw_delegate.lib")])
-        env.Prepend(LIBS=[File(deps_base + "absl_log_severity.lib")])
-        env.Prepend(LIBS=[File(deps_base + "absl_raw_logging_internal.lib")])
-        env.Prepend(LIBS=[File(deps_base + "absl_malloc_internal.lib")])
-        env.Prepend(LIBS=[File(deps_base + "absl_spinlock_wait.lib")])
-        env.Prepend(LIBS=[File(deps_base + "absl_base.lib")])
-        env.Prepend(LIBS=[File(deps_base + "absl_kernel_timeout_internal.lib")])
-        env.Prepend(LIBS=[File(deps_base + "absl_graphcycles_internal.lib")])
-        env.Prepend(LIBS=[File(deps_base + "absl_synchronization.lib")])
-        env.Prepend(LIBS=[File(deps_base + "absl_int128.lib")])
-        env.Prepend(LIBS=[File(deps_base + "absl_civil_time.lib")])
-        env.Prepend(LIBS=[File(deps_base + "absl_time_zone.lib")])
-        env.Prepend(LIBS=[File(deps_base + "absl_time.lib")])
-        env.Prepend(LIBS=[File(deps_base + "absl_raw_hash_set.lib")])
-        env.Prepend(LIBS=[File(deps_base + "absl_hashtablez_sampler.lib")])
-        env.Prepend(LIBS=[File(deps_base + "absl_city.lib")])
-        env.Prepend(LIBS=[File(deps_base + "absl_low_level_hash.lib")])
-        env.Prepend(LIBS=[File(deps_base + "absl_hash.lib")])
-        env.Prepend(LIBS=[File(deps_base + "absl_str_format_internal.lib")])
-        env.Prepend(LIBS=[File(deps_base + "absl_string_view.lib")])
-        env.Prepend(LIBS=[File(deps_base + "absl_strings_internal.lib")])
-        env.Prepend(LIBS=[File(deps_base + "absl_strings.lib")])
-        env.Prepend(LIBS=[File(deps_base + "absl_crc_cpu_detect.lib")])
-        env.Prepend(LIBS=[File(deps_base + "absl_crc_internal.lib")])
-        env.Prepend(LIBS=[File(deps_base + "absl_crc32c.lib")])
-        env.Prepend(LIBS=[File(deps_base + "absl_crc_cord_state.lib")])
-        env.Prepend(LIBS=[File(deps_base + "absl_cordz_functions.lib")])
-        env.Prepend(LIBS=[File(deps_base + "absl_cordz_handle.lib")])
-        env.Prepend(LIBS=[File(deps_base + "absl_cordz_info.lib")])
-        env.Prepend(LIBS=[File(deps_base + "absl_cord_internal.lib")])
-        env.Prepend(LIBS=[File(deps_base + "absl_cord.lib")])
-        env.Prepend(LIBS=[File(deps_base + "absl_status.lib")])
-        env.Prepend(LIBS=[File(deps_base + "absl_statusor.lib")])
-
-        # zlib (compression, depended on by many)
-        env.Prepend(LIBS=[File(deps_base + "zlibstatic.lib")])
-
-        # Flatbuffers (serialization library)
-        env.Prepend(LIBS=[File(deps_base + "flatbuffers.lib")])
-
-        # libcurl and websockets (HTTP transport)
-        env.Prepend(LIBS=[File(deps_base + "libuWS.lib")])
-        env.Prepend(LIBS=[File(deps_base + "libcurl.lib")])
-
-        # libuv (async I/O library required by RTDB)
-        env.Prepend(LIBS=[File(deps_base + "uv_a.lib")])
-
-        # LevelDB and snappy (required by RTDB for local caching)
-        env.Prepend(LIBS=[File(deps_base + "snappy.lib")])
-        env.Prepend(LIBS=[File(deps_base + "leveldb.lib")])
-
-        # UPB (protobuf micro library used by gRPC)
-        env.Prepend(LIBS=[File(deps_base + "utf8_validity.lib")])
-        env.Prepend(LIBS=[File(deps_base + "utf8_range_lib.lib")])
-        env.Prepend(LIBS=[File(deps_base + "upb_textformat_lib.lib")])
-        env.Prepend(LIBS=[File(deps_base + "upb_message_lib.lib")])
-        env.Prepend(LIBS=[File(deps_base + "upb_mem_lib.lib")])
-        env.Prepend(LIBS=[File(deps_base + "upb_json_lib.lib")])
-        env.Prepend(LIBS=[File(deps_base + "upb_base_lib.lib")])
-
-        # gRPC and protobuf (required by Firestore and RTDB)
-        env.Prepend(LIBS=[File(deps_base + "re2.lib")])
-        env.Prepend(LIBS=[File(deps_base + "cares.lib")])
-        env.Prepend(LIBS=[File(deps_base + "address_sorting.lib")])
-        env.Prepend(LIBS=[File(deps_base + "protobuf-nanopb.lib")])
-        env.Prepend(LIBS=[File(deps_base + "libprotobuf.lib")])
-        env.Prepend(LIBS=[File(deps_base + "gpr.lib")])
-        env.Prepend(LIBS=[File(deps_base + "grpc++.lib")])
-        env.Prepend(LIBS=[File(deps_base + "grpc.lib")])
-
-        # Firestore dependencies (required for firebase_firestore)
-        env.Prepend(LIBS=[File(deps_base + "firestore_util.lib")])
-        env.Prepend(LIBS=[File(deps_base + "firestore_protos_nanopb.lib")])
-        env.Prepend(LIBS=[File(deps_base + "firestore_nanopb.lib")])
-        env.Prepend(LIBS=[File(deps_base + "firestore_core.lib")])
-
-        print("Firebase: Prepended " + str(103) + " explicit dependency libraries from deps/")
-
-        # --- STEP 2: Prepend Firebase core libraries (these go BEFORE deps) ---
-        # Since these Prepends happen AFTER the deps Prepends above,
-        # they end up at the FRONT of the link line, before deps.
-        # Internal Firebase libraries (required by Auth, Remote Config for HTTP transport)
-        env.Prepend(LIBS=[File(lib_base + "firebase_rest_lib.lib")])
+        # Prebuilt Firebase core libraries (task-1074). The prebuilt firebase_*.lib are
+        # SELF-CONTAINED — they bundle their transitive deps (BoringSSL/abseil/grpc/leveldb/
+        # curl/... AND the internal REST transport), so the old 103-entry deps/ block AND the
+        # from-source-only firebase_rest_lib.lib are gone — the prebuilt distribution does not
+        # ship firebase_rest_lib.lib (REST transport is folded into the service libs).
         # Core Firebase libraries
         env.Prepend(LIBS=[File(lib_base + "firebase_messaging.lib")])
         env.Prepend(LIBS=[File(lib_base + "firebase_functions.lib")])
@@ -336,20 +170,10 @@ elif env['platform'] == 'windows':
         env.Append(LINKFLAGS=['Winhttp.lib'])   # HTTP Services (WinHttpOpen)
         env.Append(LINKFLAGS=['Shlwapi.lib'])   # Shell Lightweight API
 
-        # ============================================================================
-        # OpenSSL libraries (required by gRPC, libcurl, Firebase Auth/Database)
-        # Firebase SDK uses system OpenSSL on Windows (not bundled BoringSSL)
-        # OpenSSL installed at: C:\Program Files\OpenSSL-Win64
-        # ============================================================================
-
-        # Add OpenSSL library path (escaped for Windows backslashes)
-        openssl_lib_path = "C:\\Program Files\\OpenSSL-Win64\\lib"
-        env.Append(LINKFLAGS=['/LIBPATH:' + openssl_lib_path])
-        print("Firebase: Added OpenSSL library path: " + openssl_lib_path)
-
-        # OpenSSL crypto and SSL libraries
-        env.Append(LINKFLAGS=['libcrypto.lib'])  # OpenSSL cryptographic functions (SHA1, EVP_*)
-        env.Append(LINKFLAGS=['libssl.lib'])     # OpenSSL SSL/TLS functions (SSL_write, SSL_ctrl)
+        # OpenSSL: NOT linked for prebuilt Firebase (task-1074). The prebuilt firebase_*.lib
+        # are self-contained — they bundle BoringSSL; linking system OpenSSL here is dead
+        # weight and risks a BoringSSL/OpenSSL symbol conflict. (from-source builds that need
+        # system OpenSSL are the opt-in FIREBASE_SDK_MODE=from-source path, handled separately.)
 
         # Legacy CRT functions required by some Firebase components
         # These resolve __imp__difftime64 and other UCRT functions
