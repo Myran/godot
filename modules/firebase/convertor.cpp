@@ -1,8 +1,14 @@
 #include "convertor.h"
 #include "core/string/print_string.h" // For print_line/itos
 
-// Deep copy a Variant to ensure GDScript-safe memory
-// This creates a new copy entirely in Godot's memory space, isolated from Firebase C++ memory
+// Deep copy a Variant to ensure GDScript-safe memory: a new copy entirely in Godot's
+// memory space, isolated from Firebase C++ memory.
+//
+// task-1065 KEEP — load-bearing, do not remove. database.cpp's RTDB handlers call
+// fromFirebaseVariant + deepCopyVariant ON THE MAIN THREAD (b6e10f69c0); that pair is the
+// real ARM64 guard (fresh, aligned, caller-isolated Godot memory). The old GDScript
+// _safe_copy_variant backstop was a redundant extra copy, deleted in task-1065 — it never
+// prevented the worker-thread-build crash class; moving the build to the main thread did.
 Variant Convertor::deepCopyVariant(const Variant& arg) {
 	// Use Godot's built-in duplicate method for Arrays and Dictionaries
 	// This ensures proper memory alignment and reference counting

@@ -901,6 +901,7 @@ void FirebaseDatabase::_handle_get_value_on_main_thread(int req_id) {
 			// This is the critical fix: creating Dictionary/Array objects on the main thread
 			// prevents null _p pointer corruption that occurred when created on worker threads.
 			Variant godot_value = Convertor::fromFirebaseVariant(pending.fb_value);
+			// task-1065 KEEP: main-thread fromFirebaseVariant + deepCopyVariant is the ARM64 guard; GDScript backstop deleted (see convertor.cpp). Do not remove.
 			Variant safe_value = Convertor::deepCopyVariant(godot_value);
 
 			String signal_key = !pending.key.empty() ? String(pending.key.c_str()) : "";
@@ -1074,6 +1075,7 @@ void FirebaseDatabase::_handle_query_ordered_data_on_main_thread(int req_id) {
 			String result_key = !key.is_empty() ? key : path_str;
 
 			// Deep copy for ARM64 alignment safety
+			// task-1065 KEEP: main-thread fromFirebaseVariant + deepCopyVariant is the ARM64 guard; GDScript backstop deleted (see convertor.cpp). Do not remove.
 			Variant safe_value = Convertor::deepCopyVariant(godot_value);
 
 			print_verbose(String("[RTDB C++] Query ReqID:") + itos(req_id) + " Main thread handler - Success.");
@@ -1130,6 +1132,7 @@ void FirebaseDatabase::_handle_transaction_on_main_thread(int req_id) {
 			String result_key = !key.is_empty() ? key : "";
 
 			// Deep copy for ARM64 alignment safety
+			// task-1065 KEEP: main-thread fromFirebaseVariant + deepCopyVariant is the ARM64 guard; GDScript backstop deleted (see convertor.cpp). Do not remove.
 			Variant safe_transaction_value = Convertor::deepCopyVariant(godot_value);
 
 			print_verbose(String("[RTDB C++] Transaction ReqID:") + itos(req_id) + " Main thread handler - Success. Committed: Yes.");
@@ -1177,6 +1180,7 @@ void FirebaseDatabase::_handle_child_event_on_main_thread(int event_id) {
 
 	// Create Godot objects ON MAIN THREAD (root cause fix for listener crashes)
 	Variant godot_value = Convertor::fromFirebaseVariant(pending.fb_value);
+	// task-1065 KEEP: main-thread fromFirebaseVariant + deepCopyVariant is the ARM64 guard; GDScript backstop deleted (see convertor.cpp). Do not remove.
 	Variant safe_value = Convertor::deepCopyVariant(godot_value);
 	String key = String(pending.key.c_str());
 
