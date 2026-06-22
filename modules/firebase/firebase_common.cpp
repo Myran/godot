@@ -4,7 +4,8 @@
 // - firebase_windows.cpp (Windows)
 
 #include "firebase.h"
-#include "database.h"   // For FirebaseDatabase::begin_shutdown()
+#include "database.h"        // For FirebaseDatabase::begin_shutdown()
+#include "remote_config.h"   // For FirebaseRemoteConfig::begin_shutdown() (task-1081)
 
 #if defined(__APPLE__)
 #include <TargetConditionals.h>
@@ -39,9 +40,19 @@ void Firebase::cleanup_firebase() {
         // Only Database is guaranteed to be used (card retrieval), others are optional
         FirebaseDatabase::begin_shutdown();
 
-        // Note: Firestore, Auth, RemoteConfig, Analytics shutdown is handled by their
-        // respective destructors and GDScript cleanup. Only call begin_shutdown() if
-        // the service was actually initialized to avoid static initialization issues.
+        // task-1081: RemoteConfig must ALSO begin_shutdown. The boot balance overlay
+        // (BalanceOverlay.fetch_and_apply) fires a fetch_and_activate at startup; if that
+        // SDK future is still pending at quit, its worker-thread completion lambda would
+        // push_callable(callable_mp(this,...)) onto a torn-down MessageQueue -> 0xC0000005
+        // (Windows shutdown crash). begin_shutdown() only flips an atomic flag + prints
+        // (no SDK calls, no static-init-order hazard), so it is safe even if RemoteConfig
+        // was never initialized. The flag makes both the worker-lambda guard and the
+        // main-thread handler guards (remote_config.cpp) skip late callbacks.
+        FirebaseRemoteConfig::begin_shutdown();
+
+        // Note: Firestore, Auth, Analytics shutdown is still handled by their respective
+        // destructors and GDScript cleanup (the same latent worker-thread teardown race
+        // exists there but has not surfaced — parity follow-up).
 
         print_line(String("[Firebase] Firebase cleanup completed"));
         app_ptr = NULL;

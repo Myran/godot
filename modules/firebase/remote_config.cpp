@@ -228,6 +228,15 @@ void FirebaseRemoteConfig::set_defaults_async(int p_request_id, const Dictionary
 	// Pass the vector to the Future and capture it for cleanup in the callback
 	rc->SetDefaults(defaults_data->variants->data(), defaults_data->variants->size()).OnCompletion(
 		[this, p_request_id, defaults_data](const firebase::Future<void>& future) {
+			// task-1081: if shutting down, free the captured heap data and bail BEFORE
+			// touching `this` / MessageQueue (worker-thread teardown race). The delete
+			// must happen here too, otherwise the early return leaks defaults_data.
+			if (is_shutting_down.load()) {
+				delete defaults_data->variants;
+				delete defaults_data->key_strings;
+				delete defaults_data;
+				return;
+			}
 			// WORKER THREAD - Extract thread-safe data only
 			int error = future.error();
 			int status = future.status();
@@ -339,6 +348,14 @@ void FirebaseRemoteConfig::fetch_and_activate_async(int p_request_id) {
 
 	firebase::Future<bool> future = rc->FetchAndActivate();
 	future.OnCompletion([this, p_request_id](const firebase::Future<bool>& result) {
+		// task-1081: bail BEFORE touching `this` / MessageQueue if the app is shutting
+		// down. This worker thread can fire during/after teardown; without this guard a
+		// late completion does push_callable(callable_mp(this,...)) onto a torn-down
+		// MessageQueue -> 0xC0000005. (data_loaded is a static atomic, but skip it too:
+		// nothing reads it after shutdown.)
+		if (is_shutting_down.load()) {
+			return;
+		}
 		// WORKER THREAD - Extract thread-safe data only
 		int error = result.error();
 		int status = result.status();
@@ -372,6 +389,11 @@ void FirebaseRemoteConfig::fetch_async(int p_request_id) {
 	// throttle. Dev builds set the interval to 0 via set_instant_fetching().
 	firebase::Future<void> future = rc->Fetch();
 	future.OnCompletion([this, p_request_id](const firebase::Future<void>& result) {
+		// task-1081: bail before touching `this` / MessageQueue if shutting down (see
+		// fetch_and_activate_async for the full rationale — worker-thread teardown race).
+		if (is_shutting_down.load()) {
+			return;
+		}
 		// WORKER THREAD - Extract thread-safe data only
 		int error = result.error();
 		int status = result.status();
@@ -397,6 +419,11 @@ void FirebaseRemoteConfig::activate_async(int p_request_id) {
 
 	firebase::Future<bool> future = rc->Activate();
 	future.OnCompletion([this, p_request_id](const firebase::Future<bool>& result) {
+		// task-1081: bail before touching `this` / MessageQueue if shutting down (see
+		// fetch_and_activate_async for the full rationale — worker-thread teardown race).
+		if (is_shutting_down.load()) {
+			return;
+		}
 		// WORKER THREAD - Extract thread-safe data only
 		int error = result.error();
 		int status = result.status();
