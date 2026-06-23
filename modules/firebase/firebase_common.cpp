@@ -6,6 +6,9 @@
 #include "firebase.h"
 #include "database.h"        // For FirebaseDatabase::begin_shutdown()
 #include "remote_config.h"   // For FirebaseRemoteConfig::begin_shutdown() (task-1081)
+#include "auth.h"            // For FirebaseAuth::begin_shutdown() (task-1084)
+#include "firestore.h"       // For FirebaseFirestore::begin_shutdown() (task-1084)
+#include "analytics.h"       // For FirebaseAnalytics::begin_shutdown() (task-1084)
 
 #if defined(__APPLE__)
 #include <TargetConditionals.h>
@@ -50,9 +53,17 @@ void Firebase::cleanup_firebase() {
         // main-thread handler guards (remote_config.cpp) skip late callbacks.
         FirebaseRemoteConfig::begin_shutdown();
 
-        // Note: Firestore, Auth, Analytics shutdown is still handled by their respective
-        // destructors and GDScript cleanup (the same latent worker-thread teardown race
-        // exists there but has not surfaced — parity follow-up).
+        // task-1084: teardown parity. Auth, Firestore, and Analytics each register
+        // firebase::Future OnCompletion worker-thread lambdas that push_callable onto the
+        // MessageQueue; the is_shutting_down guards already exist atop those lambdas (auth.cpp,
+        // firestore.cpp, analytics.cpp) but stayed DORMANT because begin_shutdown() was never
+        // called for them — so a still-pending future firing during teardown could push onto a
+        // torn-down MessageQueue / dereference a freed `this` (the same 0xC0000005 class as
+        // task-1081). Each begin_shutdown() only flips an atomic flag + prints (no SDK calls,
+        // no static-init-order hazard), so it is safe even if the service was never initialized.
+        FirebaseAuth::begin_shutdown();
+        FirebaseFirestore::begin_shutdown();
+        FirebaseAnalytics::begin_shutdown();
 
         print_line(String("[Firebase] Firebase cleanup completed"));
         app_ptr = NULL;
