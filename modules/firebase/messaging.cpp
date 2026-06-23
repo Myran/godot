@@ -3,9 +3,15 @@
 bool FirebaseMessaging::inited = false;
 FirebaseMessagingListener *FirebaseMessaging::listener = NULL;
 String FirebaseMessaging::_token;
+std::atomic<bool> FirebaseMessaging::is_shutting_down{false};
 
 void FirebaseMessagingListener::OnMessage(const firebase::messaging::Message& message)
 {
+    // task-1084: a late FCM push can fire during/after teardown; bail before touching
+    // singleton (which may be freed) or its call_deferred emit (torn-down MessageQueue).
+    if (FirebaseMessaging::is_app_shutting_down()) {
+        return;
+    }
     print_line("FCM Message arrived");
     this->singleton->setMessage(message);
     String from = message.from.c_str();
@@ -17,6 +23,10 @@ void FirebaseMessagingListener::OnMessage(const firebase::messaging::Message& me
 
 void FirebaseMessagingListener::OnTokenReceived(const char* token)
 {
+    // task-1084: bail before touching singleton during teardown (see OnMessage).
+    if (FirebaseMessaging::is_app_shutting_down()) {
+        return;
+    }
     String str;
     str += token;
     print_line(String("Get FCM Token: ") + str);
@@ -56,12 +66,18 @@ Variant FirebaseMessaging::token()
 
 void FirebaseMessaging::setToken(String token)
 {
+    if (is_shutting_down.load()) {
+        return;
+    }
     _token = token;
     call_deferred("emit_signal", "token");
 }
 
 void FirebaseMessaging::setMessage(const firebase::messaging::Message& message)
 {
+    if (is_shutting_down.load()) {
+        return;
+    }
     // Extract relevant data from the message
     Dictionary msg_data;
     msg_data["from"] = String(message.from.c_str());
@@ -75,6 +91,15 @@ void FirebaseMessaging::setMessage(const firebase::messaging::Message& message)
     msg_data["data"] = data_dict;
     
     call_deferred("emit_signal", "message", msg_data);
+}
+
+void FirebaseMessaging::begin_shutdown() {
+    is_shutting_down.store(true);
+    print_line("[Messaging] begin_shutdown() called - late FCM callbacks will be ignored");
+}
+
+bool FirebaseMessaging::is_app_shutting_down() {
+    return is_shutting_down.load();
 }
 
 void FirebaseMessaging::_bind_methods() {

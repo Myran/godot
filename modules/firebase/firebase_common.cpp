@@ -9,6 +9,7 @@
 #include "auth.h"            // For FirebaseAuth::begin_shutdown() (task-1084)
 #include "firestore.h"       // For FirebaseFirestore::begin_shutdown() (task-1084)
 #include "analytics.h"       // For FirebaseAnalytics::begin_shutdown() (task-1084)
+#include "messaging.h"       // For FirebaseMessaging::begin_shutdown() (task-1084 panel follow-up)
 
 #if defined(__APPLE__)
 #include <TargetConditionals.h>
@@ -64,6 +65,10 @@ void Firebase::cleanup_firebase() {
         FirebaseAuth::begin_shutdown();
         FirebaseFirestore::begin_shutdown();
         FirebaseAnalytics::begin_shutdown();
+        // task-1084 (panel follow-up): FCM is Listener-based, not Future-based, so the
+        // original Future-sweep missed it. setToken/setMessage call_deferred onto the
+        // MessageQueue from an OS-driven push callback — guard it too.
+        FirebaseMessaging::begin_shutdown();
 
         print_line(String("[Firebase] Firebase cleanup completed"));
         app_ptr = NULL;
