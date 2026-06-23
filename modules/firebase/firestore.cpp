@@ -75,7 +75,16 @@ void FirebaseFirestore::initialize() {
 		return;
 	}
 
-	// Configure settings - disable persistence by default for simpler behavior
+	// Configure settings - persistence disabled.
+	// task-1080: enabling persistence does NOT fix the macOS desktop set_document write-hang.
+	// Tested 2026-06-23 (build-export-test-macos firebase-firestore-cpp with persistence ON):
+	// set_document still hung to the 45s FIREBASE_TIMEOUT_SEC (44859ms) — the desktop Firestore
+	// C++ SDK hard-gates writes on the server write-ACK with NO local-commit fastpath even when
+	// persistence is enabled (reads resolve cache-or-server, which is why Get/query pass). So
+	// the write-hang is an inherent desktop-SDK limitation, not a settings issue. It is bounded
+	// by task-1083 (the cpp await times out cleanly → queue advances, no wedge). Persistence is
+	// left OFF (the prior deliberate default); do not re-try enabling it as a fix for the hang.
+	// configure_settings() can still override per-session if a future feature needs the cache.
 	firebase::firestore::Settings settings;
 	settings.set_persistence_enabled(false);
 	firestore_instance->set_settings(settings);
