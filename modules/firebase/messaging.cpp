@@ -2,35 +2,34 @@
 
 bool FirebaseMessaging::inited = false;
 FirebaseMessagingListener *FirebaseMessaging::listener = NULL;
-String FirebaseMessaging::_token;
+std::string FirebaseMessaging::_token;
+std::mutex FirebaseMessaging::_token_mutex;
 std::atomic<bool> FirebaseMessaging::is_shutting_down{false};
 
 void FirebaseMessagingListener::OnMessage(const firebase::messaging::Message& message)
 {
+    // WORKER THREAD — Only C++ types, no Godot objects.
     // task-1084: a late FCM push can fire during/after teardown; bail before touching
     // singleton (which may be freed) or its call_deferred emit (torn-down MessageQueue).
     if (FirebaseMessaging::is_app_shutting_down()) {
         return;
     }
-    print_line("FCM Message arrived");
+    // task-1077: setMessage copies only raw C++ here and defers the Godot Dictionary build to
+    // the main thread. The previous worker-side String(message.from/message_id) + setMessage()
+    // Dictionary build raced CowData _p — the b6e10f69c0 null-_p/SIGBUS class.
     this->singleton->setMessage(message);
-    String from = message.from.c_str();
-    String mess_id = message.message_id.c_str();
-    print_line("From: " + from);
-    print_line("Message ID: " + mess_id);
-
 }
 
 void FirebaseMessagingListener::OnTokenReceived(const char* token)
 {
+    // WORKER THREAD — Only C++ types, no Godot objects.
     // task-1084: bail before touching singleton during teardown (see OnMessage).
     if (FirebaseMessaging::is_app_shutting_down()) {
         return;
     }
-    String str;
-    str += token;
-    print_line(String("Get FCM Token: ") + str);
-    this->singleton->setToken(str);
+    // task-1077: pass the raw C string straight through; setToken stores it as std::string
+    // under a mutex. No Godot String is built on the worker.
+    this->singleton->setToken(token);
 }
 
 FirebaseMessaging::FirebaseMessaging() {
@@ -57,40 +56,77 @@ FirebaseMessaging::~FirebaseMessaging() {
 
 Variant FirebaseMessaging::token()
 {
-    if(_token.size() > 0) {
-        return Variant(_token);
-    } else {
-        return Variant();
+    // MAIN THREAD (GDScript getter) — build the Godot String here, under the lock.
+    std::lock_guard<std::mutex> lock(_token_mutex);
+    if (!_token.empty()) {
+        return Variant(String(_token.c_str()));
     }
+    return Variant();
 }
 
-void FirebaseMessaging::setToken(String token)
+void FirebaseMessaging::setToken(const char* token)
 {
+    // Called on the FCM worker thread (OnTokenReceived). Store raw std::string only.
     if (is_shutting_down.load()) {
         return;
     }
-    _token = token;
+    {
+        std::lock_guard<std::mutex> lock(_token_mutex);
+        _token = token ? token : "";
+    }
     call_deferred("emit_signal", "token");
 }
 
 void FirebaseMessaging::setMessage(const firebase::messaging::Message& message)
 {
+    // WORKER THREAD — copy ONLY raw C++ types. message.from / message.message_id are
+    // std::string and message.data is std::map<std::string,std::string> in the SDK, so this
+    // copy fully owns its data independent of the SDK callback frame. Build NO Godot object here.
     if (is_shutting_down.load()) {
         return;
     }
-    // Extract relevant data from the message
+    PendingMessage pending;
+    pending.from = message.from;
+    pending.message_id = message.message_id;
+    pending.data = message.data;
+    int id;
+    {
+        std::lock_guard<std::mutex> lock(_msg_mutex);
+        id = ++_msg_counter;
+        _pending_messages[id] = std::move(pending);
+    }
+    // Hand off an int id; the Godot Dictionary is built on the main thread (mirrors
+    // database.cpp _queue_child_event -> _handle_child_event_on_main_thread).
+    callable_mp(this, &FirebaseMessaging::_handle_message_on_main_thread).call_deferred(id);
+}
+
+void FirebaseMessaging::_handle_message_on_main_thread(int id)
+{
+    // NOW ON MAIN THREAD — safe to build Godot Dictionary / String.
+    if (is_app_shutting_down()) {
+        std::lock_guard<std::mutex> lock(_msg_mutex);
+        _pending_messages.erase(id);
+        return;
+    }
+    PendingMessage pending;
+    {
+        std::lock_guard<std::mutex> lock(_msg_mutex);
+        auto it = _pending_messages.find(id);
+        if (it == _pending_messages.end()) {
+            return;
+        }
+        pending = std::move(it->second);
+        _pending_messages.erase(it);
+    }
     Dictionary msg_data;
-    msg_data["from"] = String(message.from.c_str());
-    msg_data["message_id"] = String(message.message_id.c_str());
-    
-    // Convert data to Godot format
+    msg_data["from"] = String(pending.from.c_str());
+    msg_data["message_id"] = String(pending.message_id.c_str());
     Dictionary data_dict;
-    for (const auto& entry : message.data) {
+    for (const auto& entry : pending.data) {
         data_dict[String(entry.first.c_str())] = String(entry.second.c_str());
     }
     msg_data["data"] = data_dict;
-    
-    call_deferred("emit_signal", "message", msg_data);
+    emit_signal("message", msg_data);
 }
 
 void FirebaseMessaging::begin_shutdown() {
