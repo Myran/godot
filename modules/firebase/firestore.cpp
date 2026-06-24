@@ -308,18 +308,13 @@ Variant FirebaseFirestore::field_value_to_variant(const firebase::firestore::Fie
 	}
 }
 
-Dictionary FirebaseFirestore::document_snapshot_to_dict(const firebase::firestore::DocumentSnapshot& snapshot) {
+Dictionary FirebaseFirestore::map_to_dict(const firebase::firestore::MapFieldValue& data) {
+	// task-1066: MAIN-THREAD ONLY — builds Godot objects. Called from the _handle_*_on_main_thread
+	// handlers over a raw MapFieldValue the worker copied; never call this on a Firebase worker thread.
 	Dictionary result;
-
-	if (!snapshot.exists()) {
-		return result;
-	}
-
-	firebase::firestore::MapFieldValue data = snapshot.GetData();
 	for (const auto& pair : data) {
 		result[String(pair.first.c_str())] = field_value_to_variant(pair.second);
 	}
-
 	return result;
 }
 
@@ -328,9 +323,15 @@ Dictionary FirebaseFirestore::document_snapshot_to_dict(const firebase::firestor
 void FirebaseFirestore::get_document_async(int p_request_id, const String& path) {
 	if (!inited || !firestore_instance) {
 		print_error("[Firestore] Not initialized");
+		{
+			PendingFirestoreResult pending;
+			pending.error_code = -1;
+			pending.error_msg = "Firestore not initialized";
+			std::lock_guard<std::mutex> lock(_pending_results_mutex);
+			_pending_results[p_request_id] = std::move(pending);
+		}
 		MessageQueue::get_singleton()->push_callable(
-			callable_mp(this, &FirebaseFirestore::_handle_document_get_on_main_thread)
-				.bind(p_request_id, false, false, Dictionary(), -1, String("Firestore not initialized"))
+			callable_mp(this, &FirebaseFirestore::_handle_document_get_on_main_thread).bind(p_request_id)
 		);
 		return;
 	}
@@ -350,29 +351,35 @@ void FirebaseFirestore::get_document_async(int p_request_id, const String& path)
 
 	firebase::Future<firebase::firestore::DocumentSnapshot> future = doc_ref.Get();
 	future.OnCompletion([req_id, self](const firebase::Future<firebase::firestore::DocumentSnapshot>& result) {
+		// WORKER THREAD — task-1066: copy ONLY raw C++; build the Godot Dictionary on the main
+		// thread in _handle_document_get_on_main_thread. snapshot.GetData() returns a MapFieldValue
+		// BY VALUE whose FieldValues own their data, so the copy outlives the Future safely.
 		if (is_shutting_down) {
 			print_line("[Firestore] Ignoring get callback - app shutting down");
 			return;
 		}
 
-		bool success = (result.error() == firebase::firestore::kErrorOk);
-		bool exists = false;
-		Dictionary data;
-		String error_msg;
-
-		if (success) {
+		PendingFirestoreResult pending;
+		pending.success = (result.error() == firebase::firestore::kErrorOk);
+		pending.error_code = result.error();
+		if (pending.success) {
 			const firebase::firestore::DocumentSnapshot& snapshot = *result.result();
-			exists = snapshot.exists();
-			if (exists) {
-				data = self->document_snapshot_to_dict(snapshot);
+			pending.exists = snapshot.exists();
+			if (pending.exists) {
+				pending.doc_data = snapshot.GetData();
+				pending.has_doc = true;
 			}
 		} else {
-			error_msg = String(result.error_message());
+			const char* em = result.error_message();
+			pending.error_msg = em ? em : "";
 		}
 
+		{
+			std::lock_guard<std::mutex> lock(self->_pending_results_mutex);
+			self->_pending_results[req_id] = std::move(pending);
+		}
 		MessageQueue::get_singleton()->push_callable(
-			callable_mp(self, &FirebaseFirestore::_handle_document_get_on_main_thread)
-				.bind(req_id, success, exists, data, result.error(), error_msg)
+			callable_mp(self, &FirebaseFirestore::_handle_document_get_on_main_thread).bind(req_id)
 		);
 	});
 }
@@ -501,9 +508,15 @@ void FirebaseFirestore::delete_document_async(int p_request_id, const String& pa
 void FirebaseFirestore::query_collection_async(int p_request_id, const String& collection_path, const Dictionary& query_params) {
 	if (!inited || !firestore_instance) {
 		print_error("[Firestore] Not initialized");
+		{
+			PendingFirestoreResult pending;
+			pending.error_code = -1;
+			pending.error_msg = "Firestore not initialized";
+			std::lock_guard<std::mutex> lock(_pending_results_mutex);
+			_pending_results[p_request_id] = std::move(pending);
+		}
 		MessageQueue::get_singleton()->push_callable(
-			callable_mp(this, &FirebaseFirestore::_handle_collection_query_on_main_thread)
-				.bind(p_request_id, false, Array(), -1, String("Firestore not initialized"))
+			callable_mp(this, &FirebaseFirestore::_handle_collection_query_on_main_thread).bind(p_request_id)
 		);
 		return;
 	}
@@ -591,38 +604,60 @@ void FirebaseFirestore::query_collection_async(int p_request_id, const String& c
 
 	firebase::Future<firebase::firestore::QuerySnapshot> future = query.Get();
 	future.OnCompletion([req_id, self](const firebase::Future<firebase::firestore::QuerySnapshot>& result) {
+		// WORKER THREAD — task-1066: copy ONLY raw C++ (per-doc id std::string + MapFieldValue);
+		// build the Godot Array/Dictionary on the main thread in _handle_collection_query_on_main_thread.
 		if (is_shutting_down) {
 			print_line("[Firestore] Ignoring query callback - app shutting down");
 			return;
 		}
 
-		bool success = (result.error() == firebase::firestore::kErrorOk);
-		Array documents;
-		String error_msg;
-
-		if (success) {
+		PendingFirestoreResult pending;
+		pending.success = (result.error() == firebase::firestore::kErrorOk);
+		pending.error_code = result.error();
+		if (pending.success) {
 			const firebase::firestore::QuerySnapshot& snapshot = *result.result();
 			for (const auto& doc : snapshot.documents()) {
-				Dictionary doc_data;
-				doc_data["id"] = String(doc.id().c_str());
-				doc_data["data"] = self->document_snapshot_to_dict(doc);
-				documents.append(doc_data);
+				pending.query_docs.emplace_back(doc.id(), doc.GetData());
 			}
 		} else {
-			error_msg = String(result.error_message());
+			const char* em = result.error_message();
+			pending.error_msg = em ? em : "";
 		}
 
+		{
+			std::lock_guard<std::mutex> lock(self->_pending_results_mutex);
+			self->_pending_results[req_id] = std::move(pending);
+		}
 		MessageQueue::get_singleton()->push_callable(
-			callable_mp(self, &FirebaseFirestore::_handle_collection_query_on_main_thread)
-				.bind(req_id, success, documents, result.error(), error_msg)
+			callable_mp(self, &FirebaseFirestore::_handle_collection_query_on_main_thread).bind(req_id)
 		);
 	});
 }
 
 // --- Main Thread Callback Handlers ---
 
-void FirebaseFirestore::_handle_document_get_on_main_thread(int req_id, bool success, bool exists, Dictionary data, int error_code, String error_msg) {
-	emit_signal("get_document_completed", req_id, success, exists, data, error_code, error_msg);
+void FirebaseFirestore::_handle_document_get_on_main_thread(int req_id) {
+	// NOW ON MAIN THREAD — safe to build Godot objects from the raw payload the worker stored.
+	PendingFirestoreResult pending;
+	{
+		std::lock_guard<std::mutex> lock(_pending_results_mutex);
+		auto it = _pending_results.find(req_id);
+		if (it == _pending_results.end()) {
+			return;
+		}
+		pending = std::move(it->second);
+		_pending_results.erase(it);
+	}
+	if (is_app_shutting_down()) {
+		return;
+	}
+	Variant data = Dictionary();
+	if (pending.success && pending.exists && pending.has_doc) {
+		// Build on the main thread, then deepCopyVariant for ARM64 alignment/caller-isolation
+		// (task-1066 AC: the C++ guard Firestore previously lacked, matching database.cpp).
+		data = Convertor::deepCopyVariant(map_to_dict(pending.doc_data));
+	}
+	emit_signal("get_document_completed", req_id, pending.success, pending.exists, data, pending.error_code, String(pending.error_msg.c_str()));
 }
 
 void FirebaseFirestore::_handle_document_set_on_main_thread(int req_id, bool success, int error_code, String error_msg) {
@@ -637,8 +672,32 @@ void FirebaseFirestore::_handle_document_delete_on_main_thread(int req_id, bool 
 	emit_signal("delete_document_completed", req_id, success, error_code, error_msg);
 }
 
-void FirebaseFirestore::_handle_collection_query_on_main_thread(int req_id, bool success, Array documents, int error_code, String error_msg) {
-	emit_signal("query_collection_completed", req_id, success, documents, error_code, error_msg);
+void FirebaseFirestore::_handle_collection_query_on_main_thread(int req_id) {
+	// NOW ON MAIN THREAD — build the Godot Array/Dictionary from the raw per-doc payload.
+	PendingFirestoreResult pending;
+	{
+		std::lock_guard<std::mutex> lock(_pending_results_mutex);
+		auto it = _pending_results.find(req_id);
+		if (it == _pending_results.end()) {
+			return;
+		}
+		pending = std::move(it->second);
+		_pending_results.erase(it);
+	}
+	if (is_app_shutting_down()) {
+		return;
+	}
+	Array documents;
+	if (pending.success) {
+		for (const auto& entry : pending.query_docs) {
+			Dictionary doc_data;
+			doc_data["id"] = String(entry.first.c_str());
+			doc_data["data"] = map_to_dict(entry.second);
+			documents.append(doc_data);
+		}
+	}
+	Variant docs = Convertor::deepCopyVariant(documents);
+	emit_signal("query_collection_completed", req_id, pending.success, docs, pending.error_code, String(pending.error_msg.c_str()));
 }
 
 // --- GDScript Binding ---

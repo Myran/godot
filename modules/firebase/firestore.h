@@ -28,6 +28,8 @@ class ListenerRegistration;
 #include <atomic>
 #include <mutex>
 #include <vector>
+#include <string>
+#include <utility>
 
 // Include Firebase SDK headers for Firestore
 // Note: firestore_errors.h is not available in from-source SDK builds
@@ -72,18 +74,37 @@ protected:
 	// Helper: Convert Godot Dictionary to Firestore MapFieldValue
 	firebase::firestore::MapFieldValue dict_to_map_field_value(const Dictionary& dict);
 
-	// Helper: Convert Firestore DocumentSnapshot to Godot Dictionary
-	Dictionary document_snapshot_to_dict(const firebase::firestore::DocumentSnapshot& snapshot);
+	// Helper: Convert a raw Firestore MapFieldValue to a Godot Dictionary.
+	// task-1066: MAIN-THREAD ONLY. The worker OnCompletion stores the raw MapFieldValue; the
+	// Godot Dictionary is built here from the _handle_*_on_main_thread handlers, so no Godot
+	// object is constructed on the Firebase worker thread (the b6e10f69c0 null-_p/SIGBUS class).
+	Dictionary map_to_dict(const firebase::firestore::MapFieldValue& data);
 
-	// Helper: Convert single Firestore FieldValue to Godot Variant
+	// Helper: Convert single Firestore FieldValue to Godot Variant (main-thread only, recursive)
 	Variant field_value_to_variant(const firebase::firestore::FieldValue& value);
 
-	// Main thread callback handlers (MessageQueue marshalling)
-	void _handle_document_get_on_main_thread(int req_id, bool success, bool exists, Dictionary data, int error_code, String error_msg);
+	// task-1066: worker→main relocation state (mirrors database.cpp PendingFirebaseResult).
+	// The worker OnCompletion copies ONLY raw C++ — a copied MapFieldValue fully owns its
+	// FieldValues independent of the Future — and hands an int req_id to the main thread.
+	struct PendingFirestoreResult {
+		bool success = false;
+		bool exists = false;
+		bool has_doc = false;
+		int error_code = 0;
+		std::string error_msg;
+		firebase::firestore::MapFieldValue doc_data;                                        // get_document payload
+		std::vector<std::pair<std::string, firebase::firestore::MapFieldValue>> query_docs; // query payload
+	};
+	std::mutex _pending_results_mutex;
+	std::map<int, PendingFirestoreResult> _pending_results;
+
+	// Main thread callback handlers (MessageQueue marshalling). get/query now take ONLY the
+	// req_id and pull their raw payload from _pending_results to build the Godot container here.
+	void _handle_document_get_on_main_thread(int req_id);
 	void _handle_document_set_on_main_thread(int req_id, bool success, int error_code, String error_msg);
 	void _handle_document_update_on_main_thread(int req_id, bool success, int error_code, String error_msg);
 	void _handle_document_delete_on_main_thread(int req_id, bool success, int error_code, String error_msg);
-	void _handle_collection_query_on_main_thread(int req_id, bool success, Array documents, int error_code, String error_msg);
+	void _handle_collection_query_on_main_thread(int req_id);
 
 public:
 	// Thread-safe singleton access methods
