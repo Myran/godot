@@ -233,7 +233,24 @@ public class GodotFragment extends Fragment implements IDownloaderClient, GodotH
 			return downloadingExpansionView;
 		}
 
+		// The Godot singleton is retained across fragment view recreation (process-death
+		// restore, multi-window, sensor-portrait flip), so the cached container may still
+		// be attached to a previous parent. Re-adding it as-is throws IllegalStateException
+		// ("child already has a parent") in ViewGroup.addViewInner. Detach first. (task-1052)
+		if (godotContainerLayout != null && godotContainerLayout.getParent() instanceof ViewGroup) {
+			((ViewGroup)godotContainerLayout.getParent()).removeView(godotContainerLayout);
+		}
 		return godotContainerLayout;
+	}
+
+	@Override
+	public void onDestroyView() {
+		// Root-cause fix for the re-parent crash (task-1052): detach the retained container
+		// when this fragment's view is torn down, so the next onCreateView() re-add is clean.
+		if (godotContainerLayout != null && godotContainerLayout.getParent() instanceof ViewGroup) {
+			((ViewGroup)godotContainerLayout.getParent()).removeView(godotContainerLayout);
+		}
+		super.onDestroyView();
 	}
 
 	@Override
