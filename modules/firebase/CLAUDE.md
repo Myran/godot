@@ -385,25 +385,64 @@ if result.success:
 
 ### **Thread Safety**
 
-**Firebase SDK Threading:**
-- ✅ **Main thread**: Safe for all operations
-- ⚠️ **Background threads**: Limited operations allowed
-- ❌ **Godot threads**: Do NOT call Firebase from Godot threads
+> 🚨 **THE #1 recurring crash in this module — read this before writing ANY async callback.**
+> A Godot container (`Dictionary`/`Array`/`Variant`/`String`, all CowData) built on a Firebase
+> **worker thread** corrupts its internal `_p` pointer → intermittent **ARM64 `null-_p` / SIGBUS**
+> in the field. It passes most test runs and then crashes on a device. This class cost a
+> multi-session debug for RTDB (`b6e10f69c0`) and was then **re-introduced TWICE** — Firestore
+> (task-1066) and Messaging (task-1077). It keeps happening because Godot's own *Thread-safe APIs*
+> docs make it look fine (refcounts are atomic), so following the **engine** docs gives you the
+> bug. Atomic refcounts do not save you here — the corruption is in the CowData build, not the count.
 
-**Pattern:**
+**The rule — every async callback runs on a Firebase SDK worker thread, NOT the main thread:**
+
+`future.OnCompletion([...]{ })`, snapshot / child listeners, and FCM `OnMessage` / `OnTokenReceived`
+all fire off-main. Inside them:
+
+1. Construct **ONLY raw C++** — `firebase::Variant` / `std::string` / `std::map` / `std::vector` /
+   `int` / `bool`, plus copies of self-owning SDK types (`firebase::Variant`, a copied
+   `MapFieldValue`). Build **NO Godot object** (`Dictionary` / `Array` / `Variant` / `String`).
+2. Store that raw payload under a `std::mutex`, keyed by an `int` id.
+3. Hand **only the int id** to the main thread —
+   `MessageQueue::get_singleton()->push_callable(callable_mp(this, &Svc::_handle_x_on_main_thread).bind(id))`
+   for futures, or `callable_mp(this, &Svc::_handle_x_on_main_thread).call_deferred(id)` for listeners.
+4. In `_handle_x_on_main_thread(int id)` (now on the main thread) pull the payload under the lock,
+   build the Godot `Dictionary` / `String`, apply `Convertor::deepCopyVariant(...)`, then `emit_signal`.
+
+**Allowed on the worker:** a bare scalar `String`/`int` passed by value through MessageQueue
+(e.g. an error code). Prefer storing `std::string` and building the `String` in the handler.
+
+**Copy-this gold standard → `database.cpp`:** `PendingFirebaseResult` + `_pending_results_mutex`
++ `_queue_*_event` / `_handle_*_on_main_thread`. `firestore.cpp` and `messaging.cpp` now follow the
+identical shape — read any of the three before adding a new async service and mirror it exactly.
+
 ```cpp
-// ✅ CORRECT - Call from main thread
-void _process(double delta) {
-    if (pending_operation) {
-        check_firebase_future();  // Safe - main thread
-    }
-}
+// ❌ FORBIDDEN — builds a Godot Dictionary on the Firebase worker thread (the SIGBUS class)
+future.OnCompletion([this](const Future<Snapshot>& r) {
+    Dictionary d = to_dict(r.result());            // CowData built off-main → null-_p
+    MessageQueue::get_singleton()->push_callable(cb.bind(d));
+});
 
-// ❌ FORBIDDEN - Background thread
-void background_thread_func() {
-    database_ref.GetValue();  // CRASH - wrong thread
+// ✅ CORRECT — store raw C++, build the Dictionary in the main-thread handler
+future.OnCompletion([this](const Future<Snapshot>& r) {
+    PendingResult p; p.raw = r.result().GetData();  // raw C++ copy, owns itself
+    { std::lock_guard<std::mutex> lk(_mutex); _pending[id] = std::move(p); }
+    MessageQueue::get_singleton()->push_callable(
+        callable_mp(this, &Svc::_handle_on_main_thread).bind(id));
+});
+void Svc::_handle_on_main_thread(int id) {           // NOW on the main thread
+    Dictionary d = to_dict(_pending[id].raw);
+    emit_signal("done", Convertor::deepCopyVariant(d));
 }
 ```
+
+**Separate, lower-frequency rule:** never *call* the Firebase SDK from a Godot worker thread —
+drive futures from the main thread (`_process` / signals).
+
+> Enforcement is by review against this rule + the gold-standard pattern. (A CI brace-matching gate
+> was prototyped in task-1078 and dropped 2026-06-25 — a heuristic that needed per-change
+> reconciliation was judged heavier than the rule it guarded; the fix is keeping THIS section
+> prominent and mirroring `database.cpp`.)
 
 ### **Memory Management**
 
@@ -649,6 +688,10 @@ firebase::App* app = firebase::App::Create(
 ## 📖 Development Guidelines
 
 ### **Adding New Firebase Services**
+
+> 🚨 **If the service has async callbacks (futures or listeners), they run on a Firebase worker
+> thread — follow the worker→main pattern in [Thread Safety](#thread-safety) and mirror
+> `database.cpp`. Building a Godot object in the callback is the recurring ARM64 SIGBUS bug.**
 
 1. **Add header/implementation files**
 ```cpp
