@@ -886,3 +886,15 @@ Vector<String> OS_AppleEmbedded::get_granted_permissions() const {
 	return ret;
 }
 #endif // APPLE_EMBEDDED_ENABLED
+
+#ifdef SDL_ENABLED
+// GameTwo patch (upstreamable): Godot's vendored SDL is joystick-only and omits
+// the uikit video sources that define these; SDL.c declares them extern on
+// SDL_PLATFORM_IOS, so debug app links (no dead-strip) fail without definitions.
+extern "C" bool SDL_IsIPad(void) {
+	return [UIDevice currentDevice].userInterfaceIdiom == UIUserInterfaceIdiomPad;
+}
+extern "C" bool SDL_IsAppleTV(void) {
+	return false;
+}
+#endif // SDL_ENABLED
