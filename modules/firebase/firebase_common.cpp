@@ -4,6 +4,8 @@
 // - firebase_windows.cpp (Windows)
 
 #include "firebase.h"
+#include "core/object/callable_mp.h"
+#include "core/object/class_db.h"
 #include "database.h"        // For FirebaseDatabase::begin_shutdown()
 #include "remote_config.h"   // For FirebaseRemoteConfig::begin_shutdown() (task-1081)
 #include "auth.h"            // For FirebaseAuth::begin_shutdown() (task-1084)

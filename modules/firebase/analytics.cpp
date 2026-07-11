@@ -73,7 +73,7 @@ const String FirebaseAnalytics::PROPERTY_SIGN_UP_METHOD = "sign_up_method";
 std::mutex FirebaseAnalytics::initialization_mutex;
 std::atomic<bool> FirebaseAnalytics::inited(false);
 std::atomic<bool> FirebaseAnalytics::is_shutting_down(false);
-FirebaseAnalytics* FirebaseAnalytics::singleton_instance = nullptr;
+Ref<FirebaseAnalytics> FirebaseAnalytics::singleton_instance;
 std::mutex FirebaseAnalytics::instance_mutex;
 
 // --- Constructor ---
@@ -89,19 +89,18 @@ FirebaseAnalytics::~FirebaseAnalytics() {
 // --- Singleton Access ---
 FirebaseAnalytics& FirebaseAnalytics::get_instance() {
 	std::lock_guard<std::mutex> lock(instance_mutex);
-	if (!singleton_instance) {
+	if (singleton_instance.is_null()) {
 		singleton_instance = memnew(FirebaseAnalytics);
 	}
-	return *singleton_instance;
+	return *singleton_instance.ptr();
 }
 
 // --- Cleanup ---
 void FirebaseAnalytics::cleanup() {
 	std::lock_guard<std::mutex> lock(instance_mutex);
-	if (singleton_instance) {
+	if (singleton_instance.is_valid()) {
 		singleton_instance->reset_analytics_data();
-		memdelete(singleton_instance);
-		singleton_instance = nullptr;
+		singleton_instance.unref();
 	}
 	inited.store(false);
 }

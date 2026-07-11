@@ -17,7 +17,7 @@
 // iOS-specific headers
 #import "drivers/apple_embedded/godot_app_delegate.h"
 #import "drivers/apple_embedded/app_delegate_service.h"
-#import "drivers/apple_embedded/view_controller.h"
+#import "drivers/apple_embedded/godot_view_controller.h"
 #include "core/object/object.h"
 AppActivity _instance;
 #elif TARGET_OS_OSX

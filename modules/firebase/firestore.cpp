@@ -2,13 +2,15 @@
 #include "firebase.h"
 #include "convertor.h"
 #include "core/object/message_queue.h"
+#include "core/object/callable_mp.h"
+#include "core/object/class_db.h"
 #include "core/variant/variant.h"
 
 // Static member initialization
 std::mutex FirebaseFirestore::initialization_mutex;
 std::atomic<bool> FirebaseFirestore::inited{false};
 std::atomic<bool> FirebaseFirestore::is_shutting_down{false};
-FirebaseFirestore* FirebaseFirestore::singleton_instance{nullptr};
+Ref<FirebaseFirestore> FirebaseFirestore::singleton_instance;
 std::mutex FirebaseFirestore::instance_mutex;
 firebase::firestore::Firestore* FirebaseFirestore::firestore_instance{nullptr};
 
@@ -24,17 +26,16 @@ FirebaseFirestore::~FirebaseFirestore() {
 
 FirebaseFirestore& FirebaseFirestore::get_instance() {
 	std::lock_guard<std::mutex> lock(instance_mutex);
-	if (!singleton_instance) {
+	if (singleton_instance.is_null()) {
 		singleton_instance = memnew(FirebaseFirestore);
 	}
-	return *singleton_instance;
+	return *singleton_instance.ptr();
 }
 
 void FirebaseFirestore::cleanup() {
 	std::lock_guard<std::mutex> lock(instance_mutex);
-	if (singleton_instance) {
-		memdelete(singleton_instance);
-		singleton_instance = nullptr;
+	if (singleton_instance.is_valid()) {
+		singleton_instance.unref();
 	}
 	firestore_instance = nullptr;
 	inited = false;

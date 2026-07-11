@@ -35,7 +35,7 @@ private:
 	static std::mutex initialization_mutex;
 	static std::atomic<bool> inited;
 	static std::atomic<bool> is_shutting_down;
-	static FirebaseAnalytics* singleton_instance;
+	static Ref<FirebaseAnalytics> singleton_instance;
 	static std::mutex instance_mutex;
 
 	// Private constructor for singleton pattern

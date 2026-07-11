@@ -29,7 +29,7 @@ private:
 	static std::mutex initialization_mutex;
 	static std::atomic<bool> inited;
 	static std::atomic<bool> is_shutting_down;
-	static FirebaseAuth* singleton_instance;
+	static Ref<FirebaseAuth> singleton_instance;
 	static std::mutex instance_mutex;
 
 	// Static Firebase resources

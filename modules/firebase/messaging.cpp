@@ -1,4 +1,6 @@
 #include "messaging.h"
+#include "core/object/callable_mp.h"
+#include "core/object/class_db.h"
 
 bool FirebaseMessaging::inited = false;
 FirebaseMessagingListener *FirebaseMessaging::listener = NULL;

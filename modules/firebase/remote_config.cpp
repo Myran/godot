@@ -6,6 +6,7 @@
 // Godot Core Headers
 #include "core/io/json.h" // For JSON parsing in get_json()
 #include "core/object/class_db.h"
+#include "core/object/callable_mp.h"
 #include "core/object/message_queue.h" // For thread-safe callback marshalling
 #include "core/string/print_string.h"
 #include "core/variant/callable.h"

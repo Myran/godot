@@ -7,6 +7,7 @@
 #include "core/config/project_settings.h"
 #include "core/error/error_macros.h" // For WARN_PRINT
 #include "core/object/class_db.h"
+#include "core/object/callable_mp.h"
 #include "core/object/message_queue.h" // For thread-safe callback marshalling (Task-207)
 #include "core/os/os.h"
 #include "core/string/print_string.h"

@@ -3,6 +3,8 @@
 #include "firebase/auth.h"
 #include "firebase/auth/user.h"
 #include "core/object/object.h"
+#include "core/object/callable_mp.h"
+#include "core/object/class_db.h"
 #include "core/object/message_queue.h" // For thread-safe callback marshalling
 #include "core/string/print_string.h"
 #include "core/variant/callable.h"
@@ -62,7 +64,7 @@ private:
 std::mutex FirebaseAuth::initialization_mutex;
 std::atomic<bool> FirebaseAuth::inited(false);
 std::atomic<bool> FirebaseAuth::is_shutting_down(false);
-FirebaseAuth* FirebaseAuth::singleton_instance = nullptr;
+Ref<FirebaseAuth> FirebaseAuth::singleton_instance;
 std::mutex FirebaseAuth::instance_mutex;
 
 // Static Firebase resources
@@ -76,17 +78,16 @@ std::atomic<bool> FirebaseAuth::auth_state_listener_active(false);
 // --- Thread-Safe Singleton Access (matches database.cpp pattern) ---
 FirebaseAuth& FirebaseAuth::get_instance() {
     std::lock_guard<std::mutex> lock(instance_mutex);
-    if (!singleton_instance) {
+    if (singleton_instance.is_null()) {
         singleton_instance = memnew(FirebaseAuth);
     }
-    return *singleton_instance;
+    return *singleton_instance.ptr();
 }
 
 void FirebaseAuth::cleanup() {
     std::lock_guard<std::mutex> lock(instance_mutex);
-    if (singleton_instance) {
-        memdelete(singleton_instance);
-        singleton_instance = nullptr;
+    if (singleton_instance.is_valid()) {
+        singleton_instance.unref();
     }
 }
 
