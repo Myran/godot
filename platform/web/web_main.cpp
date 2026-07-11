@@ -47,7 +47,9 @@
 #endif
 
 #include <emscripten/emscripten.h>
+#include <emscripten/eventloop.h>
 
+#include <cstdint>
 #include <cstdlib>
 
 static OS_Web *os = nullptr;
@@ -71,7 +73,17 @@ void exit_callback() {
 	os = nullptr;
 	godot_cleanup_profiler();
 	emscripten_cancel_main_loop(); // We are exiting in this iteration.
-	emscripten_force_exit(exit_code); // Exit runtime.
+	// Defer the actual runtime exit out of this main-loop tick. Since the Emscripten
+	// MainLoop refactor, emscripten_force_exit() clears the runtime keepalive counter,
+	// but the MainLoop runner's post-callback stale-loop check (checkIsRunning) still
+	// runs after this function returns and pops that counter — ASSERTIONS builds
+	// (debug templates) abort with "Aborted(Assertion failed)" at runtimeKeepalivePop.
+	// Hold one extra keepalive so the runner's pop stays balanced, then exit on the
+	// next task with the real exit code (force_exit clears the keepalive itself).
+	emscripten_runtime_keepalive_push();
+	emscripten_async_call([](void *p_exit_code) {
+		emscripten_force_exit((int)(intptr_t)p_exit_code); // Exit runtime.
+	}, (void *)(intptr_t)exit_code, 0);
 }
 
 void cleanup_after_sync() {
