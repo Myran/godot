@@ -321,7 +321,7 @@ just deploy-android           # 3. Package + deploy (REQUIRED)
 **Critical**:
 - **After ANY C++ changes**: `just deploy-android` **MANDATORY** before Android testing
 - **Reason**: Android uses compiled/cached templates that don't auto-update
-- **iOS**: Similar workflow with `just build-install-ios`
+- **iOS**: Similar workflow with `just deploy-ios`
 
 ### **Build Artifacts**
 
@@ -768,9 +768,9 @@ just logs-android-device "FATAL"
 # Look for crashes
 just android-logs-tagged "DEBUG" 30 100
 
-# iOS device logs
-just ios-retrieve-logs-ipad
-just ios-retrieve-logs-iphone
+# iOS logs
+just logs-ios TEST_ID              # saved iOS test logs
+just logs-ios-device "term"        # live iOS device logs
 ```
 
 ---
@@ -784,7 +784,7 @@ just build-android-templates      # Build C++ module
 just install-android-template     # Install to project
 just deploy-android            # Deploy (REQUIRED)
 
-just build-install-ios            # iOS build + deploy
+just deploy-ios                   # iOS build + deploy
 ```
 
 **Testing:**
