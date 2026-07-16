@@ -12,11 +12,9 @@ class FirebaseRemoteConfig : public RefCounted {
 	GDCLASS(FirebaseRemoteConfig, RefCounted);
 
 private:
-	// Thread-safe singleton implementation (matching database.h pattern)
+	// Thread-safe initialization guard (matching database.h pattern)
 	static std::mutex initialization_mutex;
 	static std::atomic<bool> inited;
-	static FirebaseRemoteConfig* singleton_instance;
-	static std::mutex instance_mutex;
 
 	// Shutdown safety - prevents callbacks during cleanup
 	static std::atomic<bool> is_shutting_down;
@@ -38,10 +36,6 @@ protected:
 	void _handle_set_defaults_on_main_thread(int req_id, bool success, int error, String error_msg);
 
 public:
-	// Thread-safe singleton access methods
-	static FirebaseRemoteConfig& get_instance();
-	static void cleanup();
-
 	// Shutdown control methods
 	static void begin_shutdown();
 	static bool is_app_shutting_down();

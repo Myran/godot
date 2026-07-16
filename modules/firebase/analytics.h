@@ -31,12 +31,10 @@ class FirebaseAnalytics : public RefCounted {
 	GDCLASS(FirebaseAnalytics, RefCounted);
 
 private:
-	// Thread-safe singleton implementation
+	// Thread-safe initialization guard
 	static std::mutex initialization_mutex;
 	static std::atomic<bool> inited;
 	static std::atomic<bool> is_shutting_down;
-	static Ref<FirebaseAnalytics> singleton_instance;
-	static std::mutex instance_mutex;
 
 	// Private constructor for singleton pattern
 	FirebaseAnalytics();
@@ -45,10 +43,6 @@ protected:
 	static void _bind_methods();
 
 public:
-	// Thread-safe singleton access methods
-	static FirebaseAnalytics& get_instance();
-	static void cleanup();
-
 	// macOS crash prevention - shutdown control methods
 	static void begin_shutdown();
 	static bool is_app_shutting_down();

@@ -24,29 +24,9 @@ std::mutex FirebaseRemoteConfig::initialization_mutex;
 std::atomic<bool> FirebaseRemoteConfig::inited(false);
 std::atomic<bool> FirebaseRemoteConfig::is_shutting_down(false);
 std::atomic<bool> FirebaseRemoteConfig::data_loaded(false);
-FirebaseRemoteConfig* FirebaseRemoteConfig::singleton_instance = nullptr;
-std::mutex FirebaseRemoteConfig::instance_mutex;
 firebase::remote_config::RemoteConfig* FirebaseRemoteConfig::rc = nullptr;
 
-// --- Thread-Safe Singleton Implementation ---
-
-FirebaseRemoteConfig& FirebaseRemoteConfig::get_instance() {
-	std::lock_guard<std::mutex> lock(instance_mutex);
-
-	if (!singleton_instance) {
-		singleton_instance = new FirebaseRemoteConfig();
-	}
-	return *singleton_instance;
-}
-
-void FirebaseRemoteConfig::cleanup() {
-	std::lock_guard<std::mutex> lock(instance_mutex);
-
-	if (singleton_instance) {
-		delete singleton_instance;
-		singleton_instance = nullptr;
-	}
-}
+// --- Shutdown Control ---
 
 void FirebaseRemoteConfig::begin_shutdown() {
 	is_shutting_down.store(true);
@@ -109,16 +89,10 @@ FirebaseRemoteConfig::FirebaseRemoteConfig() {
 FirebaseRemoteConfig::~FirebaseRemoteConfig() {
 	print_line("[RemConf] FirebaseRemoteConfig Destructor called.");
 
-	std::lock_guard<std::mutex> cleanup_lock(instance_mutex);
-
-	// Reset Remote Config instance reference
-	rc = nullptr;
-
-	// Reset state flags
-	data_loaded.store(false);
-	inited.store(false);
-
-	print_line("[RemConf] FirebaseRemoteConfig cleanup completed.");
+	// task-1124: no per-instance resources to free. `rc`, `data_loaded`, and `inited` are
+	// process-lifetime state shared by all instances. A transient throwaway instance
+	// (GDScript ClassDB.instantiate) must NOT reset them — doing so disabled Remote Config
+	// for the live service. Teardown is via begin_shutdown() (flips is_shutting_down).
 }
 
 // --- Existing Methods (PRESERVED with improvements) ---

@@ -38,8 +38,6 @@
 std::mutex FirebaseDatabase::initialization_mutex;
 std::atomic<bool> FirebaseDatabase::inited(false);
 std::atomic<bool> FirebaseDatabase::is_shutting_down(false);
-FirebaseDatabase* FirebaseDatabase::singleton_instance = nullptr;
-std::mutex FirebaseDatabase::instance_mutex;
 
 // Static Firebase resources (properly managed)
 firebase::database::Database* FirebaseDatabase::database_instance = nullptr;
@@ -184,26 +182,6 @@ firebase::database::TransactionResult FirebaseDatabase::increment_transaction_fu
 
 // --- FirebaseDatabase Implementation ---
 
-// Thread-safe singleton implementation (Task-213 critical fix)
-FirebaseDatabase& FirebaseDatabase::get_instance() {
-	std::lock_guard<std::mutex> lock(instance_mutex);
-
-	if (!singleton_instance) {
-		singleton_instance = new FirebaseDatabase();
-	}
-	return *singleton_instance;
-}
-
-// Thread-safe cleanup method
-void FirebaseDatabase::cleanup() {
-	std::lock_guard<std::mutex> lock(instance_mutex);
-
-	if (singleton_instance) {
-		delete singleton_instance;
-		singleton_instance = nullptr;
-	}
-}
-
 // macOS crash prevention - shutdown control methods
 void FirebaseDatabase::begin_shutdown() {
 	is_shutting_down.store(true);
@@ -246,11 +224,14 @@ FirebaseDatabase::FirebaseDatabase() {
 					print_line("[RTDB C++] Firebase Database instance obtained successfully.");
 
 					// Create listeners and set singleton pointer
+					// task-1124 invariant: this back-pointer must belong to the boot init-instance
+					// (FirebaseService autoload, inits before any debug action) which outlives the
+					// process; a boot-reorder that lets a transient instance init first breaks it.
 					child_listener_instance = new FirebaseChildListener();
 					child_listener_instance->singleton = this;
 
 					connection_listener_instance = new ConnectionStateListener();
-					connection_listener_instance->singleton = this;
+					connection_listener_instance->singleton = this;  // same boot-ordering invariant as above
 
 					print_line("[RTDB C++] Listener instances created.");
 					inited.store(true);
@@ -268,33 +249,24 @@ FirebaseDatabase::FirebaseDatabase() {
 FirebaseDatabase::~FirebaseDatabase() {
 	print_line("[RTDB C++] FirebaseDatabase Destructor called.");
 
-	// Clean up instance-specific resources
+	// Clean up ONLY this instance's own resource: the child listener THIS instance
+	// registered at a path (via add_listener_at_path). Skipped for a transient throwaway
+	// instance, which never registered one (_listener_path_ref_count == 0).
 	if (_listener_path_ref_count > 0 && _active_child_listener_ref.is_valid() && child_listener_instance) {
 		WARN_PRINT("[RTDB C++] Destructor: Removing active child listener due to object destruction.");
 		_active_child_listener_ref.RemoveChildListener(child_listener_instance);
 		_listener_path_ref_count = 0;
 	}
 
-	// CRITICAL: Clean up ALL static resources properly (Task-213 memory corruption fix)
-	std::lock_guard<std::mutex> cleanup_lock(instance_mutex);
-
-	if (connection_listener_instance) {
-		delete connection_listener_instance;
-		connection_listener_instance = nullptr;
-	}
-
-	if (child_listener_instance) {
-		delete child_listener_instance;
-		child_listener_instance = nullptr;
-	}
-
-	// Reset database instance reference
-	database_instance = nullptr;
-
-	// Reset initialization flag
-	inited.store(false);
-
-	print_line("[RTDB C++] FirebaseDatabase complete cleanup completed (Task-213 fix).");
+	// task-1124: DO NOT tear down the shared static singletons here. database_instance,
+	// child_listener_instance, connection_listener_instance and `inited` are
+	// process-lifetime state shared by all instances; teardown is via begin_shutdown()/
+	// cleanup_firebase(), never a per-instance destructor. Deleting them on ANY instance
+	// death (GDScript instantiates transient throwaway FirebaseDatabase objects) disabled
+	// RTDB for the live service and — since connection_listener_instance stays registered
+	// via AddValueListener with no RemoveValueListener — armed a use-after-free when
+	// .info/connected next fired. The connection listener now lives for process lifetime
+	// (never deleted); begin_shutdown() nulls its singleton back-pointer so it no-ops at exit.
 }
 
 firebase::database::DatabaseReference FirebaseDatabase::get_reference_to_path(const Array &keys) {

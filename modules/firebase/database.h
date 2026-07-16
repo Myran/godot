@@ -105,11 +105,9 @@ class FirebaseDatabase : public RefCounted {
 	GDCLASS(FirebaseDatabase, RefCounted);
 
 private:
-	// Thread-safe singleton implementation (Task-213 critical fix)
+	// Thread-safe initialization guard (Task-213 critical fix)
 	static std::mutex initialization_mutex;
 	static std::atomic<bool> inited;
-	static FirebaseDatabase* singleton_instance;
-	static std::mutex instance_mutex;
 
 	// macOS crash prevention - shutdown flag to prevent callbacks during cleanup
 	static std::atomic<bool> is_shutting_down;
@@ -166,10 +164,6 @@ protected:
 	void _handle_listener_error_on_main_thread(int event_id);
 
 public:
-	// Thread-safe singleton access methods (Task-213 critical fix)
-	static FirebaseDatabase& get_instance();
-	static void cleanup();
-
 	// macOS crash prevention - shutdown control methods
 	static void begin_shutdown();
 	static bool is_app_shutting_down();

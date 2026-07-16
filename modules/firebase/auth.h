@@ -25,12 +25,10 @@ class FirebaseAuth : public RefCounted {
 	friend class GodotAuthStateListener;
 
 private:
-	// Thread-safe singleton implementation (matches database.h pattern)
+	// Thread-safe initialization guard (matches database.h pattern)
 	static std::mutex initialization_mutex;
 	static std::atomic<bool> inited;
 	static std::atomic<bool> is_shutting_down;
-	static Ref<FirebaseAuth> singleton_instance;
-	static std::mutex instance_mutex;
 
 	// Static Firebase resources
 	static firebase::auth::Auth *auth;
@@ -56,10 +54,6 @@ protected:
 	void _handle_auth_state_changed_on_main_thread(bool is_signed_in, String uid);
 
 public:
-	// Thread-safe singleton access methods
-	static FirebaseAuth& get_instance();
-	static void cleanup();
-
 	// macOS crash prevention - shutdown control methods
 	static void begin_shutdown();
 	static bool is_app_shutting_down();

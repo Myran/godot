@@ -64,8 +64,6 @@ private:
 std::mutex FirebaseAuth::initialization_mutex;
 std::atomic<bool> FirebaseAuth::inited(false);
 std::atomic<bool> FirebaseAuth::is_shutting_down(false);
-Ref<FirebaseAuth> FirebaseAuth::singleton_instance;
-std::mutex FirebaseAuth::instance_mutex;
 
 // Static Firebase resources
 firebase::auth::Auth* FirebaseAuth::auth = nullptr;
@@ -74,22 +72,6 @@ firebase::auth::Auth* FirebaseAuth::auth = nullptr;
 GodotAuthStateListener* FirebaseAuth::auth_state_listener = nullptr;
 std::atomic<bool> FirebaseAuth::auth_state_listener_active(false);
 
-
-// --- Thread-Safe Singleton Access (matches database.cpp pattern) ---
-FirebaseAuth& FirebaseAuth::get_instance() {
-    std::lock_guard<std::mutex> lock(instance_mutex);
-    if (singleton_instance.is_null()) {
-        singleton_instance = memnew(FirebaseAuth);
-    }
-    return *singleton_instance.ptr();
-}
-
-void FirebaseAuth::cleanup() {
-    std::lock_guard<std::mutex> lock(instance_mutex);
-    if (singleton_instance.is_valid()) {
-        singleton_instance.unref();
-    }
-}
 
 void FirebaseAuth::begin_shutdown() {
     print_line("[Auth] begin_shutdown called - preventing new callbacks");
@@ -129,24 +111,12 @@ FirebaseAuth::FirebaseAuth() {
 FirebaseAuth::~FirebaseAuth() {
     print_line("[Auth] FirebaseAuth Destructor called.");
 
-    std::lock_guard<std::mutex> cleanup_lock(instance_mutex);
-
-    // Stop and clean up AuthStateListener (Task-420)
-    if (auth_state_listener && auth) {
-        print_line("[Auth] Removing AuthStateListener");
-        auth->RemoveAuthStateListener(auth_state_listener);
-        delete auth_state_listener;
-        auth_state_listener = nullptr;
-        auth_state_listener_active.store(false);
-    }
-
-    // Reset auth instance reference
-    auth = nullptr;
-
-    // Reset initialization flag
-    inited.store(false);
-
-    print_line("[Auth] FirebaseAuth complete cleanup completed.");
+    // task-1124: no per-instance resources to free. `auth`, the AuthStateListener, and
+    // `inited` are process-lifetime state shared by all instances. A transient throwaway
+    // instance (GDScript ClassDB.instantiate) must NOT tear them down — doing so removed the
+    // live service's auth-state listener and nulled the shared Auth pointer. The listener's
+    // real lifecycle is start_auth_state_listener()/stop_auth_state_listener(); shutdown is
+    // begin_shutdown() (flips is_shutting_down so OnAuthStateChanged no-ops at exit).
 }
 
 
@@ -632,6 +602,8 @@ void FirebaseAuth::start_auth_state_listener() {
     print_line("[Auth] Starting AuthStateListener");
 
     // Create and register the listener
+    // task-1124 invariant: `owner` must be the boot init-instance (FirebaseService autoload) that
+    // outlives the process; a boot-reorder letting a transient instance register first breaks it.
     auth_state_listener = new GodotAuthStateListener(this);
     auth->AddAuthStateListener(auth_state_listener);
     auth_state_listener_active.store(true);

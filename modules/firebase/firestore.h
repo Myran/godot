@@ -48,12 +48,10 @@ class FirebaseFirestore : public RefCounted {
 	GDCLASS(FirebaseFirestore, RefCounted);
 
 private:
-	// Thread-safe singleton implementation (following database.h pattern)
+	// Thread-safe initialization guard (following database.h pattern)
 	static std::mutex initialization_mutex;
 	static std::atomic<bool> inited;
 	static std::atomic<bool> is_shutting_down;
-	static Ref<FirebaseFirestore> singleton_instance;
-	static std::mutex instance_mutex;
 
 	// Static Firebase resources
 	static firebase::firestore::Firestore* firestore_instance;
@@ -107,10 +105,6 @@ protected:
 	void _handle_collection_query_on_main_thread(int req_id);
 
 public:
-	// Thread-safe singleton access methods
-	static FirebaseFirestore& get_instance();
-	static void cleanup();
-
 	// macOS crash prevention - shutdown control methods
 	static void begin_shutdown();
 	static bool is_app_shutting_down();

@@ -10,35 +10,18 @@
 std::mutex FirebaseFirestore::initialization_mutex;
 std::atomic<bool> FirebaseFirestore::inited{false};
 std::atomic<bool> FirebaseFirestore::is_shutting_down{false};
-Ref<FirebaseFirestore> FirebaseFirestore::singleton_instance;
-std::mutex FirebaseFirestore::instance_mutex;
 firebase::firestore::Firestore* FirebaseFirestore::firestore_instance{nullptr};
 
-// --- Singleton Implementation ---
+// --- Lifecycle ---
 
 FirebaseFirestore::FirebaseFirestore() {
 	print_line("[Firestore] Constructor called");
 }
 
 FirebaseFirestore::~FirebaseFirestore() {
+	// task-1124: no per-instance resources. firestore_instance/inited are process-lifetime
+	// shared statics; teardown is via begin_shutdown(), not per-instance destructors.
 	print_line("[Firestore] Destructor called");
-}
-
-FirebaseFirestore& FirebaseFirestore::get_instance() {
-	std::lock_guard<std::mutex> lock(instance_mutex);
-	if (singleton_instance.is_null()) {
-		singleton_instance = memnew(FirebaseFirestore);
-	}
-	return *singleton_instance.ptr();
-}
-
-void FirebaseFirestore::cleanup() {
-	std::lock_guard<std::mutex> lock(instance_mutex);
-	if (singleton_instance.is_valid()) {
-		singleton_instance.unref();
-	}
-	firestore_instance = nullptr;
-	inited = false;
 }
 
 void FirebaseFirestore::begin_shutdown() {
@@ -717,8 +700,7 @@ void FirebaseFirestore::_handle_collection_query_on_main_thread(int req_id) {
 // --- GDScript Binding ---
 
 void FirebaseFirestore::_bind_methods() {
-	// NOTE: get_instance() is NOT exposed to GDScript to avoid PtrToArg<FirebaseFirestore> binding issues.
-	// Instead, GDScript should create instances directly: var firestore = FirebaseFirestore.new()
+	// NOTE: GDScript creates instances directly: var firestore = FirebaseFirestore.new()
 	// The underlying firestore_instance is shared across all instances.
 
 	// Initialization
