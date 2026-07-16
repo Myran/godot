@@ -23,7 +23,10 @@ class FirebaseMessaging : public RefCounted {
     GDCLASS(FirebaseMessaging, RefCounted);
 
     protected:
-    static bool inited;
+    // task-1136: atomic to match the other five services (Auth/Database/Firestore/RemoteConfig/Analytics).
+    // Read/written on the main thread (ctor) but a worker OnMessage/OnTokenReceived may observe it; atomic
+    // gives the same well-defined visibility the siblings rely on.
+    static std::atomic<bool> inited;
     static void _bind_methods();
     static FirebaseMessagingListener* listener;
     // task-1077: _token is written on the FCM worker thread (OnTokenReceived -> setToken) and

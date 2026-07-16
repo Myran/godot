@@ -2,7 +2,7 @@
 #include "core/object/callable_mp.h"
 #include "core/object/class_db.h"
 
-bool FirebaseMessaging::inited = false;
+std::atomic<bool> FirebaseMessaging::inited{false};
 FirebaseMessagingListener *FirebaseMessaging::listener = NULL;
 std::string FirebaseMessaging::_token;
 std::mutex FirebaseMessaging::_token_mutex;
@@ -13,7 +13,9 @@ void FirebaseMessagingListener::OnMessage(const firebase::messaging::Message& me
     // WORKER THREAD — Only C++ types, no Godot objects.
     // task-1084: a late FCM push can fire during/after teardown; bail before touching
     // singleton (which may be freed) or its call_deferred emit (torn-down MessageQueue).
-    if (FirebaseMessaging::is_app_shutting_down()) {
+    // task-1136: also bail if singleton was nulled by the destructor on a mid-run instance
+    // free — deref-ing it here would be a use-after-free (mirrors database.cpp's `if (!singleton)`).
+    if (FirebaseMessaging::is_app_shutting_down() || this->singleton == nullptr) {
         return;
     }
     // task-1077: setMessage copies only raw C++ here and defers the Godot Dictionary build to
@@ -26,7 +28,8 @@ void FirebaseMessagingListener::OnTokenReceived(const char* token)
 {
     // WORKER THREAD — Only C++ types, no Godot objects.
     // task-1084: bail before touching singleton during teardown (see OnMessage).
-    if (FirebaseMessaging::is_app_shutting_down()) {
+    // task-1136: also bail if singleton was nulled by the destructor (mid-run free UAF guard).
+    if (FirebaseMessaging::is_app_shutting_down() || this->singleton == nullptr) {
         return;
     }
     // task-1077: pass the raw C string straight through; setToken stores it as std::string
@@ -35,24 +38,32 @@ void FirebaseMessagingListener::OnTokenReceived(const char* token)
 }
 
 FirebaseMessaging::FirebaseMessaging() {
-    if(!inited) {
+    if(!inited.load()) {
         firebase::App* app = Firebase::AppId();
         if(app != NULL) {
             listener = new FirebaseMessagingListener();
             listener->singleton = this;
             firebase::messaging::Initialize(*app, listener);
-            inited = true;
+            inited.store(true);
         }
     }
 }
 
 FirebaseMessaging::~FirebaseMessaging() {
-    // Only clean up if this is the last instance and resources were initialized
-    if (get_reference_count() == 1 && inited && listener != NULL) {
-        delete listener;
-        listener = NULL;
-        inited = false;
-        // We don't terminate Firebase Messaging here as it might be used by other parts of the app
+    // task-1136: the old `get_reference_count() == 1` guard was DEAD on the normal free path
+    // (refcount is already 0 inside a RefCounted destructor), so the listener was never
+    // deregistered and listener->singleton kept dangling at this freed instance — a late FCM push
+    // would then deref freed memory (use-after-free). Fix: deregister from the FCM SDK and null the
+    // back-pointer, but ONLY when THIS instance owns the listener (listener->singleton == this) so a
+    // transient throwaway instance can't tear down the live service's listener (the task-1124 footgun).
+    if (listener != NULL && listener->singleton == this) {
+        firebase::messaging::SetListener(NULL); // inverse of Initialize(): SDK stops dispatching to our listener
+        listener->singleton = NULL;             // any already-dispatched worker callback now no-ops via the singleton guard
+        // Deliberately NOT deleting `listener` (process-lifetime shared state, matching task-1124) —
+        // deleting it while a worker OnMessage may still be in flight would reintroduce a UAF on the
+        // listener itself. `inited` stays true; FCM remains initialized for the process. Residual: if
+        // the listener-owning instance is freed mid-run (won't happen under the task-557 wrapper, which
+        // holds it process-lifetime), FCM delivers no further messages — a no-op, not a crash.
     }
 }
 
