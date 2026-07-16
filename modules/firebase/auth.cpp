@@ -190,6 +190,10 @@ void FirebaseAuth::_handle_auth_state_changed_on_main_thread(bool is_signed_in, 
 Array FirebaseAuth::providers()
 {
     Array retArray;
+    if (!inited.load() || !auth) {
+        print_error("[Auth] providers() called before Auth initialized.");
+        return retArray;
+    }
     firebase::auth::User current_user = auth->current_user();
    for (std::size_t i = 0; i < current_user.provider_data().size(); ++i)
    {
@@ -205,36 +209,55 @@ Array FirebaseAuth::providers()
 
 bool FirebaseAuth::is_logged_in()
 {
+    if (!inited.load() || !auth) {
+        return false;
+    }
     firebase::auth::User current_user = auth->current_user();
     return (current_user.is_valid());
 }
 
 String FirebaseAuth::user_name()
 {
+    if (!inited.load() || !auth) {
+        return String("");
+    }
     firebase::auth::User current_user = auth->current_user();
     return String(current_user.display_name().c_str());
 }
 
 String FirebaseAuth::email()
 {
+    if (!inited.load() || !auth) {
+        return String("");
+    }
     firebase::auth::User current_user = auth->current_user();
     return String(current_user.email().c_str());
 }
 
 String FirebaseAuth::uid()
 {
+    if (!inited.load() || !auth) {
+        return String("");
+    }
     firebase::auth::User current_user = auth->current_user();
     return String(current_user.uid().c_str());
 }
 
 String FirebaseAuth::photo_url()
 {
+    if (!inited.load() || !auth) {
+        return String("");
+    }
     firebase::auth::User current_user = auth->current_user();
     return String(current_user.photo_url().c_str());
 }
 
 void FirebaseAuth::sign_out()
 {
+    if (!inited.load() || !auth) {
+        print_error("[Auth] sign_out() called before Auth initialized.");
+        return;
+    }
     auth->SignOut();
 }
 
