@@ -12,6 +12,63 @@ std::atomic<bool> FirebaseFirestore::inited{false};
 std::atomic<bool> FirebaseFirestore::is_shutting_down{false};
 firebase::firestore::Firestore* FirebaseFirestore::firestore_instance{nullptr};
 
+namespace {
+// task-1133: validate a Firestore path WITHOUT touching the SDK, so a malformed path fails the op
+// up-front instead of silently resolving to the "__invalid__/__invalid__" sentinel reference — a
+// REAL document that set/update would write to and get would report as success+exists=false.
+// Mirrors the segment rules in get_document_reference/get_collection_reference and the GDScript
+// _validate_document_path/_validate_collection_path helpers (empty + leading-slash rejected too).
+constexpr int INVALID_PATH_ERROR_CODE = -2; // distinct from -1 ("not initialized"); surfaced to GDScript as the failed op's error_code.
+
+std::vector<std::string> split_firestore_path(const String& path) {
+	CharString path_cs = path.utf8();
+	std::string path_str(path_cs.get_data());
+	std::vector<std::string> segments;
+	size_t start = 0;
+	size_t end = path_str.find('/');
+	while (end != std::string::npos) {
+		segments.push_back(path_str.substr(start, end - start));
+		start = end + 1;
+		end = path_str.find('/', start);
+	}
+	segments.push_back(path_str.substr(start));
+	return segments;
+}
+
+bool has_empty_segment(const std::vector<std::string>& segments) {
+	for (const std::string& seg : segments) {
+		if (seg.empty()) {
+			return true;
+		}
+	}
+	return false;
+}
+
+bool is_valid_document_path(const String& path) {
+	if (path.is_empty() || path.begins_with("/")) {
+		return false;
+	}
+	std::vector<std::string> segments = split_firestore_path(path);
+	// Document paths need an even segment count (collection/document pairs) and no empty segment.
+	if (segments.size() < 2 || segments.size() % 2 != 0) {
+		return false;
+	}
+	return !has_empty_segment(segments);
+}
+
+bool is_valid_collection_path(const String& path) {
+	if (path.is_empty() || path.begins_with("/")) {
+		return false;
+	}
+	std::vector<std::string> segments = split_firestore_path(path);
+	// Collection paths need an odd segment count and no empty segment.
+	if (segments.empty() || segments.size() % 2 == 0) {
+		return false;
+	}
+	return !has_empty_segment(segments);
+}
+} // namespace
+
 // --- Lifecycle ---
 
 FirebaseFirestore::FirebaseFirestore() {
@@ -126,7 +183,8 @@ firebase::firestore::DocumentReference FirebaseFirestore::get_document_reference
 
 	if (segments.size() < 2 || segments.size() % 2 != 0) {
 		print_error("[Firestore] Invalid document path: " + path + " (must have even number of segments)");
-		// Return invalid reference - caller should check
+		// task-1133: callers now pre-validate via is_valid_document_path() and never reach here with
+		// a bad path. This stays only as a defensive fallback against out-of-bounds segment access.
 		return firestore_instance->Collection("__invalid__").Document("__invalid__");
 	}
 
@@ -160,6 +218,7 @@ firebase::firestore::CollectionReference FirebaseFirestore::get_collection_refer
 
 	if (segments.empty() || segments.size() % 2 == 0) {
 		print_error("[Firestore] Invalid collection path: " + path + " (must have odd number of segments)");
+		// task-1133: callers now pre-validate via is_valid_collection_path(); defensive fallback only.
 		return firestore_instance->Collection("__invalid__");
 	}
 
@@ -325,6 +384,22 @@ void FirebaseFirestore::get_document_async(int p_request_id, const String& path)
 		return;
 	}
 
+	if (!is_valid_document_path(path)) {
+		print_error("[Firestore] Rejecting get_document_async - invalid path: " + path);
+		{
+			PendingFirestoreResult pending;
+			pending.success = false;
+			pending.error_code = INVALID_PATH_ERROR_CODE;
+			pending.error_msg = "INVALID_PATH: not a valid document path (collection/document pairs)";
+			std::lock_guard<std::mutex> lock(_pending_results_mutex);
+			_pending_results[p_request_id] = std::move(pending);
+		}
+		MessageQueue::get_singleton()->push_callable(
+			callable_mp(this, &FirebaseFirestore::_handle_document_get_on_main_thread).bind(p_request_id)
+		);
+		return;
+	}
+
 	print_line("[Firestore] get_document_async: " + path);
 
 	firebase::firestore::DocumentReference doc_ref = get_document_reference(path);
@@ -383,6 +458,16 @@ void FirebaseFirestore::set_document_async(int p_request_id, const String& path,
 		return;
 	}
 
+	if (!is_valid_document_path(path)) {
+		print_error("[Firestore] Rejecting set_document_async - invalid path: " + path);
+		MessageQueue::get_singleton()->push_callable(
+			callable_mp(this, &FirebaseFirestore::_handle_document_set_on_main_thread)
+				.bind(p_request_id, false, INVALID_PATH_ERROR_CODE,
+					String("INVALID_PATH: not a valid document path (collection/document pairs)"))
+		);
+		return;
+	}
+
 	print_line("[Firestore] set_document_async: " + path);
 
 	firebase::firestore::DocumentReference doc_ref = get_document_reference(path);
@@ -423,6 +508,16 @@ void FirebaseFirestore::update_document_async(int p_request_id, const String& pa
 		return;
 	}
 
+	if (!is_valid_document_path(path)) {
+		print_error("[Firestore] Rejecting update_document_async - invalid path: " + path);
+		MessageQueue::get_singleton()->push_callable(
+			callable_mp(this, &FirebaseFirestore::_handle_document_update_on_main_thread)
+				.bind(p_request_id, false, INVALID_PATH_ERROR_CODE,
+					String("INVALID_PATH: not a valid document path (collection/document pairs)"))
+		);
+		return;
+	}
+
 	print_line("[Firestore] update_document_async: " + path);
 
 	firebase::firestore::DocumentReference doc_ref = get_document_reference(path);
@@ -460,6 +555,16 @@ void FirebaseFirestore::delete_document_async(int p_request_id, const String& pa
 
 	if (is_shutting_down) {
 		print_line("[Firestore] Ignoring delete_document_async - app shutting down");
+		return;
+	}
+
+	if (!is_valid_document_path(path)) {
+		print_error("[Firestore] Rejecting delete_document_async - invalid path: " + path);
+		MessageQueue::get_singleton()->push_callable(
+			callable_mp(this, &FirebaseFirestore::_handle_document_delete_on_main_thread)
+				.bind(p_request_id, false, INVALID_PATH_ERROR_CODE,
+					String("INVALID_PATH: not a valid document path (collection/document pairs)"))
+		);
 		return;
 	}
 
@@ -507,6 +612,22 @@ void FirebaseFirestore::query_collection_async(int p_request_id, const String& c
 
 	if (is_shutting_down) {
 		print_line("[Firestore] Ignoring query_collection_async - app shutting down");
+		return;
+	}
+
+	if (!is_valid_collection_path(collection_path)) {
+		print_error("[Firestore] Rejecting query_collection_async - invalid path: " + collection_path);
+		{
+			PendingFirestoreResult pending;
+			pending.success = false;
+			pending.error_code = INVALID_PATH_ERROR_CODE;
+			pending.error_msg = "INVALID_PATH: not a valid collection path (odd segment count)";
+			std::lock_guard<std::mutex> lock(_pending_results_mutex);
+			_pending_results[p_request_id] = std::move(pending);
+		}
+		MessageQueue::get_singleton()->push_callable(
+			callable_mp(this, &FirebaseFirestore::_handle_collection_query_on_main_thread).bind(p_request_id)
+		);
 		return;
 	}
 
