@@ -454,6 +454,13 @@ void FirebaseDatabase::get_value_async(int p_request_id, const Array &keys) {
 	// Godot objects created on worker threads can have corrupted internal pointers (null _p).
 	// All data is stored in PendingFirebaseResult and converted to Godot types on main thread.
 	future.OnCompletion([this, p_request_id, path_std](const firebase::Future<firebase::database::DataSnapshot> &result) {
+		// task-1123: bail before locking _pending_results_mutex / pushing to MessageQueue if
+		// shutting down. This worker lambda can fire during/after teardown; touching the
+		// instance-member mutex or a torn-down MessageQueue -> 0xC0000005 (the task-1081/1084
+		// class, completed here for RTDB). Mirrors remote_config.cpp's guard.
+		if (is_shutting_down.load()) {
+			return;
+		}
 		// WORKER THREAD — Only C++ types, no Godot objects
 		PendingFirebaseResult pending;
 		pending.error = result.error();
@@ -503,6 +510,11 @@ void FirebaseDatabase::set_value_async(int p_request_id, const Array &keys, cons
 	print_verbose(String("[RTDB C++] SetValue ReqID:") + itos(p_request_id) + " Path: " + String(Variant(keys)));
 	firebase::Future<void> future = ref.SetValue(firebase_value);
 	future.OnCompletion([this, p_request_id](const firebase::Future<void> &result) {
+		// task-1123: bail before touching _pending_results_mutex / MessageQueue if shutting
+		// down (see get_value_async for the full rationale — worker-thread teardown race).
+		if (is_shutting_down.load()) {
+			return;
+		}
 		// WORKER THREAD — Only C++ types, no Godot objects
 		PendingFirebaseResult pending;
 		pending.success = (result.status() == firebase::kFutureStatusComplete &&
@@ -558,6 +570,11 @@ void FirebaseDatabase::push_and_update_async(int p_request_id, const Array &keys
 	print_verbose(String("[RTDB C++] PushUpdate ReqID:") + itos(p_request_id) + " Path: " + String(Variant(keys)) + " PushKey: " + String(String(push_key_std.c_str())));
 	firebase::Future<void> future = new_child_ref.UpdateChildren(firebase_data);
 	future.OnCompletion([this, p_request_id, push_key_std](const firebase::Future<void> &result) {
+		// task-1123: bail before touching _pending_results_mutex / MessageQueue if shutting
+		// down (see get_value_async for the full rationale — worker-thread teardown race).
+		if (is_shutting_down.load()) {
+			return;
+		}
 		// WORKER THREAD — Only C++ types, no Godot objects
 		PendingFirebaseResult pending;
 		pending.success = (result.status() == firebase::kFutureStatusComplete &&
@@ -594,6 +611,11 @@ void FirebaseDatabase::remove_value_async(int p_request_id, const Array &keys) {
 	print_verbose(String("[RTDB C++] RemoveValue ReqID:") + itos(p_request_id) + " Path: " + String(Variant(keys)));
 	firebase::Future<void> future = ref.RemoveValue();
 	future.OnCompletion([this, p_request_id](const firebase::Future<void> &result) {
+		// task-1123: bail before touching _pending_results_mutex / MessageQueue if shutting
+		// down (see get_value_async for the full rationale — worker-thread teardown race).
+		if (is_shutting_down.load()) {
+			return;
+		}
 		// WORKER THREAD — Only C++ types, no Godot objects
 		PendingFirebaseResult pending;
 		pending.success = (result.status() == firebase::kFutureStatusComplete &&
@@ -635,6 +657,11 @@ void FirebaseDatabase::query_ordered_data_async(int p_request_id, const Array &k
 
 	firebase::Future<firebase::database::DataSnapshot> future = query.GetValue();
 	future.OnCompletion([this, p_request_id, query_path_std](const firebase::Future<firebase::database::DataSnapshot> &result) {
+		// task-1123: bail before touching _pending_results_mutex / MessageQueue if shutting
+		// down (see get_value_async for the full rationale — worker-thread teardown race).
+		if (is_shutting_down.load()) {
+			return;
+		}
 		// WORKER THREAD — Only C++ types, no Godot objects
 		PendingFirebaseResult pending;
 		pending.error = result.error();
@@ -685,6 +712,14 @@ void FirebaseDatabase::run_transaction_async(int p_request_id, const Array &keys
 	print_verbose(String("[RTDB C++] Transaction ReqID:") + itos(p_request_id) + " Path: " + String(Variant(keys)) + " Increment: " + itos(increment_by));
 	firebase::Future<firebase::database::DataSnapshot> future = ref.RunTransaction(increment_transaction_function, tx_data);
 	future.OnCompletion([this, tx_data](const firebase::Future<firebase::database::DataSnapshot> &result) {
+		// task-1123: bail before touching _pending_results_mutex / MessageQueue if shutting
+		// down (worker-thread teardown race). Free the lambda-owned tx_data first so the early
+		// return doesn't leak — mirrors remote_config set_defaults_async freeing defaults_data.
+		// (delete nullptr is a safe no-op, so this is correct even if tx_data is null.)
+		if (is_shutting_down.load()) {
+			delete tx_data;
+			return;
+		}
 		// WORKER THREAD — Only C++ types, no Godot objects
 		if (!tx_data) {
 			return;
@@ -743,6 +778,11 @@ void FirebaseDatabase::set_server_timestamp_async(int p_request_id, const Array 
 
 	firebase::Future<void> future = ref.SetValue(timestamp_placeholder);
 	future.OnCompletion([this, p_request_id](const firebase::Future<void> &result) {
+		// task-1123: bail before touching _pending_results_mutex / MessageQueue if shutting
+		// down (see get_value_async for the full rationale — worker-thread teardown race).
+		if (is_shutting_down.load()) {
+			return;
+		}
 		// WORKER THREAD — Only C++ types, no Godot objects
 		PendingFirebaseResult pending;
 		pending.success = (result.status() == firebase::kFutureStatusComplete &&

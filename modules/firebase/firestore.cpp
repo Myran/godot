@@ -662,14 +662,27 @@ void FirebaseFirestore::_handle_document_get_on_main_thread(int req_id) {
 }
 
 void FirebaseFirestore::_handle_document_set_on_main_thread(int req_id, bool success, int error_code, String error_msg) {
+	// task-1123: second line of defense — skip the emit if the app is shutting down, matching
+	// the get/query handlers above (the worker guard is the first line of defense).
+	if (is_app_shutting_down()) {
+		return;
+	}
 	emit_signal("set_document_completed", req_id, success, error_code, error_msg);
 }
 
 void FirebaseFirestore::_handle_document_update_on_main_thread(int req_id, bool success, int error_code, String error_msg) {
+	// task-1123: second line of defense — skip the emit if shutting down (see set handler).
+	if (is_app_shutting_down()) {
+		return;
+	}
 	emit_signal("update_document_completed", req_id, success, error_code, error_msg);
 }
 
 void FirebaseFirestore::_handle_document_delete_on_main_thread(int req_id, bool success, int error_code, String error_msg) {
+	// task-1123: second line of defense — skip the emit if shutting down (see set handler).
+	if (is_app_shutting_down()) {
+		return;
+	}
 	emit_signal("delete_document_completed", req_id, success, error_code, error_msg);
 }
 
