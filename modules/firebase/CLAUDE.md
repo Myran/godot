@@ -1,391 +1,16 @@
 # Firebase C++ Module
 
-**Custom Godot module** - Integrates Firebase C++ SDK with Godot Engine for GameTwo.
+**Custom Godot module** — the C++ bridge between the Firebase C++ SDK and GDScript.
 
-This module provides the C++ bridge between Firebase SDK and GDScript. **Fully wired services:** Auth, Realtime Database, Firestore, Remote Config, Analytics. **Partial:** Cloud Messaging (token + receive only). **Not built:** Cloud Functions (commented-out stub — see below).
+**Fully wired services:** Auth, Realtime Database, Firestore, Remote Config, Analytics. **Partial:** Cloud Messaging (token + receive only). **Not built:** Cloud Functions (commented-out stub — see below).
 
-## Architecture context (read first for non-trivial work)
-
-- [data-and-firebase.md](../../../docs/technical/architecture/data-and-firebase.md) — three-tier data model, ARM64 safety via C++ main-thread `fromFirebaseVariant`+`deepCopyVariant` (task-1065 deleted the GDScript `_safe_copy_variant`), rate-limiter constants, FIREBASE_TIMEOUT_SEC=45.0
-- [build-and-deploy.md](../../../docs/technical/architecture/build-and-deploy.md) — Firebase SDK build-from-source (`build-firebase-libs`), SDK-injection markers (`//ADD_FIREBASE_BUILDSCRIPT_HERE_`, etc.), per-platform pipelines
+The two sections below are the reason this file exists. Everything after them is context.
 
 ---
 
-## 📁 Module Structure
+## 🚨 Thread Safety — read this before writing ANY async callback
 
-```
-godot/modules/firebase/
-├── config.py              # SCons build configuration
-├── SCsub                  # SCons build script
-├── register_types.h/cpp   # Module registration
-├── convertor.h/cpp        # Type conversion (GDScript ↔ Firebase)
-├── firebase.h             # Core Firebase header
-├── firebase_common.cpp    # Shared Firebase logic (ALL platforms)
-├── firebase_platform.mm   # Platform-specific init (Android/iOS/macOS)
-├── firebase_windows.cpp   # Platform-specific init (Windows MSVC)
-├── analytics.h/cpp        # Analytics service (ALL platforms) ✨ NEW
-├── auth.h                 # Authentication header
-├── auth.cpp               # Authentication service (ALL platforms)
-├── database.h/cpp         # Realtime Database service
-├── functions.h            # Cloud Functions — STUB ONLY (no .cpp, commented out of register_types.cpp, not compiled)
-├── messaging.h/cpp        # Cloud Messaging — PARTIAL (FCM token + message receive; NO topic subscribe; no GDScript service layer)
-├── remote_config.h/cpp    # Remote Config service
-└── AndroidManifest.xml    # Android permissions
-```
-
----
-
-## 🔧 Build System Integration
-
-### **config.py - Platform Detection**
-```python
-def can_build(env, platform):
-    if platform == "android":
-        return True
-    if platform == "ios":
-        return True
-    if platform == "macos":
-        return True
-    if platform == "windows":
-        return True
-    return False
-```
-
-**Platform Support:**
-- ✅ **Android**: Full support (arm32, arm64, x86_64)
-- ✅ **iOS**: Full support (arm64 device)
-- ✅ **macOS**: Full support (arm64, x86_64 Universal 2)
-- ✅ **Windows**: Full support (x86_64 MSVC) - Requires Windows VM with VS2022
-- ❌ **Linux**: Not supported (no Firebase C++ SDK integration)
-
-### **SCsub - Build Configuration**
-
-**Architecture: Shared + Platform-Specific Code**
-
-The module uses a shared architecture to minimize code duplication:
-
-```python
-# Shared C++ source files (ALL platforms)
-env.add_source_files(env.modules_sources, "auth.cpp")
-env.add_source_files(env.modules_sources, "convertor.cpp")
-env.add_source_files(env.modules_sources, "database.cpp")
-env.add_source_files(env.modules_sources, "firebase_common.cpp")  # Shared Firebase logic
-env.add_source_files(env.modules_sources, "messaging.cpp")
-env.add_source_files(env.modules_sources, "register_types.cpp")
-env.add_source_files(env.modules_sources, "remote_config.cpp")
-
-# Platform-specific Firebase initialization (createApplication, quit_app)
-if env['platform'] == 'windows':
-    env.add_source_files(env.modules_sources, "firebase_windows.cpp")  # Windows MSVC
-else:
-    env.add_source_files(env.modules_sources, "firebase_platform.mm")  # Android/iOS/macOS
-
-# Include Firebase SDK headers
-env.Append(CPPPATH="#/../firebase/firebase_cpp_sdk/include")
-```
-
-**iOS Library Linking:**
-```python
-if env['platform'] == 'iphone':
-    env.Prepend(LIBS=[File("#/../firebase/firebase_cpp_sdk/libs/ios/device-arm64/libfirebase_app.a")])
-    env.Prepend(LIBS=[File("#/../firebase/firebase_cpp_sdk/libs/ios/device-arm64/libfirebase_auth.a")])
-    env.Prepend(LIBS=[File("#/../firebase/firebase_cpp_sdk/libs/ios/device-arm64/libfirebase_database.a")])
-    # ... additional Firebase services
-```
-
-**Android Library Linking (Architecture-Specific):**
-```python
-if env['platform'] == 'android':
-    if env['arch'] == 'arm32':
-        env.Prepend(LIBS=[File("#/../firebase/firebase_cpp_sdk/libs/android/armeabi-v7a/libfirebase_app.a")])
-    elif env['arch'] == 'arm64':
-        env.Prepend(LIBS=[File("#/../firebase/firebase_cpp_sdk/libs/android/arm64-v8a/libfirebase_app.a")])
-    elif env['arch'] == 'x86_64':
-        env.Prepend(LIBS=[File("#/../firebase/firebase_cpp_sdk/libs/android/x86_64/libfirebase_app.a")])
-```
-
-**Critical**: Architecture must match device (arm64 for modern devices, x86_64 for emulators).
-
-**Windows Library Linking (MSVC):**
-```python
-if env['platform'] == 'windows':
-    if env['arch'] == 'x86_64':
-        env.Prepend(LIBS=[File("#/../firebase/firebase_cpp_sdk/libs/windows/VS2019/MT/x64/Release/firebase_app.lib")])
-        env.Prepend(LIBS=[File("#/../firebase/firebase_cpp_sdk/libs/windows/VS2019/MT/x64/Release/firebase_auth.lib")])
-        env.Prepend(LIBS=[File("#/../firebase/firebase_cpp_sdk/libs/windows/VS2019/MT/x64/Release/firebase_database.lib")])
-        # ... additional Firebase services
-        # Windows system libraries (passed via LINKFLAGS to avoid SCons name mangling)
-        env.Append(LINKFLAGS=['Userenv.lib'])  # For GetUserProfileDirectoryW
-        env.Append(LINKFLAGS=['icu.lib'])      # For ICU timezone functions
-```
-
-**Note**: Windows requires MSVC build (VS2019/VS2022) - MinGW is NOT supported due to Firebase SDK ABI incompatibility.
-
----
-
-## 🔀 Type Conversion System
-
-### **Convertor Class**
-
-**Purpose**: Safely convert between GDScript `Variant` and Firebase `firebase::Variant`
-
-**Key Functions:**
-```cpp
-class Convertor {
-public:
-    // Firebase → GDScript
-    static Variant fromFirebaseVariant(const firebase::Variant& arg);
-
-    // GDScript → Firebase
-    static firebase::Variant toFirebaseVariant(const String& arg);
-    static firebase::Variant toFirebaseVariant(const Dictionary& arg);
-    static firebase::Variant toFirebaseVariant(const Variant& arg);
-
-    // Deep copy for GDScript-safe memory
-    static Variant deepCopyVariant(const Variant& arg);
-};
-```
-
-### **Type Mapping**
-
-| GDScript Type | Firebase Type | Notes |
-|---------------|---------------|-------|
-| `String` | `std::string` | UTF-8 encoding |
-| `int` | `int64_t` | 64-bit integer |
-| `float` | `double` | Double precision |
-| `bool` | `bool` | Direct mapping |
-| `Dictionary` | `std::map<Variant, Variant>` | Recursive conversion |
-| `Array` | `std::vector<Variant>` | Recursive conversion |
-| `null` | `Variant::Null()` | Firebase null type |
-
-### **Memory Safety**
-
-**Critical**: Firebase C++ SDK uses different memory management than GDScript
-
-```cpp
-// ✅ CORRECT - Deep copy ensures GDScript owns memory
-Variant data = Convertor::fromFirebaseVariant(firebase_data);
-Variant safe_copy = Convertor::deepCopyVariant(data);
-return safe_copy;  // Safe to use in GDScript
-
-// ❌ FORBIDDEN - Shallow copy causes crashes
-return Convertor::fromFirebaseVariant(firebase_data);  // Firebase owns memory
-```
-
-**Why**: Firebase SDK memory may be freed while GDScript still references it.
-
----
-
-## 🔥 Firebase Services
-
-### **Core Initialization (firebase.mm)**
-
-**Initialization Pattern:**
-```cpp
-// Initialize Firebase App (required for all services)
-firebase::App* app = firebase::App::Create(
-    firebase::AppOptions(),
-    get_jni_env(),  // Android JNIEnv*
-    get_activity()  // Android Activity
-);
-
-// Initialize services
-firebase::auth::Auth* auth = firebase::auth::Auth::GetAuth(app);
-firebase::database::Database* database = firebase::database::Database::GetInstance(app);
-```
-
-**Platform-Specific:**
-- **iOS**: Uses `.mm` (Objective-C++) for UIKit integration
-- **Android**: Requires JNI environment and Activity reference
-
-### **Authentication (auth.h/mm)**
-
-**Exposed Methods:**
-```cpp
-// Sign in with email/password
-void sign_in_with_email_and_password(String email, String password);
-
-// Sign out
-void sign_out();
-
-// Get current user
-Dictionary get_current_user();
-
-// Auth state listener
-signal auth_state_changed(Dictionary user);
-```
-
-**iOS-Specific (`auth.mm`):**
-- Uses Objective-C++ for iOS-specific Auth UI
-- Handles keychain integration
-- Manages iOS authentication flow
-
-### **Realtime Database (database.h/cpp)**
-
-**Exposed Methods:**
-```cpp
-// Read data
-void get_value(String path);
-
-// Write data
-void set_value(String path, Variant data);
-
-// Update data
-void update_children(String path, Dictionary data);
-
-// Remove data
-void remove_value(String path);
-
-// Listen for changes
-void listen_for_value_events(String path);
-void stop_listening(String path);
-```
-
-**Data Conversion:**
-```cpp
-// GDScript → Firebase
-Dictionary gd_data = {"name": "Player", "level": 5};
-firebase::Variant fb_data = Convertor::toFirebaseVariant(gd_data);
-database_ref.SetValue(fb_data);
-
-// Firebase → GDScript
-firebase::Future<firebase::database::DataSnapshot> future = database_ref.GetValue();
-firebase::database::DataSnapshot snapshot = future.result();
-Variant gd_result = Convertor::fromFirebaseVariant(snapshot.value());
-```
-
-### **Cloud Functions (functions.h)** — NOT IMPLEMENTED
-
-⚠️ **Stub only — do not assume any of this works.** `functions.h` declares a `FirebaseFunctions` class whose `firebase/functions.h` include and `functions::Functions*` member are both commented out, there is no `functions.cpp`, and the `#include` + `register_class<FirebaseFunctions>()` are commented out in `register_types.cpp` (lines 14-18, 33-36). The class is not compiled, not registered, and not callable from GDScript. The method names below were a design sketch and were never implemented:
-
-```cpp
-// PLANNED ONLY — none of these exist as bound methods/signals:
-// void call_function(String function_name, Dictionary data);
-// signal function_result(String function_name, Dictionary result);
-// signal function_error(String function_name, String error);
-```
-
-To actually wire Cloud Functions, follow the "Adding New Firebase Services" steps below (create `functions.cpp`, uncomment registration, link `libfirebase_functions`).
-
-**Decision (2026-06-16): keep this stub dormant — do NOT build it for parity.** This binding wraps the *callable* (`onCall`) client SDK, whose only value over a plain `HTTPRequest` is auto-attaching the caller's Auth + App Check context to a server RPC. GameTwo's planned server functions don't need that channel: Steam token-minting (task-559) is reached over plain `HTTPRequest` — no auth context exists yet at mint time (see `project/firebase/steam_auth_service.gd`) — and the RevenueCat receipt webhook (task-573) is server-to-server (the client never calls it). The deployed-functions backend itself lives in a separate `functions/` project (task-586), not in this C++ module. Finish this binding only when an already-signed-in client must invoke server-authoritative gameplay (e.g. server-side run scoring, validated opponent fetch) — the current design deliberately solves those client-side.
-
-### **Cloud Messaging (messaging.h/cpp)** — PARTIAL
-
-`FirebaseMessaging` is registered (`register_types.cpp:32`) and `messaging.cpp` initializes FCM with a listener. **Actual bound surface** (the only methods/signals that exist):
-
-```cpp
-// Get the current FCM token (returns "" until OnTokenReceived fires)
-Variant get_token();
-
-// Signals:
-signal token();                          // emitted when a token arrives
-signal message(Dictionary message_data); // emitted on incoming message
-```
-
-**NOT implemented** (despite earlier docs): `subscribe_to_topic`, `unsubscribe_from_topic`, no `message_received` signal (the signal is `message`), and there is **no GDScript `MessagingService` wrapper** — so it is not usable from game code yet. Finishing this is gated on task-557 (push-notification retention feature).
-
-### **Remote Config (remote_config.h/cpp)**
-
-**Exposed Methods:**
-```cpp
-// Fetch remote config
-void fetch_config();
-
-// Activate fetched config
-void activate_config();
-
-// Get config value
-Variant get_config_value(String key);
-
-// Set defaults
-void set_defaults(Dictionary defaults);
-```
-
----
-
-## 🔨 Build Requirements
-
-### **Development Workflow**
-
-```bash
-# RECOMMENDED: One-command C++ workflow
-just cpp-dev
-# Combines: build templates → install template → deploy-android
-
-# Manual workflow (alternative)
-just build-android-templates     # 1. Compile C++ → .aar (3-15 min)
-just install-android-template    # 2. Extract to project/android/build/
-just deploy-android           # 3. Package + deploy (REQUIRED)
-```
-
-**Critical**:
-- **After ANY C++ changes**: `just deploy-android` **MANDATORY** before Android testing
-- **Reason**: Android uses compiled/cached templates that don't auto-update
-- **iOS**: Similar workflow with `just deploy-ios`
-
-### **Build Artifacts**
-
-**Android:**
-```
-godot/bin/
-└── android_templates/
-    └── firebase.release.aar      # Compiled Firebase module
-```
-
-**iOS:**
-```
-godot/bin/
-└── libgodot.ios.template_release.arm64.a
-```
-
-**Installation Location:**
-```
-project/android/build/
-├── libs/
-│   └── firebase.release.aar     # Installed module
-└── src/
-    └── AndroidManifest.xml      # Merged permissions
-```
-
----
-
-## 🚨 Critical Patterns & Safety
-
-### **Async Operations**
-
-**All Firebase operations are asynchronous:**
-
-```cpp
-// C++ side - Returns Future
-firebase::Future<firebase::database::DataSnapshot> future = database_ref.GetValue();
-
-// Monitor completion
-while (future.status() == firebase::kFutureStatusPending) {
-    // Wait for completion
-}
-
-if (future.error() == firebase::database::kErrorNone) {
-    // Success
-    firebase::database::DataSnapshot snapshot = future.result();
-    Variant data = Convertor::fromFirebaseVariant(snapshot.value());
-    emit_signal("data_received", data);
-} else {
-    // Error
-    emit_signal("data_error", String(future.error_message()));
-}
-```
-
-**GDScript Integration:**
-```gdscript
-# GDScript automatically handles async via signals/await
-var result: Dictionary = await firebase_service.database_get("/path")
-if result.success:
-    process_data(result.data)
-```
-
-### **Thread Safety**
-
-> 🚨 **THE #1 recurring crash in this module — read this before writing ANY async callback.**
+> **THE #1 recurring crash in this module.**
 > A Godot container (`Dictionary`/`Array`/`Variant`/`String`, all CowData) built on a Firebase
 > **worker thread** corrupts its internal `_p` pointer → intermittent **ARM64 `null-_p` / SIGBUS**
 > in the field. It passes most test runs and then crashes on a device. This class cost a
@@ -412,9 +37,10 @@ all fire off-main. Inside them:
 **Allowed on the worker:** a bare scalar `String`/`int` passed by value through MessageQueue
 (e.g. an error code). Prefer storing `std::string` and building the `String` in the handler.
 
-**Copy-this gold standard → `database.cpp`:** `PendingFirebaseResult` + `_pending_results_mutex`
-+ `_queue_*_event` / `_handle_*_on_main_thread`. `firestore.cpp` and `messaging.cpp` now follow the
-identical shape — read any of the three before adding a new async service and mirror it exactly.
+**Copy-this gold standard → `database.cpp` / `database.h`:** `PendingFirebaseResult` +
+`_pending_results_mutex` + `_queue_*_event` / `_handle_*_on_main_thread`. `firestore.cpp` and
+`messaging.cpp` follow the identical shape — read any of the three before adding a new async
+service and mirror it exactly.
 
 ```cpp
 // ❌ FORBIDDEN — builds a Godot Dictionary on the Firebase worker thread (the SIGBUS class)
@@ -439,22 +65,20 @@ void Svc::_handle_on_main_thread(int id) {           // NOW on the main thread
 **Separate, lower-frequency rule:** never *call* the Firebase SDK from a Godot worker thread —
 drive futures from the main thread (`_process` / signals).
 
-> Enforcement is by review against this rule + the gold-standard pattern. (A CI brace-matching gate
-> was prototyped in task-1078 and dropped 2026-06-25 — a heuristic that needed per-change
-> reconciliation was judged heavier than the rule it guarded; the fix is keeping THIS section
+> Checked by review against this rule + the gold-standard pattern — there is no CI gate. (A brace-matching
+> gate was prototyped in task-1078 and dropped 2026-06-25 — a heuristic that needed per-change
+> reconciliation was judged heavier than the rule it guarded; the protection is keeping THIS section
 > prominent and mirroring `database.cpp`.)
 
-### **Memory Management**
+---
 
-#### **String UTF-8 Lifetime Pattern (CRITICAL)**
-
-**Root Cause**: `String::utf8().get_data()` creates a **dangling pointer**.
+## 🚨 String UTF-8 Lifetime — `String::utf8().get_data()` is a dangling pointer
 
 ```cpp
 // ❌ CRASHES - Dangling pointer!
 // String::utf8() returns a temporary CharString.
 // get_data() points into that temporary.
-// When temporary is destroyed, pointer becomes invalid.
+// When the temporary is destroyed, the pointer becomes invalid.
 const char* cstr = string_name.utf8().get_data();
 firebase::analytics::LogEvent(cstr);  // CRASH: pointer invalid
 
@@ -465,348 +89,151 @@ firebase::analytics::LogEvent(cs.get_data());  // Pointer valid through call
 
 **Why This Matters**:
 - **Android JNI**: Strict UTF-8 validation (`Modified UTF-8` format). Dangling pointers read garbage bytes that fail JNI validation.
-- **Desktop**: More lenient - may work randomly but will crash eventually.
-- **Firebase SDK**: Reads string data asynchronously - pointer must remain valid.
+- **Desktop**: More lenient — may work randomly but will crash eventually.
+- **Firebase SDK**: Reads string data asynchronously — the pointer must remain valid.
 
-**Pattern for All Functions**:
+When building a `std::vector<firebase::analytics::Parameter>`, the `Parameter`s hold *pointers* into
+the CharStrings — so the CharStrings must outlive the vector. Keep them in a parallel
+`std::vector<CharString>` in the same scope as the `LogEvent` call:
+
 ```cpp
-void log_event(const String& event_name, const Dictionary& params) {
-    // Store CharStrings to extend lifetime
-    CharString event_cs = event_name.utf8();
-
-    // Convert params (store each CharString)
-    std::vector<firebase::analytics::Parameter> fb_params;
-    for (const KeyValue& kv : params) {
-        String key_str = kv.key;
-        String value_str = kv.value;
-        CharString key_cs = key_str.utf8();
-        CharString value_cs = value_str.utf8();
-        fb_params.push_back(firebase::analytics::Parameter(
-            key_cs.get_data(),
-            value_cs.get_data()
-        ));
-    }
-
-    // Now safe to call Firebase SDK
-    firebase::analytics::LogEvent(event_cs.get_data(), fb_params.data(), fb_params.size());
+std::vector<CharString> key_strings, value_strings;   // MUST outlive fb_params
+std::vector<firebase::analytics::Parameter> fb_params;
+for (const KeyValue<Variant, Variant>& kv : params) {
+    key_strings.push_back(String(kv.key).utf8());
+    value_strings.push_back(String(kv.value).utf8());
+    fb_params.push_back({key_strings.back().get_data(), value_strings.back().get_data()});
 }
+firebase::analytics::LogEvent(event_cs.get_data(), fb_params.data(), fb_params.size());
 ```
 
-**Functions Affected** (must ALL follow this pattern):
-- `log_event()`, `log_event_string()`, `log_event_int()`, `log_event_double()`, `log_event_params()`
-- `set_user_property()`, `set_user_id()`
-- `_convert_dict_to_parameters()` - parameter dictionary conversion
+**Reference implementation**: `analytics.cpp` — every `log_event*` / `set_user_property` /
+`set_user_id` follows this (fixed in task-402, 2025-12-31). Mirror it in any new SDK call
+that takes a `const char*`.
 
-**Reference**: Fixed in `analytics.cpp` (task-402, 2025-12-31)
+### Firebase Objects Lifetime
 
-#### **Firebase Objects Lifetime**
-```cpp
-// ✅ CORRECT - Keep Firebase objects alive
-class FirebaseService {
-    firebase::App* app;                    // Must outlive services
-    firebase::auth::Auth* auth;            // Must outlive app
-    firebase::database::Database* database;
-
-public:
-    ~FirebaseService() {
-        // Clean up in reverse order
-        delete database;
-        delete auth;
-        delete app;
-    }
-};
-
-// ❌ FORBIDDEN - Dangling pointers
-firebase::App* app = firebase::App::Create(...);
-delete app;  // Services still reference app - CRASH
-```
-
-### **Error Handling**
-
-**Always check error codes:**
-```cpp
-firebase::Future<void> future = database_ref.SetValue(data);
-future.OnCompletion([](const firebase::Future<void>& result) {
-    if (result.error() == firebase::database::kErrorNone) {
-        // Success
-        emit_signal("write_success");
-    } else {
-        // Error
-        String error_msg = String(result.error_message());
-        int error_code = result.error();
-        emit_signal("write_error", error_code, error_msg);
-    }
-});
-```
-
-**Common Error Codes:**
-- `kErrorNone` (0): Success
-- `kErrorPermissionDenied` (1): Security rules denied access
-- `kErrorNotFound` (2): Data not found
-- `kErrorUnavailable` (3): Service temporarily unavailable
-- `kErrorNetworkError` (4): Network connection failed
+`firebase::App*` must outlive every service built from it (`Auth`, `Database`, …) — destroy in
+reverse order. Deleting the app while a service still references it is a crash.
 
 ---
 
-## 🚨 Known Platform Limitations
+## Architecture context (read for non-trivial work)
 
-### **Windows RTDB Error Handling (Task-516)**
-
-**Issue**: Windows Firebase C++ SDK returns incorrect error information for permission denied scenarios in Realtime Database operations.
-
-**Behavior Comparison:**
-
-| Platform | `result.error()` | `result.error_message()` | Behavior |
-|----------|------------------|--------------------------|----------|
-| **macOS/iOS** | `8` (kErrorPermissionDenied) | `"This client does not have permission..."` | ✅ Correct |
-| **Windows** | `0` (kErrorNone) | `""` (empty string) | ❌ SDK Bug |
-
-**Root Cause Analysis:**
-
-The Firebase C++ SDK for desktop platforms (Windows, macOS, Linux) shares the same source code in `extras/firebase-cpp-sdk/database/src/desktop/`. The divergence occurs in lower-level libraries:
-
-1. **Error path**: Server → WebSocket (uWS) → JSON Parse (flatbuffers) → Connection → PersistentConnection → EventRegistration → Future
-2. **Critical code** (`value_event_registration.cc:45-47`):
-   ```cpp
-   void ValueEventRegistration::FireCancelEvent(Error error) {
-       listener_->OnCancelled(error, GetErrorMessage(error));  // Uses STATIC message!
-   }
-   ```
-3. **Design limitation**: `GetErrorMessage(Error)` returns static strings from an enum lookup, NOT the server-provided error message
-4. **Platform divergence**: uWebSockets/flatbuffers/libuv behave differently on Windows, causing error code 0 to be passed instead of the actual error
-
-**GitHub Issue Search** (2026-02-03):
-- No exact match found in firebase/firebase-cpp-sdk issues
-- Related: Issue #1785 "[Bug] Errors fail to return all data from error object" (Auth, Windows) - same pattern of Windows-specific error information loss
-
-**Workarounds Implemented:**
-
-1. **C++ Defensive Fix** (`database.cpp`):
-   ```cpp
-   // Task-516: Windows Firebase SDK bug workaround
-   // Check for error_message even when error code is 0
-   if (status == firebase::kFutureStatusComplete && error == firebase::database::kErrorNone) {
-       if (!error_msg.is_empty()) {
-           // Error message present despite error code 0 - treat as error
-           print_error("[RTDB C++] ... Error (SDK returned code 0 with message): " + error_msg);
-           call_deferred(SNAME("emit_signal"), SNAME("get_value_error"), req_id, path_str, "SDK_ERROR_MSG", error_msg);
-       }
-       // ... normal handling
-   }
-   ```
-   **Note**: This fix is retained but doesn't help on Windows since both error code AND error_message are empty.
-
-2. **Test Framework Adaptation** (`firebase-rtdb-layer.json`):
-   ```json
-   {
-     "action": "rtdb.testing.error_handling",
-     "expected_result": {
-       "type": "action_result_trust",
-       "description": "Validates error handling via action success/failure (Windows SDK doesn't report permission errors in logs)"
-     }
-   }
-   ```
-   Changed from `expected_errors` (validates log patterns) to `action_result_trust` (validates action success/failure).
-
-**Impact on Testing:**
-- ✅ All 21 RTDB test actions PASS on Windows
-- ✅ Error handling test correctly handles null results gracefully
-- ⚠️ Windows logs won't show Firebase permission error details
-- ✅ macOS/iOS continue to show full error messages
-
-**Recommendations:**
-- Do NOT rely on Windows Firebase RTDB error messages for debugging
-- Use macOS or mobile platforms for Firebase permission error investigation
-- The `action_result_trust` validation type is platform-agnostic and reliable
+- [data-and-firebase.md](../../../docs/technical/architecture/data-and-firebase.md) — three-tier data model, ARM64 safety via C++ main-thread `fromFirebaseVariant`+`deepCopyVariant` (task-1065 deleted the GDScript `_safe_copy_variant`), rate-limiter constants, FIREBASE_TIMEOUT_SEC=45.0
+- [build-and-deploy.md](../../../docs/technical/architecture/build-and-deploy.md) — Firebase SDK build-from-source (`build-firebase-libs`), SDK-injection markers (`//ADD_FIREBASE_BUILDSCRIPT_HERE_`, etc.), per-platform pipelines
 
 ---
 
-## 🔧 Platform-Specific Implementation
+## 🔀 Type Conversion (`convertor.h/cpp`)
 
-### **iOS (.mm files)**
+`Convertor` converts between GDScript `Variant` and `firebase::Variant`:
+`fromFirebaseVariant` (FB → GD), three `toFirebaseVariant` overloads (GD → FB), and
+`deepCopyVariant` (GDScript-safe memory).
 
-**Objective-C++ Integration:**
-```objc
-// auth.mm - iOS-specific auth
-@interface AuthHandler : NSObject
-@end
+Scalars map as expected (`String`→`std::string` UTF-8, `int`→`int64_t`, `float`→`double`);
+`Dictionary`→`std::map`, `Array`→`std::vector` convert recursively; `null`→`Variant::Null()`.
 
-@implementation AuthHandler
-- (void)handleAuthResult:(FIRAuthDataResult*)result {
-    // Convert iOS auth result to GDScript
-    Dictionary user_data;
-    user_data["uid"] = String([result.user.uid UTF8String]);
-    user_data["email"] = String([result.user.email UTF8String]);
+**Critical**: deep-copy before handing data to GDScript — Firebase SDK memory may be freed while
+GDScript still references it.
 
-    // Emit to GDScript
-    emit_signal("auth_success", user_data);
-}
-@end
-```
-
-**UIKit Integration:**
-- Auth UI flows
-- Keychain access
-- App lifecycle events
-
-### **Android (JNI)**
-
-**JNI Environment:**
 ```cpp
-// Get JNI environment
-JNIEnv* env = get_jni_env();
+// ✅ CORRECT - Deep copy ensures GDScript owns memory
+Variant data = Convertor::fromFirebaseVariant(firebase_data);
+return Convertor::deepCopyVariant(data);
 
-// Get Android Activity
-jobject activity = get_activity();
-
-// Initialize Firebase with Android context
-firebase::App* app = firebase::App::Create(
-    firebase::AppOptions(),
-    env,
-    activity
-);
-```
-
-**AndroidManifest.xml:**
-```xml
-<!-- Required permissions for Firebase -->
-<uses-permission android:name="android.permission.INTERNET" />
-<uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
-
-<!-- Firebase services -->
-<service
-    android:name="com.google.firebase.components.ComponentDiscoveryService"
-    android:exported="false">
-    <meta-data
-        android:name="com.google.firebase.components:com.google.firebase.auth.FirebaseAuthRegistrar"
-        android:value="com.google.firebase.components.ComponentRegistrar" />
-</service>
+// ❌ FORBIDDEN - Shallow copy causes crashes
+return Convertor::fromFirebaseVariant(firebase_data);  // Firebase owns memory
 ```
 
 ---
 
-## 📖 Development Guidelines
+## Platform Support
 
-### **Adding New Firebase Services**
+Build gating lives in `config.py` (`can_build`) — read it rather than trusting a copy here.
+Current state: **Android, iOS, macOS, Windows** all build the module; **Linux is not supported**;
+and **editor builds exclude it entirely** (`target == 'editor'` → `False`), which is why GDScript
+guards every C++ class behind `ClassDB.class_exists(...)`.
 
-> 🚨 **If the service has async callbacks (futures or listeners), they run on a Firebase worker
-> thread — follow the worker→main pattern in [Thread Safety](#thread-safety) and mirror
-> `database.cpp`. Building a Godot object in the callback is the recurring ARM64 SIGBUS bug.**
+| Platform | Arches | Init source |
+|----------|--------|-------------|
+| Android | arm32, arm64, x86_64 (must match the device) | `firebase_platform.mm` (JNIEnv + Activity) |
+| iOS | arm64 device | `firebase_platform.mm` (Objective-C++, UIKit/NSRunLoop) |
+| macOS | arm64, x86_64 Universal 2 | `firebase_platform.mm` |
+| Windows | x86_64, **MSVC only** (MinGW ABI-incompatible with the SDK) | `firebase_windows.cpp` |
 
-1. **Add header/implementation files**
-```cpp
-// new_service.h
-class NewService : public RefCounted {
-    GDCLASS(NewService, RefCounted);
+Everything else (`auth.cpp`, `database.cpp`, `firestore.cpp`, `analytics.cpp`, `messaging.cpp`,
+`remote_config.cpp`, `convertor.cpp`, `firebase_common.cpp`) is pure C++, shared by all platforms.
+Per-platform library lists + Windows system-lib LINKFLAGS live in `SCsub`.
 
-protected:
-    static void _bind_methods();
+---
 
-public:
-    void new_operation();
-};
+## Service status
 
-// new_service.cpp
-void NewService::_bind_methods() {
-    ClassDB::bind_method(D_METHOD("new_operation"), &NewService::new_operation);
-}
-```
+Bound method surfaces are derivable — read each service's `_bind_methods()` for the authoritative
+list (they are `*_async(request_id, ...)` + signal pairs, not the synchronous shapes you might assume).
 
-2. **Register in register_types.cpp**
-```cpp
-void initialize_firebase_module(ModuleInitializationLevel p_level) {
-    if (p_level != MODULE_INITIALIZATION_LEVEL_SCENE) {
-        return;
-    }
+### Cloud Functions (`functions.h`) — NOT IMPLEMENTED
 
-    ClassDB::register_class<NewService>();
-}
-```
+⚠️ **Stub only.** No `functions.cpp`; the `#include` and `register_class<FirebaseFunctions>()` are
+commented out in `register_types.cpp`. Not compiled, not registered, not callable from GDScript.
 
-3. **Add to SCsub**
-```python
-# Link new Firebase service library
-if env['platform'] == 'android':
-    env.Prepend(LIBS=[File("#/../firebase/firebase_cpp_sdk/libs/android/.../libnew_service.a")])
-```
+**Decision (2026-06-16): keep this stub dormant — do NOT build it for parity.** This binding wraps the *callable* (`onCall`) client SDK, whose only value over a plain `HTTPRequest` is auto-attaching the caller's Auth + App Check context to a server RPC. GameTwo's planned server functions don't need that channel: Steam token-minting (task-559) is reached over plain `HTTPRequest` — no auth context exists yet at mint time (see `project/firebase/steam_auth_service.gd`) — and the RevenueCat receipt webhook (task-573) is server-to-server (the client never calls it). The deployed-functions backend itself lives in a separate `functions/` project (task-586), not in this C++ module. Finish this binding only when an already-signed-in client must invoke server-authoritative gameplay (e.g. server-side run scoring, validated opponent fetch) — the current design deliberately solves those client-side.
 
-4. **Expose to GDScript**
-```gdscript
-# project/firebase/new_service.gd
-extends RefCounted
-class_name NewService
+### Cloud Messaging (`messaging.h/cpp`) — PARTIAL
 
-var _native: Object
+`FirebaseMessaging` is registered and initializes FCM with a listener, but the whole bound surface
+is one method `get_token()` plus signals `token` and `message(message_data)`. **NOT implemented**
+(despite earlier docs): `subscribe_to_topic` / `unsubscribe_from_topic`, no `message_received`
+signal, and there is **no GDScript `MessagingService` wrapper** — so it is not usable from game
+code yet. Finishing this is gated on task-557 (push-notification retention feature).
 
-func _init() -> void:
-    _native = NativeNewService.new()  # C++ binding
+### Adding a new service
 
-func new_operation() -> void:
-    _native.new_operation()
-```
+Copy `firestore.cpp` — it is the newest full implementation and already carries the worker→main
+pattern above. Then: register the class in `register_types.cpp`, link the service lib per platform
+in `SCsub`, and add the GDScript wrapper under `project/firebase/`.
 
-### **Testing C++ Changes**
+---
+
+## 🚨 Known Platform Limitation — Windows RTDB error strings (task-516)
+
+Do NOT trust Windows Firebase RTDB error reporting: on a permission-denied the SDK returns
+`error() == 0` with an empty `error_message()` (macOS/iOS correctly return `8` + the server text).
+Investigate Firebase permission errors on macOS or mobile instead. Windows RTDB tests therefore
+validate with `expected_result.type = "action_result_trust"` (action success/failure) rather than
+log-pattern matching — see `tests/debug_configs/firebase-rtdb-layer.json`.
+
+---
+
+## 🔨 Build & Debug
 
 ```bash
-# Complete workflow
-just cpp-dev  # Build + install + fastbuild
+# After ANY C++ change — MANDATORY before Android testing (Android runs cached templates)
+just cpp-dev                      # build templates → install template → deploy-android
+just deploy-ios                   # iOS equivalent
 
-# Validate on device
-just test-android-target firebase-test
-
-# Debug logs
+# Test
+just test-android-target firebase-cpp-layer
 just logs-pattern TEST_ID "cpp.firebase.*"
-```
 
-### **Debugging C++ Module**
-
-```bash
-# Android native logs
-just logs-android-device "Firebase"
-just logs-android-device "FATAL"
-
-# Look for crashes
-just android-logs-tagged "DEBUG" 30 100
-
-# iOS logs
-just logs-ios TEST_ID              # saved iOS test logs
-just logs-ios-device "term"        # live iOS device logs
-```
-
----
-
-## 📚 Additional Resources
-
-**Build Commands:**
-```bash
-just cpp-dev                      # One-command C++ workflow
-just build-android-templates      # Build C++ module
-just install-android-template     # Install to project
-just deploy-android            # Deploy (REQUIRED)
-
-just deploy-ios                   # iOS build + deploy
-```
-
-**Testing:**
-```bash
-just test-android-target cpp-firebase-test
-just logs-pattern TEST_ID "cpp.*"
+# Debug
+just logs-android-device "Firebase"   # or "FATAL" for native crashes
+just logs-ios TEST_ID                 # saved iOS test logs
+just logs-ios-device "term"           # live iOS device logs
 ```
 
 **See Also:**
-- `project/CLAUDE.md` - GDScript Firebase integration patterns
-- `tests/CLAUDE.md` - Testing Firebase functionality
-- `justfiles/CLAUDE.md` - Build system commands
-- Root `CLAUDE.md` - Overall project workflows
-
----
+- `project/firebase/CLAUDE.md` — GDScript service layer (3-layer architecture, async patterns)
+- `tests/CLAUDE.md` — testing Firebase functionality
+- `justfiles/CLAUDE.md` — build system commands
 
 **Key Principles:**
-- ✅ **Platform-specific builds** - Android/iOS only (desktop platforms not supported)
-- ✅ **Type safety** - Use Convertor for all GDScript ↔ Firebase conversions
-- ✅ **Memory safety** - Deep copy variants, manage Firebase object lifetimes
-- ✅ **Thread safety** - All Firebase calls from main thread only
-- ✅ **Error handling** - Always check Future error codes
-- ✅ **Async operations** - Use signals/callbacks for completion
+- ✅ **Thread safety** — never build a Godot object on a Firebase worker thread (see top)
+- ✅ **String lifetime** — store the `CharString`, never `utf8().get_data()` inline
+- ✅ **Type safety** — use `Convertor` for all GDScript ↔ Firebase conversions
+- ✅ **Memory safety** — `deepCopyVariant` before returning to GDScript; manage SDK object lifetimes
+- ✅ **Error handling** — always check `Future::error()`
+- ✅ **Platform gating** — GDScript guards every C++ class with `ClassDB.class_exists(...)` (editor builds have no module)
 
-*This module is critical infrastructure - changes require thorough testing across platforms.*
+*This module is critical infrastructure — changes require thorough testing across platforms.*
