@@ -1715,14 +1715,18 @@ DisplayServerEnums::WindowID DisplayServerMacOS::create_sub_window(DisplayServer
 void DisplayServerMacOS::show_window(DisplayServerEnums::WindowID p_id) {
 	WindowData &wd = windows[p_id];
 
-	if (p_id == DisplayServerEnums::MAIN_WINDOW_ID) {
+	// GODOT_NO_ACTIVATE: automation opt-out — never pull focus or raise over the
+	// user's frontmost app. Set by the test harness, unset for normal launches.
+	const bool no_activate = getenv("GODOT_NO_ACTIVATE") != nullptr;
+
+	if (p_id == DisplayServerEnums::MAIN_WINDOW_ID && !wd.no_focus && !no_activate) {
 		[GodotApp activateApplication];
 	}
 
 	popup_open(p_id);
 	if ([wd.window_object isMiniaturized]) {
 		return;
-	} else if (wd.no_focus) {
+	} else if (wd.no_focus || no_activate) {
 		if (wd.transient_parent != DisplayServerEnums::INVALID_WINDOW_ID) {
 			WindowData &wd_parent = windows[wd.transient_parent];
 			[wd.window_object orderWindow:NSWindowAbove relativeTo:[wd_parent.window_object windowNumber]];
