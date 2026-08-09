@@ -261,6 +261,20 @@ void FirebaseAuth::sign_out()
     auth->SignOut();
 }
 
+void FirebaseAuth::use_emulator(String p_host, int p_port)
+{
+    if (!inited.load() || !auth) {
+        print_error("[Auth] use_emulator() called before Auth initialized.");
+        return;
+    }
+    // task-1460: test harness only — routes all Auth traffic to the Firebase
+    // Auth emulator. Must run before any sign-in; the underlying Auth is a
+    // process-wide singleton, so one call covers every instance.
+    CharString host_cs = p_host.utf8();
+    auth->UseEmulator(std::string(host_cs.get_data()), (uint32_t)p_port);
+    print_line(String("[Auth] Auth emulator enabled: ") + p_host + ":" + itos(p_port));
+}
+
 
 // --- New Async Methods with Request IDs and MessageQueue Marshalling ---
 
@@ -668,6 +682,7 @@ void FirebaseAuth::_bind_methods() {
     ClassDB::bind_method(D_METHOD("photo_url"), &FirebaseAuth::photo_url);
     ClassDB::bind_method(D_METHOD("sign_out"), &FirebaseAuth::sign_out);
     ClassDB::bind_method(D_METHOD("providers"), &FirebaseAuth::providers);
+    ClassDB::bind_method(D_METHOD("use_emulator", "host", "port"), &FirebaseAuth::use_emulator);
 
     // Async methods with request IDs (the only sign-in/link surface since task-1002)
     ClassDB::bind_method(D_METHOD("sign_in_anonymously_async", "request_id"), &FirebaseAuth::sign_in_anonymously_async);

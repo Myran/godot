@@ -23,6 +23,7 @@
         android:isGame="true"
         android:hasFragileUserData="false"
         android:requestLegacyExternalStorage="false"
+        android:networkSecurityConfig="@xml/network_security_config"
         tools:ignore="GoogleAppIndexingWarning" >
         <profileable
             android:shell="true"

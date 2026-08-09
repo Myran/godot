@@ -70,6 +70,7 @@ public:
 	String uid();
 	String photo_url();
 	void sign_out();
+	void use_emulator(String p_host, int p_port);
 
 	// --- New Async Methods with Request IDs ---
 	void sign_in_anonymously_async(int p_request_id);
