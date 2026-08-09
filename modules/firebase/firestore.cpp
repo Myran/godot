@@ -2,6 +2,7 @@
 #include "firebase.h"
 #include "convertor.h"
 #include "core/object/message_queue.h"
+#include "core/os/os.h"
 #include "core/object/callable_mp.h"
 #include "core/object/class_db.h"
 #include "core/variant/variant.h"
@@ -128,6 +129,27 @@ void FirebaseFirestore::initialize() {
 	// configure_settings() can still override per-session if a future feature needs the cache.
 	firebase::firestore::Settings settings;
 	settings.set_persistence_enabled(false);
+	// task-1478: test harness only — route Firestore to the local emulator.
+	// Settings are valid until first USE, so applying here (before any op)
+	// covers every caller, including the direct initialize() call in
+	// cpp_firebase_debug_action.gd. Same OS-API read rule as RTDB: never
+	// std::getenv (invisible to SetEnvironmentVariableW on Windows).
+	// host + ssl(false) must land in the SAME Settings object — ssl=false
+	// with a default host throws.
+	String emulator_value = OS::get_singleton()->get_environment("FIREBASE_FIRESTORE_EMULATOR");
+	if (!emulator_value.is_empty()) {
+		// Reject scheme-bearing values ("/") and port 0: both pass a naive
+		// host:port check and fail quietly inside the SDK instead of loudly here.
+		int colon = emulator_value.rfind(":");
+		if (colon <= 0 || emulator_value.contains("/") || !emulator_value.substr(colon + 1).is_valid_int() || emulator_value.substr(colon + 1).to_int() <= 0) {
+			print_error("[Firestore] FIREBASE_FIRESTORE_EMULATOR is not host:port: " + emulator_value + " — refusing to initialize (no live fallback)");
+			return;
+		}
+		CharString host_cs = emulator_value.utf8();
+		settings.set_host(std::string(host_cs.get_data()));
+		settings.set_ssl_enabled(false);
+		print_line("[Firestore] Firestore emulator enabled: " + emulator_value);
+	}
 	firestore_instance->set_settings(settings);
 
 	inited = true;

@@ -218,7 +218,50 @@ FirebaseDatabase::FirebaseDatabase() {
 			firebase::App *app = Firebase::AppId();
 			if (app != nullptr) {
 				firebase::InitResult init_result;
-				database_instance = firebase::database::Database::GetInstance(app, &init_result);
+				// task-1478: test harness only — route RTDB to the local emulator.
+				// The value is set by the harness env (desktop) or by
+				// firebase_service.gd from the test config BEFORE this constructor
+				// runs (device platforms). Read via Godot's OS API, never
+				// std::getenv — Windows SetEnvironmentVariableW is invisible to
+				// the CRT's startup env snapshot.
+				String emulator_value = OS::get_singleton()->get_environment("FIREBASE_DATABASE_EMULATOR");
+				if (!emulator_value.is_empty()) {
+					// Shape must be host:port. Anything else refuses init (loud):
+					// the SDK's own URL-parse failure is SILENT (null connection
+					// behind a "successful" Database), never a live fallback.
+					// Reject scheme-bearing values ("/") and port 0 too: both parse
+					// past a naive host:port check and land in the SDK's SILENT
+					// dead-Repo state instead of an error.
+					int colon = emulator_value.rfind(":");
+					if (colon <= 0 || emulator_value.contains("/") || !emulator_value.substr(colon + 1).is_valid_int() || emulator_value.substr(colon + 1).to_int() <= 0) {
+						print_error("[RTDB C++] FIREBASE_DATABASE_EMULATOR is not host:port: " + emulator_value + " — refusing to initialize (no live fallback)");
+						return;
+					}
+#if defined(__ANDROID__) || (defined(__APPLE__) && TARGET_OS_IPHONE)
+					// Native SDKs take the documented emulator form with an
+					// explicit namespace from the project's database URL.
+					String ns = String(app->options().database_url());
+					ns = ns.replace("https://", "").replace("http://", "");
+					int dot = ns.find(".");
+					if (dot > 0) {
+						ns = ns.substr(0, dot);
+					}
+					if (ns.is_empty()) {
+						print_error("[RTDB C++] Cannot derive emulator namespace — app options carry no database_url; refusing to initialize (no live fallback)");
+						return;
+					}
+					String url = "http://" + emulator_value + "?ns=" + ns;
+#else
+					// Desktop parser REJECTS ?ns= and derives the namespace from
+					// the first host label (localhost → ns "localhost").
+					String url = "http://" + emulator_value;
+#endif
+					CharString url_cs = url.utf8();
+					database_instance = firebase::database::Database::GetInstance(app, url_cs.get_data(), &init_result);
+					print_line("[RTDB C++] Database emulator enabled: " + url);
+				} else {
+					database_instance = firebase::database::Database::GetInstance(app, &init_result);
+				}
 
 				if (init_result == firebase::kInitResultSuccess && database_instance != nullptr) {
 					print_line("[RTDB C++] Firebase Database instance obtained successfully.");
