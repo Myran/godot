@@ -18,6 +18,7 @@
 // Firebase SDK Headers (Ensure SCons finds these via CPPPATH)
 #include "firebase/app.h"
 #include "firebase/database.h"
+#include "firebase/log.h" // task-1481: verbose SDK logs on the emulator path
 #include "firebase/database/common.h"
 #include "firebase/database/data_snapshot.h"
 #include "firebase/database/database_reference.h"
@@ -237,6 +238,20 @@ FirebaseDatabase::FirebaseDatabase() {
 						print_error("[RTDB C++] FIREBASE_DATABASE_EMULATOR is not host:port: " + emulator_value + " — refusing to initialize (no live fallback)");
 						return;
 					}
+					// task-1481: emulator runs are test-harness-only, so surface the
+					// SDK's connection-layer diagnostics — the Windows ws:// hang is
+					// invisible at the default level (the WS error path logs at
+					// kLogLevelDebug).
+					firebase::SetLogLevel(firebase::kLogLevelVerbose);
+					// task-1481: the Windows 12.2.0 prebuilt's PLAINTEXT ws client
+					// closes post-connect without sending the upgrade; live wss works.
+					// This override routes the desktop emulator connection through the
+					// proven TLS path via a local TLS terminator. Harness-set, https
+					// only — any other value keeps plain http.
+					String scheme = OS::get_singleton()->get_environment("FIREBASE_DATABASE_EMULATOR_SCHEME");
+					if (scheme != "https") {
+						scheme = "http";
+					}
 #if defined(__ANDROID__) || (defined(__APPLE__) && TARGET_OS_IPHONE)
 					// Native SDKs take the documented emulator form with an
 					// explicit namespace from the project's database URL.
@@ -254,7 +269,7 @@ FirebaseDatabase::FirebaseDatabase() {
 #else
 					// Desktop parser REJECTS ?ns= and derives the namespace from
 					// the first host label (localhost → ns "localhost").
-					String url = "http://" + emulator_value;
+					String url = scheme + "://" + emulator_value;
 #endif
 					CharString url_cs = url.utf8();
 					database_instance = firebase::database::Database::GetInstance(app, url_cs.get_data(), &init_result);
