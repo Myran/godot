@@ -227,15 +227,32 @@ FirebaseDatabase::FirebaseDatabase() {
 				// the CRT's startup env snapshot.
 				String emulator_value = OS::get_singleton()->get_environment("FIREBASE_DATABASE_EMULATOR");
 				if (!emulator_value.is_empty()) {
-					// Shape must be host:port. Anything else refuses init (loud):
+					// Shape must be host:port, or a bare host that takes the
+					// scheme's default port. Anything else refuses init (loud):
 					// the SDK's own URL-parse failure is SILENT (null connection
 					// behind a "successful" Database), never a live fallback.
 					// Reject scheme-bearing values ("/") and port 0 too: both parse
 					// past a naive host:port check and land in the SDK's SILENT
 					// dead-Repo state instead of an error.
-					int colon = emulator_value.rfind(":");
-					if (colon <= 0 || emulator_value.contains("/") || !emulator_value.substr(colon + 1).is_valid_int() || emulator_value.substr(colon + 1).to_int() <= 0) {
-						print_error("[RTDB C++] FIREBASE_DATABASE_EMULATOR is not host:port: " + emulator_value + " — refusing to initialize (no live fallback)");
+					//
+					// task-1481: the port-less form exists for Windows. Repo names
+					// its persistence-cache directory after the URL authority
+					// VERBATIM (repo.cc DeferredInitialization takes the substring
+					// after "//"), and CreateDirectoryW rejects a component holding
+					// ':' (GetLastError 267) — so a port-bearing emulator URL leaves
+					// both sync trees null and the next RTDB op faults on a null
+					// virtual call. HostInfo carries no port field at all, so
+					// port-less in means colon-free out. Live URLs are already
+					// port-less, which is why only emulator runs ever hit this.
+					const int colon = emulator_value.rfind(":");
+					bool bad_shape = emulator_value.contains("/");
+					if (!bad_shape && colon >= 0) {
+						// A colon is present, so everything after it must be a port.
+						const String port_part = emulator_value.substr(colon + 1);
+						bad_shape = (colon == 0) || !port_part.is_valid_int() || port_part.to_int() <= 0;
+					}
+					if (bad_shape) {
+						print_error("[RTDB C++] FIREBASE_DATABASE_EMULATOR is not host or host:port: " + emulator_value + " — refusing to initialize (no live fallback)");
 						return;
 					}
 					// task-1481: emulator runs are test-harness-only, so surface the
