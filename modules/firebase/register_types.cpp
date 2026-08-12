@@ -20,6 +20,10 @@ void initialize_firebase_module(ModuleInitializationLevel p_level) {
 	if (p_level != MODULE_INITIALIZATION_LEVEL_SCENE) {
 			return;
 	}
+	// task-1502: install before anything can touch the SDK, so an SDK-side
+	// failure during the very first App::Create() is still captured.
+	Firebase::install_sdk_log_bridge();
+
 	ClassDB::register_class<Firebase>();
 	ClassDB::register_class<FirebaseAnalytics>();
 	//ClassDB::register_class<FirebaseAdmob>();

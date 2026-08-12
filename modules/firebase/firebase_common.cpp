@@ -6,6 +6,12 @@
 #include "firebase.h"
 #include "core/object/callable_mp.h"
 #include "core/object/class_db.h"
+#include "core/object/message_queue.h"
+#include "firebase/log.h"     // task-1502: firebase::LogLevel
+#include <mutex>
+#include <string>
+#include <utility>
+#include <vector>
 #include "database.h"        // For FirebaseDatabase::begin_shutdown()
 #include "remote_config.h"   // For FirebaseRemoteConfig::begin_shutdown() (task-1081)
 #include "auth.h"            // For FirebaseAuth::begin_shutdown() (task-1084)
@@ -19,6 +25,97 @@
 #include "firebase/app.h"
 #endif
 #endif
+
+// task-1502: bridge the Firebase SDK's own diagnostics into Godot's log sink.
+//
+// The SDK formats every message and hands it to ONE global callback
+// (app/src/log.cc). The default callback printf()s to stdout, which Godot's
+// logger never captures and the Windows test runner does not redirect — so
+// SDK-side failures were silent. task-1481 spent three sessions recovering a
+// diagnostic that repo.cc:503 had already written and nobody could see.
+//
+// LogSetCallback is exported by the prebuilt libraries (verified: darwin
+// universal `T ...LogSetCallback...`, and the VS2019 x64 Debug+Release .lib)
+// but it lives in an internal header the release zip does not ship, so it is
+// declared here rather than included.
+namespace firebase {
+typedef void (*LogCallback)(LogLevel log_level, const char *log_message, void *callback_data);
+void LogSetCallback(LogCallback callback, void *callback_data);
+} // namespace firebase
+
+namespace {
+
+std::mutex g_sdk_log_mutex;
+std::vector<std::pair<int, std::string>> g_sdk_log_pending;
+bool g_sdk_log_drain_queued = false;
+uint64_t g_sdk_log_dropped = 0;
+
+// Bounded: a verbose log level must not grow without limit if the main loop
+// stalls. Drops are counted and reported rather than silently swallowed.
+constexpr size_t SDK_LOG_MAX_PENDING = 512;
+
+// MAIN THREAD ONLY — builds the Godot Strings.
+void _firebase_sdk_log_drain() {
+	std::vector<std::pair<int, std::string>> batch;
+	uint64_t dropped = 0;
+	{
+		std::lock_guard<std::mutex> lock(g_sdk_log_mutex);
+		batch.swap(g_sdk_log_pending);
+		dropped = g_sdk_log_dropped;
+		g_sdk_log_dropped = 0;
+		g_sdk_log_drain_queued = false;
+	}
+	for (const std::pair<int, std::string> &entry : batch) {
+		const String line = String("[Firebase SDK] ") + String::utf8(entry.second.c_str());
+		if (entry.first >= firebase::kLogLevelError) {
+			print_error(line);
+		} else {
+			print_line(line);
+		}
+	}
+	if (dropped > 0) {
+		print_error(String("[Firebase SDK] ") + itos((int64_t)dropped) + " log line(s) dropped - buffer full");
+	}
+}
+
+// ANY THREAD, and the SDK holds its own (non-recursive) log mutex across this
+// call. Two consequences: build NOTHING Godot here — that is the ARM64 SIGBUS
+// class this module's CLAUDE.md forbids — and never log from here, which would
+// re-enter that mutex and deadlock.
+void _firebase_sdk_log_callback(firebase::LogLevel p_level, const char *p_message, void *) {
+	bool queue_drain = false;
+	{
+		std::lock_guard<std::mutex> lock(g_sdk_log_mutex);
+		if (g_sdk_log_pending.size() >= SDK_LOG_MAX_PENDING) {
+			g_sdk_log_dropped++;
+			return;
+		}
+		// p_message points into the SDK's static format buffer — copy it now.
+		g_sdk_log_pending.emplace_back((int)p_level, p_message ? p_message : "");
+		queue_drain = !g_sdk_log_drain_queued;
+		if (queue_drain) {
+			g_sdk_log_drain_queued = true;
+		}
+	}
+	if (!queue_drain) {
+		return; // a drain is already scheduled; it will pick this line up.
+	}
+	if (MessageQueue::get_singleton() != nullptr) {
+		MessageQueue::get_singleton()->push_callable(callable_mp_static(_firebase_sdk_log_drain));
+	} else {
+		// Before the queue exists (early startup) or after it is gone
+		// (shutdown). Release the slot so the next message tries again,
+		// instead of latching the flag and stranding the buffer forever.
+		std::lock_guard<std::mutex> lock(g_sdk_log_mutex);
+		g_sdk_log_drain_queued = false;
+	}
+}
+
+} // namespace
+
+void Firebase::install_sdk_log_bridge() {
+	firebase::LogSetCallback(&_firebase_sdk_log_callback, nullptr);
+}
 
 firebase::App* Firebase::app_ptr = NULL;
 
