@@ -260,11 +260,13 @@ FirebaseDatabase::FirebaseDatabase() {
 					// invisible at the default level (the WS error path logs at
 					// kLogLevelDebug).
 					firebase::SetLogLevel(firebase::kLogLevelVerbose);
-					// task-1481: the Windows 12.2.0 prebuilt's PLAINTEXT ws client
-					// closes post-connect without sending the upgrade; live wss works.
-					// This override routes the desktop emulator connection through the
-					// proven TLS path via a local TLS terminator. Harness-set, https
-					// only — any other value keeps plain http.
+					// task-1481: kept as a diagnostic escape hatch, harness-set,
+					// https only — any other value keeps plain http.
+					// Its original rationale is DISPROVEN: the Windows plaintext
+					// ws client was never at fault. The connection appeared to
+					// close without an upgrade because the PROCESS was dying —
+					// the OS closes sockets on the way out. The real cause was a
+					// colon in the persistence-cache directory name; see below.
 					String scheme = OS::get_singleton()->get_environment("FIREBASE_DATABASE_EMULATOR_SCHEME");
 					if (scheme != "https") {
 						scheme = "http";
@@ -285,7 +287,34 @@ FirebaseDatabase::FirebaseDatabase() {
 					String url = "http://" + emulator_value + "?ns=" + ns;
 #else
 					// Desktop parser REJECTS ?ns= and derives the namespace from
-					// the first host label (localhost → ns "localhost").
+					// the first host label (127.0.0.1 → ns "127").
+					//
+					// task-1481 AC#6: the two constraints below are invisible in
+					// the SDK until they crash — it leaves a Database that
+					// answers normally while its Repo has no sync trees, and the
+					// NEXT operation dispatches through null. Refuse here, where
+					// the message can name the cause, instead of dying later
+					// somewhere that took three sessions to attribute.
+					//
+					// (a) ParseUrl assigns the namespace only inside the branch
+					// that fires on '.' or ':' in the hostname, then refuses with
+					// kParseErrorEmptyNamespace when it is still empty
+					// (util_desktop.cc). A single-label host never parses.
+					if (colon < 0 && !emulator_value.contains(".")) {
+						print_error("[RTDB C++] FIREBASE_DATABASE_EMULATOR has neither '.' nor ':' so the SDK cannot derive a namespace (kParseErrorEmptyNamespace) and silently yields a dead Repo — use a dotted host such as 127.0.0.1: " + emulator_value + " — refusing to initialize (no live fallback)");
+						return;
+					}
+#ifdef _WIN32
+					// (b) Windows names the persistence-cache directory after the
+					// authority verbatim, and CreateDirectoryW rejects a
+					// component holding ':' (GetLastError 267).
+					// DeferredInitialization returns before assigning either sync
+					// tree, and the next RTDB op faults with 0xC0000005.
+					if (colon >= 0) {
+						print_error("[RTDB C++] FIREBASE_DATABASE_EMULATOR must be PORT-LESS on Windows — the SDK names its persistence-cache directory after the authority and CreateDirectoryW rejects ':' (task-1481); route through a loopback forwarder on the default port instead: " + emulator_value + " — refusing to initialize (no live fallback)");
+						return;
+					}
+#endif
 					String url = scheme + "://" + emulator_value;
 #endif
 					CharString url_cs = url.utf8();
