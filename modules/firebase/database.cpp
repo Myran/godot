@@ -252,7 +252,7 @@ FirebaseDatabase::FirebaseDatabase() {
 						bad_shape = (colon == 0) || !port_part.is_valid_int() || port_part.to_int() <= 0;
 					}
 					if (bad_shape) {
-						print_error("[RTDB C++] FIREBASE_DATABASE_EMULATOR is not host or host:port: " + emulator_value + " — refusing to initialize (no live fallback)");
+						print_error("[RTDB C++] FIREBASE_DATABASE_EMULATOR is not host or host:port: " + emulator_value + " - refusing to initialize (no live fallback)");
 						return;
 					}
 					// task-1481: emulator runs are test-harness-only, so surface the
@@ -301,7 +301,7 @@ FirebaseDatabase::FirebaseDatabase() {
 					// kParseErrorEmptyNamespace when it is still empty
 					// (util_desktop.cc). A single-label host never parses.
 					if (colon < 0 && !emulator_value.contains(".")) {
-						print_error("[RTDB C++] FIREBASE_DATABASE_EMULATOR has neither '.' nor ':' so the SDK cannot derive a namespace (kParseErrorEmptyNamespace) and silently yields a dead Repo — use a dotted host such as 127.0.0.1: " + emulator_value + " — refusing to initialize (no live fallback)");
+						print_error("[RTDB C++] FIREBASE_DATABASE_EMULATOR has neither '.' nor ':' so the SDK cannot derive a namespace (kParseErrorEmptyNamespace) and silently yields a dead Repo - use a dotted host such as 127.0.0.1: " + emulator_value + " - refusing to initialize (no live fallback)");
 						return;
 					}
 #ifdef _WIN32
@@ -311,7 +311,7 @@ FirebaseDatabase::FirebaseDatabase() {
 					// DeferredInitialization returns before assigning either sync
 					// tree, and the next RTDB op faults with 0xC0000005.
 					if (colon >= 0) {
-						print_error("[RTDB C++] FIREBASE_DATABASE_EMULATOR must be PORT-LESS on Windows — the SDK names its persistence-cache directory after the authority and CreateDirectoryW rejects ':' (task-1481); route through a loopback forwarder on the default port instead: " + emulator_value + " — refusing to initialize (no live fallback)");
+						print_error("[RTDB C++] FIREBASE_DATABASE_EMULATOR must be PORT-LESS on Windows - the SDK names its persistence-cache directory after the authority and CreateDirectoryW rejects ':' (task-1481); route through a loopback forwarder on the default port instead: " + emulator_value + " - refusing to initialize (no live fallback)");
 						return;
 					}
 #endif
