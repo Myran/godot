@@ -4,9 +4,11 @@
 // - firebase_windows.cpp (Windows)
 
 #include "firebase.h"
+#include "core/io/dir_access.h"   // task-1502: create the sink's directory
 #include "core/object/callable_mp.h"
 #include "core/object/class_db.h"
 #include "core/object/message_queue.h"
+#include "core/os/os.h"           // task-1502: resolve the user data dir
 #include "firebase/log.h"     // task-1502: firebase::LogLevel
 #include <cstdio>            // task-1502: synchronous stderr for fatal-adjacent lines
 #include <mutex>
@@ -55,6 +57,14 @@ uint64_t g_sdk_log_dropped = 0;
 // stalls. Drops are counted and reported rather than silently swallowed.
 constexpr size_t SDK_LOG_MAX_PENDING = 512;
 
+// task-1502: the synchronous sink. Opened once on the main thread at install,
+// written from whatever thread the SDK logs on. A FILE* rather than stderr
+// because redirecting stderr on Windows costs the process exit code: any
+// -RedirectStandard* on Start-Process returns a null ExitCode, so a 0xC0000005
+// would report as a pass (measured 2026-08-13). Null when the open failed —
+// every use is guarded and the queue path still runs.
+FILE *g_sdk_log_file = nullptr;
+
 // MAIN THREAD ONLY — builds the Godot Strings.
 void _firebase_sdk_log_drain() {
 	std::vector<std::pair<int, std::string>> batch;
@@ -79,10 +89,12 @@ void _firebase_sdk_log_drain() {
 	}
 }
 
-// ANY THREAD, and the SDK holds its own (non-recursive) log mutex across this
-// call. Two consequences: build NOTHING Godot here — that is the ARM64 SIGBUS
-// class this module's CLAUDE.md forbids — and never log from here, which would
-// re-enter that mutex and deadlock.
+// ANY THREAD, and the SDK holds its own log mutex across this call, which
+// serialises every invocation. Two consequences: build NOTHING Godot here, the
+// ARM64 SIGBUS class this module's CLAUDE.md forbids; and never log from here.
+// That mutex is RECURSIVE, so the hazard is not deadlock as this comment once
+// claimed — p_message points into the SDK's shared static format buffer, so a
+// nested log overwrites the string being read and recurses.
 void _firebase_sdk_log_callback(firebase::LogLevel p_level, const char *p_message, void *) {
 	// task-1502 AC#1: an error-level line must NOT depend on the queue below.
 	// The drain runs on the main thread, so anything the SDK logs microseconds
@@ -100,19 +112,28 @@ void _firebase_sdk_log_callback(firebase::LogLevel p_level, const char *p_messag
 	// only during an unreproducible crash is a sink nobody can prove works: the
 	// one SDK LogError we know of (repo.cc's persistence failure) is now
 	// unreachable, because database.cpp refuses the input that caused it. At
-	// WARNING every Windows run emits a few lines, so the whole chain —
-	// callback, fflush, redirect, retrieval — is exercised continuously instead
-	// of being trusted. Verbose and Debug stay out; the SDK is extremely chatty
-	// there and the queue already carries them to the Godot log.
-	if (p_level >= firebase::kLogLevelWarning) {
+	// WARNING every run emits a few lines, so the whole chain — callback,
+	// fflush, retrieval — is exercised continuously instead of being trusted.
+	// Verbose and Debug stay out; the SDK is very chatty there and the queue
+	// already carries them to the Godot log.
+	//
+	// fflush is the point: without it the line sits in libc's buffer and dies
+	// with the process, exactly as it died in the queue.
+	//
+	// Two guarantees make the unlocked fprintf safe. The SDK serialises every
+	// callback under its own log mutex, and stdio locks the stream implicitly
+	// (C11 7.21.2p7). Do NOT log from inside here: p_message points into the
+	// SDK's shared static format buffer, so a nested log overwrites the string
+	// being read and recurses.
+	if (g_sdk_log_file != nullptr && p_level >= firebase::kLogLevelWarning) {
 		const char *tag = "WARNING";
 		if (p_level >= firebase::kLogLevelAssert) {
 			tag = "ASSERT";
 		} else if (p_level >= firebase::kLogLevelError) {
 			tag = "ERROR";
 		}
-		fprintf(stderr, "[Firebase SDK][%s] %s\n", tag, p_message ? p_message : "");
-		fflush(stderr);
+		fprintf(g_sdk_log_file, "[Firebase SDK][%s] %s\n", tag, p_message ? p_message : "");
+		fflush(g_sdk_log_file);
 	}
 
 	bool queue_drain = false;
@@ -146,6 +167,18 @@ void _firebase_sdk_log_callback(firebase::LogLevel p_level, const char *p_messag
 } // namespace
 
 void Firebase::install_sdk_log_bridge() {
+	// task-1502: open the synchronous sink first, on the main thread, so it is
+	// ready before anything can touch the SDK. It sits beside godot.log in the
+	// user data dir because that is the directory every platform's harness
+	// already retrieves from. "w" truncates once per process, so a previous
+	// run's warnings cannot be read as this run's.
+	if (g_sdk_log_file == nullptr && OS::get_singleton() != nullptr) {
+		const String dir = OS::get_singleton()->get_user_data_dir().path_join("logs");
+		if (DirAccess::make_dir_recursive_absolute(dir) == OK) {
+			const CharString path = dir.path_join("firebase_sdk.txt").utf8();
+			g_sdk_log_file = fopen(path.get_data(), "w");
+		}
+	}
 	firebase::LogSetCallback(&_firebase_sdk_log_callback, nullptr);
 }
 
