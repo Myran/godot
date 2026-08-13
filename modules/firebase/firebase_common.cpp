@@ -96,10 +96,22 @@ void _firebase_sdk_log_callback(firebase::LogLevel p_level, const char *p_messag
 	// point of the exercise — stderr is block-buffered when redirected to a
 	// file, so without it the line dies in libc's buffer exactly as it did in
 	// the queue.
-	if (p_level >= firebase::kLogLevelError) {
-		fprintf(stderr, "[Firebase SDK][%s] %s\n",
-				p_level >= firebase::kLogLevelAssert ? "ASSERT" : "ERROR",
-				p_message ? p_message : "");
+	// Threshold is WARNING, not ERROR, and that is deliberate. A sink that fires
+	// only during an unreproducible crash is a sink nobody can prove works: the
+	// one SDK LogError we know of (repo.cc's persistence failure) is now
+	// unreachable, because database.cpp refuses the input that caused it. At
+	// WARNING every Windows run emits a few lines, so the whole chain —
+	// callback, fflush, redirect, retrieval — is exercised continuously instead
+	// of being trusted. Verbose and Debug stay out; the SDK is extremely chatty
+	// there and the queue already carries them to the Godot log.
+	if (p_level >= firebase::kLogLevelWarning) {
+		const char *tag = "WARNING";
+		if (p_level >= firebase::kLogLevelAssert) {
+			tag = "ASSERT";
+		} else if (p_level >= firebase::kLogLevelError) {
+			tag = "ERROR";
+		}
+		fprintf(stderr, "[Firebase SDK][%s] %s\n", tag, p_message ? p_message : "");
 		fflush(stderr);
 	}
 
