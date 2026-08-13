@@ -8,6 +8,7 @@
 #include "core/object/class_db.h"
 #include "core/object/message_queue.h"
 #include "firebase/log.h"     // task-1502: firebase::LogLevel
+#include <cstdio>            // task-1502: synchronous stderr for fatal-adjacent lines
 #include <mutex>
 #include <string>
 #include <utility>
@@ -83,6 +84,25 @@ void _firebase_sdk_log_drain() {
 // class this module's CLAUDE.md forbids — and never log from here, which would
 // re-enter that mutex and deadlock.
 void _firebase_sdk_log_callback(firebase::LogLevel p_level, const char *p_message, void *) {
+	// task-1502 AC#1: an error-level line must NOT depend on the queue below.
+	// The drain runs on the main thread, so anything the SDK logs microseconds
+	// before the process dies goes down with the buffer. That is exactly how
+	// repo.cc's "Could not initialize persistence" stayed invisible through
+	// three sessions of task-1481 while it was being hunted.
+	//
+	// Written here, synchronously, on the thread that emitted it. Raw C stdio
+	// only: this runs on arbitrary threads and must construct no Godot object
+	// (the ARM64 SIGBUS class this module's CLAUDE.md forbids). fflush is the
+	// point of the exercise — stderr is block-buffered when redirected to a
+	// file, so without it the line dies in libc's buffer exactly as it did in
+	// the queue.
+	if (p_level >= firebase::kLogLevelError) {
+		fprintf(stderr, "[Firebase SDK][%s] %s\n",
+				p_level >= firebase::kLogLevelAssert ? "ASSERT" : "ERROR",
+				p_message ? p_message : "");
+		fflush(stderr);
+	}
+
 	bool queue_drain = false;
 	{
 		std::lock_guard<std::mutex> lock(g_sdk_log_mutex);
