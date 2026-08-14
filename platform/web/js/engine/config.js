@@ -284,6 +284,7 @@ const InternalConfig = function (initConfig) { // eslint-disable-line no-unused-
 	Config.prototype.getModuleConfig = function (loadPath, response) {
 		let r = response;
 		const gdext = this.gdextensionLibs;
+		const onPrintError = this.onPrintError;
 		return {
 			'print': this.onPrint,
 			'printErr': this.onPrintError,
@@ -295,11 +296,33 @@ const InternalConfig = function (initConfig) { // eslint-disable-line no-unused-
 				function done(result) {
 					onSuccess(result['instance'], result['module']);
 				}
+				// task-1515/1514 (fork patch, keep across upstream merges): the streaming
+				// path must fall back on REJECTION, not just on a missing API. Firefox
+				// rejects with "no WebAssembly compiler available"; without this the
+				// engine never booted and the page stayed blank with no error.
+				function fallback(response) {
+					return response.arrayBuffer().then(function (buffer) {
+						return WebAssembly.instantiate(buffer, imports).then(done);
+					});
+				}
 				if (typeof (WebAssembly.instantiateStreaming) !== 'undefined') {
-					WebAssembly.instantiateStreaming(Promise.resolve(r), imports).then(done);
+					// Cloned before streaming consumes the body; cancelled on success so
+					// the tee does not buffer the whole module for nothing.
+					const retry = r.clone();
+					WebAssembly.instantiateStreaming(Promise.resolve(r), imports).then(function (result) {
+						if (retry.body) {
+							retry.body.cancel();
+						}
+						done(result);
+					}).catch(function (err) {
+						onPrintError('WebAssembly streaming instantiation failed, retrying buffered:', err);
+						return fallback(retry);
+					}).catch(function (err) {
+						onPrintError('WebAssembly instantiation failed, engine cannot start:', err);
+					});
 				} else {
-					r.arrayBuffer().then(function (buffer) {
-						WebAssembly.instantiate(buffer, imports).then(done);
+					fallback(r).catch(function (err) {
+						onPrintError('WebAssembly instantiation failed, engine cannot start:', err);
 					});
 				}
 				r = null;
