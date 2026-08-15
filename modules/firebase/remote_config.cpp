@@ -115,8 +115,19 @@ void FirebaseRemoteConfig::set_defaults(const Dictionary& params) {
 	}
 	print_line("[RemConf] set_defaults Started");
 
-	std::vector<firebase::remote_config::ConfigKeyValueVariant> defaults_vector;
-	defaults_vector.reserve(params.size());
+	// SetDefaults resolves through a Future, so both the ConfigKeyValueVariant vector and
+	// the CharStrings its `key` pointers reference must outlive this call. They used to be
+	// stack locals — the CharString was even loop-local — so every key dangled and the
+	// defaults were never applied at all (task-1532, measured: the value stayed unreadable
+	// 3.5s after the call). Mirrors set_defaults_async; freed in the completion.
+	struct DefaultsData {
+		std::vector<firebase::remote_config::ConfigKeyValueVariant> variants;
+		std::vector<CharString> key_strings;
+	};
+
+	DefaultsData* defaults_data = new DefaultsData();
+	defaults_data->variants.reserve(params.size());
+	defaults_data->key_strings.reserve(params.size());
 
 	Array keys = params.keys();
 	for (int i = 0; i < keys.size(); ++i) {
@@ -126,28 +137,38 @@ void FirebaseRemoteConfig::set_defaults(const Dictionary& params) {
 			continue;
 		}
 		firebase::remote_config::ConfigKeyValueVariant ckv;
-		// CRITICAL: Store CharString to extend lifetime (UTF-8 safety pattern)
-		CharString key_cs = ((String)key).utf8();
-		ckv.key = key_cs.get_data();
+		defaults_data->key_strings.push_back(((String)key).utf8());
+		ckv.key = defaults_data->key_strings.back().get_data();
 		ckv.value = Convertor::toFirebaseVariant(val);
 		if (!ckv.value.is_null()) {
-			defaults_vector.push_back(ckv);
+			defaults_data->variants.push_back(ckv);
 		}
 	}
 
-	if (!defaults_vector.empty()) {
-		rc->SetDefaults(defaults_vector.data(), defaults_vector.size()).OnCompletion(
-			[](const firebase::Future<void>& future) {
-				if (future.status() == firebase::kFutureStatusComplete && future.error() == 0) {
-					print_line("[RemConf] set_defaults completed successfully.");
-				} else {
-					const char* msg = future.error_message() ? future.error_message() : "Unknown error";
-					print_error(String("[RemConf] set_defaults failed. Error: ") + String::num_int64(future.error()) + " - " + msg);
-				}
-			});
-	} else {
+	if (defaults_data->variants.empty()) {
 		print_line("[RemConf] No valid defaults provided to set_defaults.");
+		delete defaults_data;
+		return;
 	}
+
+	rc->SetDefaults(defaults_data->variants.data(), defaults_data->variants.size()).OnCompletion(
+		[defaults_data](const firebase::Future<void>& future) {
+			// task-1081: the lambda owns heap data, so free it before the early return.
+			if (is_shutting_down.load()) {
+				delete defaults_data;
+				return;
+			}
+			if (future.status() == firebase::kFutureStatusComplete && future.error() == 0) {
+				print_line("[RemConf] set_defaults completed successfully.");
+				// Every getter gates on loaded(); set_defaults_async, fetch_and_activate and
+				// activate all mark it here and this one did not (task-1532).
+				data_loaded.store(true);
+			} else {
+				const char* msg = future.error_message() ? future.error_message() : "Unknown error";
+				print_error(String("[RemConf] set_defaults failed. Error: ") + String::num_int64(future.error()) + " - " + msg);
+			}
+			delete defaults_data;
+		});
 }
 
 // --- NEW: Async set_defaults with completion signal ---
