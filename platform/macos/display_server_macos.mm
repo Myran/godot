@@ -105,6 +105,14 @@
 #import <IOKit/hid/IOHIDKeys.h>
 #import <IOKit/hid/IOHIDLib.h>
 
+// GODOT_NO_ACTIVATE: automation opt-out — never pull focus or raise over the
+// user's frontmost app. Set by the test harness, unset for normal launches.
+// One reader for every activation site; the env cannot change mid-process.
+static bool no_activate_requested() {
+	static const bool no_activate = getenv("GODOT_NO_ACTIVATE") != nullptr;
+	return no_activate;
+}
+
 DisplayServerEnums::WindowID DisplayServerMacOS::_create_window(DisplayServerEnums::WindowMode p_mode, DisplayServerEnums::VSyncMode p_vsync_mode, const Rect2i &p_rect) {
 	const float scale = screen_get_max_scale();
 
@@ -1715,9 +1723,7 @@ DisplayServerEnums::WindowID DisplayServerMacOS::create_sub_window(DisplayServer
 void DisplayServerMacOS::show_window(DisplayServerEnums::WindowID p_id) {
 	WindowData &wd = windows[p_id];
 
-	// GODOT_NO_ACTIVATE: automation opt-out — never pull focus or raise over the
-	// user's frontmost app. Set by the test harness, unset for normal launches.
-	const bool no_activate = getenv("GODOT_NO_ACTIVATE") != nullptr;
+	const bool no_activate = no_activate_requested();
 
 	if (p_id == DisplayServerEnums::MAIN_WINDOW_ID && !wd.no_focus && !no_activate) {
 		[GodotApp activateApplication];
@@ -2531,7 +2537,7 @@ void DisplayServerMacOS::window_set_flag(DisplayServerEnums::WindowFlags p_flag,
 			if (was_visible || [wd.window_object isVisible]) {
 				if ([wd.window_object isMiniaturized]) {
 					return;
-				} else if (wd.no_focus) {
+				} else if (wd.no_focus || no_activate_requested()) {
 					if (wd.transient_parent != DisplayServerEnums::INVALID_WINDOW_ID) {
 						WindowData &wd_parent = windows[wd.transient_parent];
 						[wd.window_object orderWindow:NSWindowAbove relativeTo:[wd_parent.window_object windowNumber]];
@@ -2682,8 +2688,10 @@ void DisplayServerMacOS::window_move_to_foreground(DisplayServerEnums::WindowID 
 	ERR_FAIL_COND(!windows.has(p_window));
 	const WindowData &wd = windows[p_window];
 
-	[[NSApplication sharedApplication] activateIgnoringOtherApps:YES];
-	if (wd.no_focus || wd.is_popup) {
+	// Activation belongs INSIDE the focus branch: a window flagged no_focus must
+	// not activate the whole application. macOS was the outlier that did it
+	// anyway, unconditionally and before the branch was even evaluated.
+	if (wd.no_focus || wd.is_popup || no_activate_requested()) {
 		if (wd.transient_parent != DisplayServerEnums::INVALID_WINDOW_ID) {
 			WindowData &wd_parent = windows[wd.transient_parent];
 			[wd.window_object orderWindow:NSWindowAbove relativeTo:[wd_parent.window_object windowNumber]];
@@ -2693,6 +2701,7 @@ void DisplayServerMacOS::window_move_to_foreground(DisplayServerEnums::WindowID 
 			[wd.window_object orderFront:nil];
 		}
 	} else {
+		[[NSApplication sharedApplication] activateIgnoringOtherApps:YES];
 		[wd.window_object makeKeyAndOrderFront:nil];
 	}
 }

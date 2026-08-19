@@ -370,6 +370,10 @@ void OS_MacOS::alert(const String &p_alert, const String &p_title) {
 	id key_window = [[NSApplication sharedApplication] keyWindow];
 	[window runModal];
 	if (key_window) {
+		// Deliberately NOT gated on GODOT_NO_ACTIVATE: this restores the window
+		// that was key BEFORE the alert, it does not take focus that was not
+		// already ours. The activation here is runModal above, and suppressing
+		// the restore would leave the app with no key window.
 		[key_window makeKeyAndOrderFront:nil];
 	}
 }
