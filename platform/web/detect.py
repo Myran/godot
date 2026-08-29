@@ -157,6 +157,11 @@ def configure(env: "SConsEnvironment"):
         # Sentry keys an uploaded wasm by its build_id section; without one sentry-cli
         # reports "missing debug identifier" and the symbols are unusable (task-1669).
         env.Append(LINKFLAGS=["-Wl,--build-id"])
+        if env["target"] == "template_release":
+            # A shipped wasm must not carry DWARF inline: doing so takes the binary from
+            # 38 MB to 475 MB, which players download. -gseparate-dwarf writes it to a
+            # side .debug.wasm that is uploaded to Sentry instead (task-1672).
+            env.Append(LINKFLAGS=["-gseparate-dwarf"])
 
     if env.editor_build and env["initial_memory"] < 64:
         print_info("Forcing `initial_memory=64` as it is required for the web editor.")
