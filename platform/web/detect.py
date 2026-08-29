@@ -154,6 +154,9 @@ def configure(env: "SConsEnvironment"):
     if env["debug_symbols"]:
         # Retain function names for backtraces at the cost of file size.
         env.Append(LINKFLAGS=["--profiling-funcs"])
+        # Sentry keys an uploaded wasm by its build_id section; without one sentry-cli
+        # reports "missing debug identifier" and the symbols are unusable (task-1669).
+        env.Append(LINKFLAGS=["-Wl,--build-id"])
 
     if env.editor_build and env["initial_memory"] < 64:
         print_info("Forcing `initial_memory=64` as it is required for the web editor.")
