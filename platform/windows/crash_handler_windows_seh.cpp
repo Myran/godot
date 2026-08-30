@@ -167,7 +167,10 @@ DWORD CrashHandlerException(EXCEPTION_POINTERS *ep) {
 	print_error(vformat("Load address: %x\n", (uint64_t)base));
 
 	// Setup stuff:
-	CONTEXT *context = ep->ContextRecord;
+	// StackWalk64 unwinds the CONTEXT in place, so walk a copy to leave ep->ContextRecord
+	// intact for whatever crash reporter runs after this filter returns (task-1693).
+	CONTEXT context_copy = *ep->ContextRecord;
+	CONTEXT *context = &context_copy;
 	STACKFRAME64 frame;
 	bool skip_first = false;
 
