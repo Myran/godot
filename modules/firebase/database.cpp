@@ -573,13 +573,13 @@ void FirebaseDatabase::get_value_async(int p_request_id, const Array &keys) {
 void FirebaseDatabase::set_value_async(int p_request_id, const Array &keys, const Variant &value) {
 	if (!inited || !database_instance) {
 		print_error("[RTDB C++] SetValue failed: RTDB not initialized.");
-		call_deferred(SNAME("emit_signal"), SNAME("set_value_completed"), p_request_id, false, "Database not initialized.");
+		call_deferred(SNAME("emit_signal"), SNAME("set_value_completed"), p_request_id, false, "DB_NOT_INITIALIZED", "Database not initialized.");
 		return;
 	}
 	firebase::database::DatabaseReference ref = get_reference_to_path(keys);
 	if (!ref.is_valid()) {
 		print_error("[RTDB C++] SetValue failed: Could not get valid reference for path: " + String(Variant(keys)));
-		call_deferred(SNAME("emit_signal"), SNAME("set_value_completed"), p_request_id, false, "Invalid database path provided.");
+		call_deferred(SNAME("emit_signal"), SNAME("set_value_completed"), p_request_id, false, "INVALID_PATH", "Invalid database path provided.");
 		return;
 	}
 	firebase::Variant firebase_value = Convertor::toFirebaseVariant(value);
@@ -614,13 +614,13 @@ void FirebaseDatabase::set_value_async(int p_request_id, const Array &keys, cons
 void FirebaseDatabase::push_and_update_async(int p_request_id, const Array &keys, const Dictionary &data) {
 	if (!inited || !database_instance) {
 		print_error("[RTDB C++] PushUpdate failed: RTDB not initialized.");
-		call_deferred(SNAME("emit_signal"), SNAME("push_and_update_completed"), p_request_id, "", false, "Database not initialized.");
+		call_deferred(SNAME("emit_signal"), SNAME("push_and_update_completed"), p_request_id, "", false, "DB_NOT_INITIALIZED", "Database not initialized.");
 		return;
 	}
 	firebase::database::DatabaseReference ref = get_reference_to_path(keys);
 	if (!ref.is_valid()) {
 		print_error("[RTDB C++] PushUpdate failed: Could not get valid reference for path: " + String(Variant(keys)));
-		call_deferred(SNAME("emit_signal"), SNAME("push_and_update_completed"), p_request_id, "", false, "Invalid database path provided.");
+		call_deferred(SNAME("emit_signal"), SNAME("push_and_update_completed"), p_request_id, "", false, "INVALID_PATH", "Invalid database path provided.");
 		return;
 	}
 	firebase::database::DatabaseReference new_child_ref = ref.PushChild();
@@ -632,14 +632,14 @@ void FirebaseDatabase::push_and_update_async(int p_request_id, const Array &keys
 
 	if (push_key_std.empty()) {
 		print_error("[RTDB C++] PushUpdate failed: Could not generate push key.");
-		call_deferred(SNAME("emit_signal"), SNAME("push_and_update_completed"), p_request_id, "", false, "Failed to generate push key.");
+		call_deferred(SNAME("emit_signal"), SNAME("push_and_update_completed"), p_request_id, "", false, "PUSH_KEY_FAILED", "Failed to generate push key.");
 		return;
 	}
 
 	firebase::Variant firebase_data = Convertor::toFirebaseVariant(data);
 	if (!firebase_data.is_map()) {
 		print_error("[RTDB C++] PushUpdate failed: Data must be a Dictionary (converts to map).");
-		call_deferred(SNAME("emit_signal"), SNAME("push_and_update_completed"), p_request_id, String(push_key_std.c_str()), false, "Data must be a Dictionary.");
+		call_deferred(SNAME("emit_signal"), SNAME("push_and_update_completed"), p_request_id, String(push_key_std.c_str()), false, "INVALID_DATA_TYPE", "Data must be a Dictionary.");
 		return;
 	}
 
@@ -675,13 +675,13 @@ void FirebaseDatabase::push_and_update_async(int p_request_id, const Array &keys
 void FirebaseDatabase::remove_value_async(int p_request_id, const Array &keys) {
 	if (!inited || !database_instance) {
 		print_error("[RTDB C++] RemoveValue failed: RTDB not initialized.");
-		call_deferred(SNAME("emit_signal"), SNAME("remove_value_completed"), p_request_id, false, "Database not initialized.");
+		call_deferred(SNAME("emit_signal"), SNAME("remove_value_completed"), p_request_id, false, "DB_NOT_INITIALIZED", "Database not initialized.");
 		return;
 	}
 	firebase::database::DatabaseReference ref = get_reference_to_path(keys);
 	if (!ref.is_valid()) {
 		print_error("[RTDB C++] RemoveValue failed: Could not get valid reference for path: " + String(Variant(keys)));
-		call_deferred(SNAME("emit_signal"), SNAME("remove_value_completed"), p_request_id, false, "Invalid database path provided.");
+		call_deferred(SNAME("emit_signal"), SNAME("remove_value_completed"), p_request_id, false, "INVALID_PATH", "Invalid database path provided.");
 		return;
 	}
 	print_verbose(String("[RTDB C++] RemoveValue ReqID:") + itos(p_request_id) + " Path: " + String(Variant(keys)));
@@ -837,13 +837,13 @@ void FirebaseDatabase::run_transaction_async(int p_request_id, const Array &keys
 void FirebaseDatabase::set_server_timestamp_async(int p_request_id, const Array &keys) {
 	if (!inited || !database_instance) {
 		print_error("[RTDB C++] SetServerTimestamp failed: RTDB not initialized.");
-		call_deferred(SNAME("emit_signal"), SNAME("set_value_completed"), p_request_id, false, "Database not initialized.");
+		call_deferred(SNAME("emit_signal"), SNAME("set_value_completed"), p_request_id, false, "DB_NOT_INITIALIZED", "Database not initialized.");
 		return;
 	}
 	firebase::database::DatabaseReference ref = get_reference_to_path(keys);
 	if (!ref.is_valid()) {
 		print_error("[RTDB C++] SetServerTimestamp failed: Could not get valid reference for path: " + String(Variant(keys)));
-		call_deferred(SNAME("emit_signal"), SNAME("set_value_completed"), p_request_id, false, "Invalid database path provided.");
+		call_deferred(SNAME("emit_signal"), SNAME("set_value_completed"), p_request_id, false, "INVALID_PATH", "Invalid database path provided.");
 		return;
 	}
 	print_verbose(String("[RTDB C++] SetServerTimestamp ReqID:") + itos(p_request_id) + " Path: " + String(Variant(keys)));
@@ -1067,14 +1067,14 @@ void FirebaseDatabase::_handle_set_value_on_main_thread(int req_id) {
 
 	if (pending.success) {
 		print_verbose(String("[RTDB C++] SetValue ReqID:") + itos(req_id) + " Main thread handler - Success.");
-		call_deferred(SNAME("emit_signal"), SNAME("set_value_completed"), req_id, true, "");
+		call_deferred(SNAME("emit_signal"), SNAME("set_value_completed"), req_id, true, "", "");
 	} else if (pending.status == firebase::kFutureStatusComplete) {
 		String error_code_str = String::num_int64(pending.error);
 		print_error(String("[RTDB C++] SetValue ReqID:") + itos(req_id) + " Main thread handler - Error: " + error_code_str + " Msg: " + error_msg);
-		call_deferred(SNAME("emit_signal"), SNAME("set_value_completed"), req_id, false, error_msg);
+		call_deferred(SNAME("emit_signal"), SNAME("set_value_completed"), req_id, false, error_code_str, error_msg);
 	} else {
 		print_error(String("[RTDB C++] SetValue ReqID:") + itos(req_id) + " Main thread handler - Future did not complete. Status: " + itos(pending.status));
-		call_deferred(SNAME("emit_signal"), SNAME("set_value_completed"), req_id, false, "Firebase Future did not complete.");
+		call_deferred(SNAME("emit_signal"), SNAME("set_value_completed"), req_id, false, "FUTURE_INVALID_STATUS", "Firebase Future did not complete.");
 	}
 }
 
@@ -1106,14 +1106,14 @@ void FirebaseDatabase::_handle_push_and_update_on_main_thread(int req_id) {
 
 	if (pending.success) {
 		print_verbose(String("[RTDB C++] PushUpdate ReqID:") + itos(req_id) + " Main thread handler - Success. PushKey: " + push_key);
-		call_deferred(SNAME("emit_signal"), SNAME("push_and_update_completed"), req_id, push_key, true, "");
+		call_deferred(SNAME("emit_signal"), SNAME("push_and_update_completed"), req_id, push_key, true, "", "");
 	} else if (pending.status == firebase::kFutureStatusComplete) {
 		String error_code_str = String::num_int64(pending.error);
 		print_error(String("[RTDB C++] PushUpdate ReqID:") + itos(req_id) + " Main thread handler - Error: " + error_code_str + " Msg: " + error_msg);
-		call_deferred(SNAME("emit_signal"), SNAME("push_and_update_completed"), req_id, push_key, false, error_msg);
+		call_deferred(SNAME("emit_signal"), SNAME("push_and_update_completed"), req_id, push_key, false, error_code_str, error_msg);
 	} else {
 		print_error(String("[RTDB C++] PushUpdate ReqID:") + itos(req_id) + " Main thread handler - Future did not complete. Status: " + itos(pending.status));
-		call_deferred(SNAME("emit_signal"), SNAME("push_and_update_completed"), req_id, push_key, false, "Firebase Future did not complete.");
+		call_deferred(SNAME("emit_signal"), SNAME("push_and_update_completed"), req_id, push_key, false, "FUTURE_INVALID_STATUS", "Firebase Future did not complete.");
 	}
 }
 
@@ -1143,14 +1143,14 @@ void FirebaseDatabase::_handle_remove_value_on_main_thread(int req_id) {
 
 	if (pending.success) {
 		print_verbose(String("[RTDB C++] RemoveValue ReqID:") + itos(req_id) + " Main thread handler - Success.");
-		call_deferred(SNAME("emit_signal"), SNAME("remove_value_completed"), req_id, true, "");
+		call_deferred(SNAME("emit_signal"), SNAME("remove_value_completed"), req_id, true, "", "");
 	} else if (pending.status == firebase::kFutureStatusComplete) {
 		String error_code_str = String::num_int64(pending.error);
 		print_error(String("[RTDB C++] RemoveValue ReqID:") + itos(req_id) + " Main thread handler - Error: " + error_code_str + " Msg: " + error_msg);
-		call_deferred(SNAME("emit_signal"), SNAME("remove_value_completed"), req_id, false, error_msg);
+		call_deferred(SNAME("emit_signal"), SNAME("remove_value_completed"), req_id, false, error_code_str, error_msg);
 	} else {
 		print_error(String("[RTDB C++] RemoveValue ReqID:") + itos(req_id) + " Main thread handler - Future did not complete. Status: " + itos(pending.status));
-		call_deferred(SNAME("emit_signal"), SNAME("remove_value_completed"), req_id, false, "Firebase Future did not complete.");
+		call_deferred(SNAME("emit_signal"), SNAME("remove_value_completed"), req_id, false, "FUTURE_INVALID_STATUS", "Firebase Future did not complete.");
 	}
 }
 
@@ -1383,9 +1383,9 @@ void FirebaseDatabase::_bind_methods() {
 
 	ADD_SIGNAL(MethodInfo("get_value_completed", PropertyInfo(Variant::INT, "request_id"), PropertyInfo(Variant::STRING, "key"), PropertyInfo(Variant::NIL, "value", PROPERTY_HINT_NONE, "", PROPERTY_USAGE_NIL_IS_VARIANT)));
 	ADD_SIGNAL(MethodInfo("get_value_error", PropertyInfo(Variant::INT, "request_id"), PropertyInfo(Variant::STRING, "key"), PropertyInfo(Variant::STRING, "error_code"), PropertyInfo(Variant::STRING, "error_message")));
-	ADD_SIGNAL(MethodInfo("set_value_completed", PropertyInfo(Variant::INT, "request_id"), PropertyInfo(Variant::BOOL, "success"), PropertyInfo(Variant::STRING, "error_message")));
-	ADD_SIGNAL(MethodInfo("push_and_update_completed", PropertyInfo(Variant::INT, "request_id"), PropertyInfo(Variant::STRING, "push_id"), PropertyInfo(Variant::BOOL, "success"), PropertyInfo(Variant::STRING, "error_message")));
-	ADD_SIGNAL(MethodInfo("remove_value_completed", PropertyInfo(Variant::INT, "request_id"), PropertyInfo(Variant::BOOL, "success"), PropertyInfo(Variant::STRING, "error_message")));
+	ADD_SIGNAL(MethodInfo("set_value_completed", PropertyInfo(Variant::INT, "request_id"), PropertyInfo(Variant::BOOL, "success"), PropertyInfo(Variant::STRING, "error_code"), PropertyInfo(Variant::STRING, "error_message")));
+	ADD_SIGNAL(MethodInfo("push_and_update_completed", PropertyInfo(Variant::INT, "request_id"), PropertyInfo(Variant::STRING, "push_id"), PropertyInfo(Variant::BOOL, "success"), PropertyInfo(Variant::STRING, "error_code"), PropertyInfo(Variant::STRING, "error_message")));
+	ADD_SIGNAL(MethodInfo("remove_value_completed", PropertyInfo(Variant::INT, "request_id"), PropertyInfo(Variant::BOOL, "success"), PropertyInfo(Variant::STRING, "error_code"), PropertyInfo(Variant::STRING, "error_message")));
 	ADD_SIGNAL(MethodInfo("query_completed", PropertyInfo(Variant::INT, "request_id"), PropertyInfo(Variant::STRING, "key"), PropertyInfo(Variant::NIL, "value", PROPERTY_HINT_NONE, "", PROPERTY_USAGE_NIL_IS_VARIANT)));
 	ADD_SIGNAL(MethodInfo("query_error", PropertyInfo(Variant::INT, "request_id"), PropertyInfo(Variant::STRING, "key"), PropertyInfo(Variant::STRING, "error_code"), PropertyInfo(Variant::STRING, "error_message")));
 	ADD_SIGNAL(MethodInfo("transaction_completed", PropertyInfo(Variant::INT, "request_id"), PropertyInfo(Variant::STRING, "key"), PropertyInfo(Variant::NIL, "value", PROPERTY_HINT_NONE, "", PROPERTY_USAGE_NIL_IS_VARIANT), PropertyInfo(Variant::BOOL, "success"), PropertyInfo(Variant::STRING, "error_message")));
