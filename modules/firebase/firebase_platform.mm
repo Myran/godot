@@ -103,12 +103,13 @@ void Firebase::quit_app() {
     // iOS quit for testing/CI only (Task-290)
     // Use _exit() instead of exit() to bypass cleanup handlers and terminate immediately
     //
-    // Task-520: Flush all file buffers before _exit() to ensure logs are written to disk.
-    // _exit() bypasses ALL cleanup including OS file buffer flushing, causing log truncation.
-    // fflush(NULL) flushes all open output streams (stdout, stderr, and file handles).
-    // sync() forces kernel to flush filesystem buffers to physical storage.
-    fflush(NULL);
-    sync();
+    // No fflush(NULL)/sync() here (task-1719). Task-520 added them against log
+    // truncation, but both streams are already flushed at write time: godot.log by
+    // the logger under run/flush_stdout_on_print, and the SDK log by the fflush on
+    // the line after its fprintf. What they DID do is hang ~8% of runs — fflush(NULL)
+    // walks every FILE under __sfp_lock while Firebase worker threads still hold
+    // stream locks, and the harness then abandoned the app at 300s. macOS keeps them:
+    // it has never hung, so there is no evidence to remove them on.
     _exit(0);
 #elif TARGET_OS_OSX
     // macOS: Use _exit() for immediate termination (same as iOS for testing/CI)
