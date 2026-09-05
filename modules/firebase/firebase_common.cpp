@@ -10,6 +10,7 @@
 #include "core/object/message_queue.h"
 #include "core/os/os.h"           // task-1502: resolve the user data dir
 #include "firebase/log.h"     // task-1502: firebase::LogLevel
+#include "firebase/analytics.h" // task-1763: NotifyAppLifecycleChange
 #include <cstdio>            // task-1502: synchronous stderr for fatal-adjacent lines
 #include <mutex>
 #include <string>
@@ -229,6 +230,13 @@ void Firebase::cleanup_firebase() {
         FirebaseAuth::begin_shutdown();
         FirebaseFirestore::begin_shutdown();
         FirebaseAnalytics::begin_shutdown();
+#ifdef _WIN32
+        // The GA DLL only uploads on lifecycle transitions; kTermination blocks until the
+        // queue beside the exe (google_analytics.sql) is sent, a bare exit strands it (task-1763)
+        if (FirebaseAnalytics::sdk_initialized()) {
+            firebase::analytics::NotifyAppLifecycleChange(firebase::analytics::kTermination);
+        }
+#endif
         // task-1084 (panel follow-up): FCM is Listener-based, not Future-based, so the
         // original Future-sweep missed it. setToken/setMessage call_deferred onto the
         // MessageQueue from an OS-driven push callback — guard it too.

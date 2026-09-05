@@ -46,6 +46,7 @@ public:
 	// macOS crash prevention - shutdown control methods
 	static void begin_shutdown();
 	static bool is_app_shutting_down();
+	static bool sdk_initialized() { return inited.load(); }
 
 	// Delete copy constructor for singleton pattern
 	FirebaseAnalytics(const FirebaseAnalytics&) = delete;
