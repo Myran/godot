@@ -1055,7 +1055,11 @@ void EditorNode::_notification(int p_what) {
 			} else {
 				EditorFileSystem::get_singleton()->scan_changes();
 			}
-			_scan_external_changes();
+			// GameTwo patch (task-1598): tooling writes project files while the editor is open, so this scan
+			// pops the changed-on-disk dialog on churn the developer already knows about.
+			if (EDITOR_GET("interface/editor/behavior/scan_external_changes_on_focus")) {
+				_scan_external_changes();
+			}
 
 			GDExtensionManager *gdextension_manager = GDExtensionManager::get_singleton();
 			callable_mp(gdextension_manager, &GDExtensionManager::reload_extensions).call_deferred();
