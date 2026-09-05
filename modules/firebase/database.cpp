@@ -326,6 +326,8 @@ FirebaseDatabase::FirebaseDatabase() {
 
 				if (init_result == firebase::kInitResultSuccess && database_instance != nullptr) {
 					print_line("[RTDB C++] Firebase Database instance obtained successfully.");
+					// The library gate; firebase::SetLogLevel above is only the App gate (task-1763)
+					database_instance->set_log_level(firebase::kLogLevelDebug);
 
 					// Create listeners and set singleton pointer
 					// task-1124 invariant: this back-pointer must belong to the boot init-instance

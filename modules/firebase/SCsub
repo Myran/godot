@@ -48,6 +48,8 @@ elif env['platform'] == 'macos':
     env.Append(LINKFLAGS=['-framework', 'CoreFoundation'])
     # GSS framework required by curl for Kerberos authentication (from-source build)
     env.Append(LINKFLAGS=['-framework', 'GSS'])
+    # Firestore's nw_path_monitor since SDK 13.x (task-1763)
+    env.Append(LINKFLAGS=['-framework', 'Network'])
 
     # OpenSSL/BoringSSL linking (required for from-source Firebase SDK builds)
     # The from-source build uses libcurl which links against system OpenSSL
@@ -159,6 +161,9 @@ elif env['platform'] == 'windows':
 
         # Firestore specific
         env.Append(LINKFLAGS=['dbghelp.lib'])   # Debug Help (SymSetOptions, SymInitialize)
+        # rpcrt4 + ole32: required by Firestore and Remote Config per the 13.12.0 readme (task-1763)
+        env.Append(LINKFLAGS=['rpcrt4.lib'])
+        env.Append(LINKFLAGS=['ole32.lib'])
 
         # ICU libraries for timezone/locale functions (u_errorName, ucal_getTimeZoneIDForWindowsID)
         # Windows 10 1903+ uses icu.lib, older versions use icuuc.lib + icuin.lib
