@@ -73,6 +73,13 @@ const String FirebaseAnalytics::PROPERTY_SIGN_UP_METHOD = "sign_up_method";
 std::mutex FirebaseAnalytics::initialization_mutex;
 std::atomic<bool> FirebaseAnalytics::inited(false);
 std::atomic<bool> FirebaseAnalytics::is_shutting_down(false);
+std::mutex FirebaseAnalytics::pending_mutex;
+std::vector<std::pair<String, Dictionary>> FirebaseAnalytics::pending_events;
+std::atomic<bool> FirebaseAnalytics::has_pending(false);
+
+// Bounded so a DLL that never reports ready cannot grow this without limit. Boot
+// submits well under a dozen events, so overflow means something is wrong (task-1767).
+static const size_t ANALYTICS_MAX_PENDING = 64;
 
 // --- Constructor ---
 FirebaseAnalytics::FirebaseAnalytics() {
@@ -115,6 +122,7 @@ void FirebaseAnalytics::_bind_methods() {
 
 	// Configuration
 	ClassDB::bind_method(D_METHOD("set_analytics_collection_enabled", "enabled"), &FirebaseAnalytics::set_analytics_collection_enabled);
+	ClassDB::bind_method(D_METHOD("is_desktop_initialized"), &FirebaseAnalytics::is_desktop_initialized);
 	ClassDB::bind_method(D_METHOD("reset_analytics_data"), &FirebaseAnalytics::reset_analytics_data);
 	ClassDB::bind_method(D_METHOD("set_session_timeout_duration", "milliseconds"), &FirebaseAnalytics::set_session_timeout_duration);
 }
@@ -145,6 +153,61 @@ bool FirebaseAnalytics::is_initialized() const {
 	return inited.load();
 }
 
+// Windows only: google_analytics.dll keeps initializing after
+// GoogleAnalytics_Initialize returns true and silently discards everything logged
+// until it finishes. IsDesktopInitialized is the DLL's own flag; this module's
+// 'inited' says nothing about it. Documented NO-OP off Windows (task-1767).
+bool FirebaseAnalytics::dll_ready() {
+#ifdef _WIN32
+	return firebase::analytics::IsDesktopInitialized();
+#else
+	return true;
+#endif
+}
+
+bool FirebaseAnalytics::is_desktop_initialized() const {
+	return dll_ready();
+}
+
+// Returns true when the caller must not send: the event has been held instead.
+bool FirebaseAnalytics::defer_until_ready(const String& event_name, const Dictionary& params) {
+	if (dll_ready()) {
+		if (has_pending.load()) {
+			flush_pending_events();
+		}
+		return false;
+	}
+
+	std::lock_guard<std::mutex> lock(pending_mutex);
+	if (pending_events.size() >= ANALYTICS_MAX_PENDING) {
+		print_verbose(String("[Analytics C++] Pending queue full, dropping: ") + event_name);
+		return true;
+	}
+	pending_events.push_back(std::make_pair(event_name, params));
+	has_pending.store(true);
+	print_verbose(String("[Analytics C++] DLL not ready, holding: ") + event_name);
+	return true;
+}
+
+void FirebaseAnalytics::flush_pending_events() {
+	if (!has_pending.load() || !inited.load()) {
+		return;
+	}
+
+	std::vector<std::pair<String, Dictionary>> batch;
+	{
+		std::lock_guard<std::mutex> lock(pending_mutex);
+		batch.swap(pending_events);
+		has_pending.store(false);
+	}
+
+	for (const std::pair<String, Dictionary>& entry : batch) {
+		// The un-gated path, or a still-unready DLL would re-queue what we just drained.
+		log_event_params_now(entry.first, entry.second);
+	}
+	print_verbose(String("[Analytics C++] Flushed ") + itos((int64_t)batch.size()) + " held event(s).");
+}
+
 // --- Helper: Convert Dictionary to Firebase Parameters ---
 // NOTE: This function is now inline-only in log_event_params to ensure CharStrings
 // live in the same scope as the Parameters that reference them.
@@ -162,6 +225,10 @@ void FirebaseAnalytics::log_event(const String& event_name) {
 		return;
 	}
 
+	if (defer_until_ready(event_name, Dictionary())) {
+		return;
+	}
+
 	// CRITICAL FIX: Store CharString to prevent dangling pointer
 	CharString event_cs = event_name.utf8();
 	firebase::analytics::LogEvent(event_cs.get_data());
@@ -172,6 +239,14 @@ void FirebaseAnalytics::log_event_string(const String& event_name, const String&
 	if (!inited.load() || is_shutting_down.load()) {
 		print_verbose("[Analytics C++] Not initialized or shutting down. Ignoring log_event_string.");
 		return;
+	}
+
+	{
+		Dictionary held;
+		held[param_name] = value;
+		if (defer_until_ready(event_name, held)) {
+			return;
+		}
 	}
 
 	// CRITICAL FIX: Store CharString objects to prevent dangling pointers
@@ -189,6 +264,14 @@ void FirebaseAnalytics::log_event_int(const String& event_name, const String& pa
 		return;
 	}
 
+	{
+		Dictionary held;
+		held[param_name] = value;
+		if (defer_until_ready(event_name, held)) {
+			return;
+		}
+	}
+
 	// CRITICAL FIX: Store CharString objects to prevent dangling pointers
 	CharString event_cs = event_name.utf8();
 	CharString param_cs = param_name.utf8();
@@ -201,6 +284,14 @@ void FirebaseAnalytics::log_event_double(const String& event_name, const String&
 	if (!inited.load() || is_shutting_down.load()) {
 		print_verbose("[Analytics C++] Not initialized or shutting down. Ignoring log_event_double.");
 		return;
+	}
+
+	{
+		Dictionary held;
+		held[param_name] = value;
+		if (defer_until_ready(event_name, held)) {
+			return;
+		}
 	}
 
 	// CRITICAL FIX: Store CharString objects to prevent dangling pointers
@@ -219,6 +310,18 @@ void FirebaseAnalytics::log_event_params(const String& event_name, const Diction
 
 	if (event_name.is_empty()) {
 		print_verbose("[Analytics C++] Event name is empty. Ignoring.");
+		return;
+	}
+
+	if (defer_until_ready(event_name, params)) {
+		return;
+	}
+
+	log_event_params_now(event_name, params);
+}
+
+void FirebaseAnalytics::log_event_params_now(const String& event_name, const Dictionary& params) {
+	if (is_shutting_down.load()) {
 		return;
 	}
 

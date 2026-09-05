@@ -21,6 +21,7 @@ namespace analytics {
 #include <atomic>
 #include <mutex>
 #include <vector>
+#include <utility>
 
 // Include Firebase SDK headers for Analytics
 // Note: event_names.h, parameter_names.h, user_property_names.h are not needed
@@ -35,6 +36,17 @@ private:
 	static std::mutex initialization_mutex;
 	static std::atomic<bool> inited;
 	static std::atomic<bool> is_shutting_down;
+
+	// Windows: google_analytics.dll finishes initializing asynchronously AFTER
+	// GoogleAnalytics_Initialize returns true, and silently discards anything
+	// logged in that window. Events are held here until it reports ready (task-1767).
+	static std::mutex pending_mutex;
+	static std::vector<std::pair<String, Dictionary>> pending_events;
+	static std::atomic<bool> has_pending;
+
+	static bool dll_ready();
+	static bool defer_until_ready(const String& event_name, const Dictionary& params);
+	static void log_event_params_now(const String& event_name, const Dictionary& params);
 
 	// Private constructor for singleton pattern
 	FirebaseAnalytics();
@@ -55,6 +67,13 @@ public:
 	// --- Initialization ---
 	void initialize();
 	bool is_initialized() const;
+
+	// The DLL's own readiness, not this module's 'inited' flag. Always true off Windows.
+	bool is_desktop_initialized() const;
+
+	// Replays anything held by defer_until_ready. Called before the termination
+	// notify, which is Windows' only upload trigger (task-1767).
+	static void flush_pending_events();
 
 	// --- Core Analytics Methods (Fire-and-Forget) ---
 

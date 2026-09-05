@@ -229,6 +229,11 @@ void Firebase::cleanup_firebase() {
         // no static-init-order hazard), so it is safe even if the service was never initialized.
         FirebaseAuth::begin_shutdown();
         FirebaseFirestore::begin_shutdown();
+#ifdef _WIN32
+        // Events held while the GA DLL was still initializing must go out before
+        // begin_shutdown() closes the log path and before kTermination uploads (task-1767).
+        FirebaseAnalytics::flush_pending_events();
+#endif
         FirebaseAnalytics::begin_shutdown();
 #ifdef _WIN32
         // The GA DLL only uploads on lifecycle transitions; kTermination blocks until the
