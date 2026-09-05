@@ -183,6 +183,22 @@ void Firebase::install_sdk_log_bridge() {
 	firebase::LogSetCallback(&_firebase_sdk_log_callback, nullptr);
 }
 
+void Firebase::install_analytics_dll_log_bridge() {
+#if defined(_WIN32) && defined(DEBUG_ENABLED)
+	// Forwarded into _firebase_sdk_log_callback rather than logging here directly: that
+	// path already owns the thread-safety and the no-Godot-objects rule this callback
+	// needs, and its queue carries Info/Debug through to the Godot log (task-1767).
+	firebase::analytics::SetLogCallback([](firebase::LogLevel p_level, const char *p_message) {
+		_firebase_sdk_log_callback(p_level, p_message, nullptr);
+	});
+
+	// Debug mode may itself change batching, so a run with this build is a diagnostic,
+	// not a measurement of stock delivery behaviour.
+	firebase::analytics::SetDesktopDebugMode(true);
+	print_line("[Firebase] GA DLL log bridge + desktop debug mode enabled");
+#endif
+}
+
 firebase::App* Firebase::app_ptr = NULL;
 
 Firebase::Firebase() {

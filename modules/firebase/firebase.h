@@ -36,6 +36,12 @@ public:
 	// task-1502: route the Firebase SDK's own diagnostics into Godot's log sink.
 	// Call once, before any SDK use. Idempotent.
 	static void install_sdk_log_bridge();
+
+	// Windows debug builds only: routes google_analytics.dll's own log messages into
+	// the SDK sink and turns on its debug mode. The DLL is closed source and discards
+	// events before its remote-config fetch lands, and this is the only channel that
+	// reports what it does with them (task-1767).
+	static void install_analytics_dll_log_bridge();
 	static firebase::App *AppId();
 	static AppActivity GetAppActivity();
 	void cleanup_firebase();

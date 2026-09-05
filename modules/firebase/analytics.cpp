@@ -143,6 +143,11 @@ void FirebaseAnalytics::initialize() {
 
 	// Initialize Firebase Analytics (fire-and-forget, no Future needed)
 	firebase::analytics::Initialize(*app);
+
+	// After Initialize, because the DLL's symbols only resolve during it — set earlier
+	// this would bind the no-op stub instead of the real export (task-1767).
+	Firebase::install_analytics_dll_log_bridge();
+
 	firebase::analytics::SetAnalyticsCollectionEnabled(true);
 
 	inited.store(true);
