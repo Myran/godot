@@ -320,10 +320,14 @@ FirebaseDatabase::FirebaseDatabase() {
 					CharString url_cs = url.utf8();
 					database_instance = firebase::database::Database::GetInstance(app, url_cs.get_data(), &init_result);
 					print_line("[RTDB C++] Database emulator enabled: " + url);
+#if !defined(__ANDROID__) && !(defined(__APPLE__) && TARGET_OS_IPHONE)
+					// Desktop only: this is the uWS connection-layer gate (App gate is SetLogLevel
+					// above). The JNI SDK's debug output names DatabaseError.*_ERROR fields, which
+					// the test error gate reads as failures (task-1763).
 					if (database_instance != nullptr) {
-						// The library gate; SetLogLevel above is only the App gate (task-1763)
 						database_instance->set_log_level(firebase::kLogLevelDebug);
 					}
+#endif
 				} else {
 					database_instance = firebase::database::Database::GetInstance(app, &init_result);
 				}
